@@ -28,7 +28,7 @@ export default function Settings({ conversation, setOption, models, readonly }: 
     frequency_penalty: freqP,
     presence_penalty: presP,
   } = conversation;
-  const endpoint = conversation.endpoint || 'openAI';
+  const endpoint = conversation.endpoint || 'azureOpenAI';
   const isOpenAI = endpoint === 'openAI' || endpoint === 'azureOpenAI';
 
   const setModel = setOption('model');
