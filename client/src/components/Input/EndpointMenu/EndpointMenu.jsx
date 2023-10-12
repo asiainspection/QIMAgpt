@@ -45,8 +45,6 @@ export default function NewConversationMenu() {
 
   const { newConversation } = useConversation();
 
-  newConversation({}, { endpoint: 'azureOpenAI' });
-
   const deletePresetsMutation = useDeletePresetMutation();
   const createPresetMutation = useCreatePresetMutation();
 
@@ -72,7 +70,7 @@ export default function NewConversationMenu() {
   // save states to localStorage
   const [newUser, setNewUser] = useLocalStorage('newUser', true);
   const [lastModel, setLastModel] = useLocalStorage('lastSelectedModel', {});
-  const setLastConvo = useLocalStorage('lastConversationSetup', {})[1];
+  const setLastConvo = useLocalStorage('lastConversationSetup', { endpoint: 'azureOpenAI' })[1];
   const [lastBingSettings, setLastBingSettings] = useLocalStorage('lastBingSettings', {});
   useEffect(() => {
     if (endpoint && endpoint !== 'bingAI') {
