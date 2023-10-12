@@ -45,6 +45,8 @@ export default function NewConversationMenu() {
 
   const { newConversation } = useConversation();
 
+  newConversation({}, { endpoint: 'azureOpenAI' });
+
   const deletePresetsMutation = useDeletePresetMutation();
   const createPresetMutation = useCreatePresetMutation();
 
