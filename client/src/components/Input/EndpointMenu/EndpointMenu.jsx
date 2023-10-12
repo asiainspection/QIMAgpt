@@ -35,6 +35,7 @@ export default function NewConversationMenu() {
   const [showEndpoints, setShowEndpoints] = useState(true);
   const [presetModelVisible, setPresetModelVisible] = useState(false);
   const [preset, setPreset] = useState(false);
+  const [endpoint] = useState('azureOpenAI');
   const [conversation, setConversation] = useRecoilState(store.conversation) ?? {};
   const [messages, setMessages] = useRecoilState(store.messages);
   const availableEndpoints = useRecoilValue(store.availableEndpoints);
@@ -42,7 +43,6 @@ export default function NewConversationMenu() {
   const [presets, setPresets] = useRecoilState(store.presets);
   const modularEndpoints = new Set(['gptPlugins', 'anthropic', 'google', 'openAI']);
 
-  const { endpoint } = conversation;
   const { newConversation } = useConversation();
 
   const deletePresetsMutation = useDeletePresetMutation();
@@ -85,7 +85,6 @@ export default function NewConversationMenu() {
     }
 
     setLastConvo(conversation);
-    newConversation({}, { endpoint: 'azureOpenAI' });
   }, [conversation]);
 
   // set the current model
