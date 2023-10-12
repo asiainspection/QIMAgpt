@@ -85,11 +85,11 @@ export default function NewConversationMenu() {
     }
 
     setLastConvo(conversation);
+    newConversation({}, { endpoint: 'azureOpenAI' });
   }, [conversation]);
 
   // set the current model
   const onSelectEndpoint = (newEndpoint) => {
-    console.log(newEndpoint);
     setMenuOpen(false);
     if (!newEndpoint) {
       return;
