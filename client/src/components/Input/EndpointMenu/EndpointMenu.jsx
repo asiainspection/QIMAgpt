@@ -35,7 +35,6 @@ export default function NewConversationMenu() {
   const [showEndpoints, setShowEndpoints] = useState(true);
   const [presetModelVisible, setPresetModelVisible] = useState(false);
   const [preset, setPreset] = useState(false);
-  const [endpoint] = useState('azureOpenAI');
   const [conversation, setConversation] = useRecoilState(store.conversation) ?? {};
   const [messages, setMessages] = useRecoilState(store.messages);
   const availableEndpoints = useRecoilValue(store.availableEndpoints);
@@ -43,6 +42,7 @@ export default function NewConversationMenu() {
   const [presets, setPresets] = useRecoilState(store.presets);
   const modularEndpoints = new Set(['gptPlugins', 'anthropic', 'google', 'openAI']);
 
+  const { endpoint } = conversation;
   const { newConversation } = useConversation();
 
   const deletePresetsMutation = useDeletePresetMutation();
@@ -70,7 +70,7 @@ export default function NewConversationMenu() {
   // save states to localStorage
   const [newUser, setNewUser] = useLocalStorage('newUser', true);
   const [lastModel, setLastModel] = useLocalStorage('lastSelectedModel', {});
-  const setLastConvo = useLocalStorage('lastConversationSetup', { endpoint: 'azureOpenAI' })[1];
+  const setLastConvo = useLocalStorage('lastConversationSetup', {})[1];
   const [lastBingSettings, setLastBingSettings] = useLocalStorage('lastBingSettings', {});
   useEffect(() => {
     if (endpoint && endpoint !== 'bingAI') {
