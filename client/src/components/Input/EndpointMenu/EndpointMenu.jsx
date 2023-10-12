@@ -42,7 +42,7 @@ export default function NewConversationMenu() {
   const [presets, setPresets] = useRecoilState(store.presets);
   const modularEndpoints = new Set(['gptPlugins', 'anthropic', 'google', 'openAI']);
 
-  const { endpoint } = conversation;
+  const endpoint = 'azureOpenAI';
   const { newConversation } = useConversation();
 
   const deletePresetsMutation = useDeletePresetMutation();
