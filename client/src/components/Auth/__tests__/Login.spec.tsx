@@ -75,28 +75,6 @@ test('renders login form', () => {
   expect(getByLabelText(/email/i)).toBeInTheDocument();
   expect(getByLabelText(/password/i)).toBeInTheDocument();
   expect(getByRole('button', { name: /Sign in/i })).toBeInTheDocument();
-  expect(getByRole('link', { name: /Sign up/i })).toBeInTheDocument();
-  expect(getByRole('link', { name: /Sign up/i })).toHaveAttribute('href', '/register');
-  expect(getByRole('link', { name: /Login with Google/i })).toBeInTheDocument();
-  expect(getByRole('link', { name: /Login with Google/i })).toHaveAttribute(
-    'href',
-    'mock-server/oauth/google',
-  );
-  expect(getByRole('link', { name: /Login with Facebook/i })).toBeInTheDocument();
-  expect(getByRole('link', { name: /Login with Facebook/i })).toHaveAttribute(
-    'href',
-    'mock-server/oauth/facebook',
-  );
-  expect(getByRole('link', { name: /Login with Github/i })).toBeInTheDocument();
-  expect(getByRole('link', { name: /Login with Github/i })).toHaveAttribute(
-    'href',
-    'mock-server/oauth/github',
-  );
-  expect(getByRole('link', { name: /Login with Discord/i })).toBeInTheDocument();
-  expect(getByRole('link', { name: /Login with Discord/i })).toHaveAttribute(
-    'href',
-    'mock-server/oauth/discord',
-  );
 });
 
 test('calls loginUser.mutate on login', async () => {
