@@ -6,8 +6,8 @@ type TConvoSetup = Partial<TPreset> | Partial<TConversation>;
 type TDefaultEndpoint = { convoSetup: TConvoSetup; endpointsConfig: TEndpointsConfig };
 
 const defaultEndpoints = [
-  'openAI',
   'azureOpenAI',
+  'openAI',
   'bingAI',
   'chatGPTBrowser',
   'gptPlugins',
@@ -47,8 +47,7 @@ const getEndpointFromLocalStorage = (endpointsConfig: TEndpointsConfig) => {
 };
 
 const getDefinedEndpoint = (endpointsConfig: TEndpointsConfig) => {
-  console.log(defaultEndpoints.find((e) => Object.hasOwn(endpointsConfig ?? {}, e)));
-  return 'azureOpenAI';
+  return defaultEndpoints.find((e) => Object.hasOwn(endpointsConfig ?? {}, e)) ?? 'openAI';
 };
 
 const getDefaultEndpoint = ({ convoSetup, endpointsConfig }: TDefaultEndpoint) => {
