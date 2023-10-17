@@ -103,6 +103,7 @@ export default {
   com_auth_to_try_again: 'för att försöka igen.', // to try again.
   com_auth_submit_registration: 'Skicka registrering', // Submit registration
   com_auth_welcome_back: 'Välkommen tillbaka', // Welcome back
+  com_auth_welcome_back_qima: 'Welcome back to QimaGPT',
   com_endpoint_open_menu: 'Öppna meny', // Open Menu
   com_endpoint_bing_enable_sydney: 'Aktivera Sydney', // Enable Sydney
   com_endpoint_bing_to_enable_sydney: 'För att aktivera Sydney', // To enable Sydney

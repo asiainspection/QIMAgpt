@@ -99,6 +99,7 @@ export default {
   com_auth_to_try_again: '重試。',
   com_auth_submit_registration: '提交註冊信息',
   com_auth_welcome_back: '歡迎回來',
+  com_auth_welcome_back_qima: 'Welcome back to QimaGPT',
   com_endpoint_open_menu: '打開菜單',
   com_endpoint_bing_enable_sydney: '啟用悉尼',
   com_endpoint_bing_to_enable_sydney: '要啟用Sydney',

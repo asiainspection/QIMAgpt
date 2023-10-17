@@ -100,6 +100,7 @@ export default {
   com_auth_to_try_again: 'to try again.',
   com_auth_submit_registration: '登録をする',
   com_auth_welcome_back: 'おかえりなさい',
+  com_auth_welcome_back_qima: 'Welcome back to QimaGPT',
   com_endpoint_open_menu: 'メニューを開く',
   com_endpoint_bing_enable_sydney: 'Sydney有効化',
   com_endpoint_bing_to_enable_sydney: '(Sydneyを利用する)',

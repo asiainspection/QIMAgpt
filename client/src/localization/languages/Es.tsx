@@ -104,6 +104,7 @@ export default {
   com_auth_to_try_again: 'para intentar nuevamente.',
   com_auth_submit_registration: 'Enviar registro',
   com_auth_welcome_back: 'Bienvenido(a) de vuelta',
+  com_auth_welcome_back_qima: 'Welcome back to QimaGPT',
   com_endpoint_open_menu: 'Abrir Menú',
   com_endpoint_bing_enable_sydney: 'Habilitar Sydney',
   com_endpoint_bing_to_enable_sydney: 'Para habilitar Sydney',

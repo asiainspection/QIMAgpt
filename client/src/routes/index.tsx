@@ -3,7 +3,7 @@ import Root from './Root';
 import Chat from './Chat';
 import Search from './Search';
 import {
-  Login,
+  LoginQima,
   Registration,
   RequestPasswordReset,
   ResetPassword,
@@ -36,7 +36,7 @@ export const router = createBrowserRouter([
     children: [
       {
         path: 'login',
-        element: <Login />,
+        element: <LoginQima />,
       },
       {
         path: '/',

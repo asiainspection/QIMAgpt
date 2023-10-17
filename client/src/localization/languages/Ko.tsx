@@ -98,6 +98,7 @@ export default {
   com_auth_to_try_again: '다시 시도하세요.',
   com_auth_submit_registration: '등록하기',
   com_auth_welcome_back: '다시 오신 것을 환영합니다',
+  com_auth_welcome_back_qima: 'Welcome back to QimaGPT',
   com_endpoint_open_menu: '메뉴 열기',
   com_endpoint_bing_enable_sydney: '시드니 활성화',
   com_endpoint_bing_to_enable_sydney: '시드니를 활성화하려면',
