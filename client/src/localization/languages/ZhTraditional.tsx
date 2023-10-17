@@ -6,6 +6,11 @@ export default {
   com_ui_example_quantum_computing: '以簡單的方式解釋量子計算',
   com_ui_example_10_year_old_b_day: '對於一個十歲生日，有什麼創意的主意嗎？',
   com_ui_example_http_in_js: '如何在Javascript中進行HTTP請求？',
+  com_ui_example_inspection:
+    'Can you write a pitch of 3 sentences to explain to a client the difference between a pre-shipment inspection and an inline inspection?',
+  com_ui_example_food_email: 'Create an automated response for incoming food related emails.',
+  com_ui_example_report:
+    'Can you summarize in 5 bullet points the key insights from this skin research report.',
   com_ui_capabilities: '功能',
   com_ui_capability_remember: '記得先前在對話中提到的內容',
   com_ui_capability_correction: '允許用戶提供後續修正',
@@ -14,6 +19,8 @@ export default {
   com_ui_limitation_incorrect_info: '有時可能會生成不正確的資訊',
   com_ui_limitation_harmful_biased: '有時可能會生成有害或偏見的內容',
   com_ui_limitation_limited_2021: '對2021年以後的世界和事件知識有限',
+  com_ui_limitation_limited_qima:
+    'WARNING: Data is not trained on QIMA specific information and has limited knowledge of the world and events after 2021.',
   com_ui_input: '輸入',
   com_ui_close: '關閉',
   com_ui_model: '模型',

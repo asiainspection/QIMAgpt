@@ -7,6 +7,11 @@ export default {
   com_ui_example_10_year_old_b_day:
     '¿Alguna idea creativa para el cumpleaños de un niño de 10 años?',
   com_ui_example_http_in_js: '¿Cómo puedo hacer una solicitud HTTP en JavaScript?',
+  com_ui_example_inspection:
+    'Can you write a pitch of 3 sentences to explain to a client the difference between a pre-shipment inspection and an inline inspection?',
+  com_ui_example_food_email: 'Create an automated response for incoming food related emails.',
+  com_ui_example_report:
+    'Can you summarize in 5 bullet points the key insights from this skin research report.',
   com_ui_capabilities: 'Capacidades',
   com_ui_capability_remember: 'Recordar lo que el usuario dijo anteriormente en la conversación',
   com_ui_capability_correction: 'Permitir al usuario proporcionar correcciones adicionales',
@@ -17,6 +22,8 @@ export default {
     'Puede producir ocasionalmente instrucciones perjudiciales o contenido sesgado',
   com_ui_limitation_limited_2021:
     'Conocimiento limitado sobre el mundo y eventos posteriores a 2021',
+  com_ui_limitation_limited_qima:
+    'WARNING: Data is not trained on QIMA specific information and has limited knowledge of the world and events after 2021.',
   com_ui_input: 'Entrada',
   com_ui_close: 'Cerrar',
   com_ui_model: 'Modelo',

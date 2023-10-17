@@ -6,6 +6,11 @@ export default {
   com_ui_example_quantum_computing: 'Explain quantum computing in simple terms',
   com_ui_example_10_year_old_b_day: 'Got any creative ideas for a 10 year old\'s birthday?',
   com_ui_example_http_in_js: 'How do I make an HTTP request in Javascript?',
+  com_ui_example_inspection:
+    'Can you write a pitch of 3 sentences to explain to a client the difference between a pre-shipment inspection and an inline inspection?',
+  com_ui_example_food_email: 'Create an automated response for incoming food related emails.',
+  com_ui_example_report:
+    'Can you summarize in 5 bullet points the key insights from this skin research report.',
   com_ui_capabilities: 'Capabilities',
   com_ui_capability_remember: 'Remembers what user said earlier in the conversation',
   com_ui_capability_correction: 'Allows user to provide follow-up corrections',
@@ -15,6 +20,8 @@ export default {
   com_ui_limitation_harmful_biased:
     'May occasionally produce harmful instructions or biased content',
   com_ui_limitation_limited_2021: 'Limited knowledge of world and events after 2021',
+  com_ui_limitation_limited_qima:
+    'WARNING: Data is not trained on QIMA specific information and has limited knowledge of the world and events after 2021.',
   com_ui_input: 'Input',
   com_ui_close: 'Close',
   com_ui_model: 'Model',
