@@ -7,11 +7,6 @@ export default {
   com_ui_example_10_year_old_b_day:
     'Tu as des idées créatives pour l\'anniversaire d\'un enfant de 10 ans ?',
   com_ui_example_http_in_js: 'Comment faire une requête HTTP en Javascript ?',
-  com_ui_example_inspection:
-    'Can you write a pitch of 3 sentences to explain to a client the difference between a pre-shipment inspection and an inline inspection?',
-  com_ui_example_food_email: 'Create an automated response for incoming food related emails.',
-  com_ui_example_report:
-    'Can you summarize in 5 bullet points the key insights from this skin research report.',
   com_ui_capabilities: 'Capacités',
   com_ui_capability_remember:
     'Se souvient de ce que l\'utilisateur a dit plus tôt dans la conversation',
@@ -22,8 +17,6 @@ export default {
   com_ui_limitation_harmful_biased:
     'Peut occasionnellement produire des instructions nuisibles ou du contenu biaisé',
   com_ui_limitation_limited_2021: 'Connaissance limitée du monde et des événements après 2021',
-  com_ui_limitation_limited_qima:
-    'WARNING: Data is not trained on QIMA specific information and has limited knowledge of the world and events after 2021.',
   com_ui_input: 'Entrée',
   com_ui_close: 'Fermer',
   com_ui_model: 'Modèle',
@@ -90,7 +83,6 @@ export default {
   com_auth_to_try_again: 'pour réessayer.',
   com_auth_submit_registration: 'Soumettre l\'inscription',
   com_auth_welcome_back: 'Bienvenue à nouveau',
-  com_auth_welcome_back_qima: 'Welcome back to QimaGPT',
   com_endpoint_open_menu: 'Ouvrir le menu',
   com_endpoint_bing_enable_sydney: 'Activer Sydney',
   com_endpoint_bing_to_enable_sydney: 'Pour activer Sydney',

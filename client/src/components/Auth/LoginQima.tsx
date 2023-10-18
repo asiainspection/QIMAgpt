@@ -6,7 +6,7 @@ import { useGetStartupConfig } from 'librechat-data-provider';
 import { OpenIDIcon } from '~/components';
 import { getLoginError } from '~/utils';
 
-function LoginQima() {
+function Login() {
   const { error, isAuthenticated } = useAuthContext();
   const { data: startupConfig } = useGetStartupConfig();
   const localize = useLocalize();
@@ -29,7 +29,7 @@ function LoginQima() {
           className="mb-6 h-[90px] w-[90px] rounded-[8px] bg-[#00AB76] p-2 text-center"
         />
         <h1 className="mb-4 text-center text-3xl font-semibold">
-          {localize('com_auth_welcome_back_qima')}
+          {localize('com_auth_welcome_back')}
         </h1>
         {error && (
           <div
@@ -62,4 +62,4 @@ function LoginQima() {
   );
 }
 
-export default LoginQima;
+export default Login;

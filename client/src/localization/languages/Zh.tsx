@@ -6,11 +6,6 @@ export default {
   com_ui_example_quantum_computing: '如何给7岁小孩讲解量子计算？',
   com_ui_example_10_year_old_b_day: '如何举办生日宴才能耳目一新？',
   com_ui_example_http_in_js: '如何在Python中实现HTTP请求？',
-  com_ui_example_inspection:
-    'Can you write a pitch of 3 sentences to explain to a client the difference between a pre-shipment inspection and an inline inspection?',
-  com_ui_example_food_email: 'Create an automated response for incoming food related emails.',
-  com_ui_example_report:
-    'Can you summarize in 5 bullet points the key insights from this skin research report.',
   com_ui_capabilities: '功能',
   com_ui_capability_remember: '历史对话记录',
   com_ui_capability_correction: '实时提供反馈',
@@ -19,8 +14,6 @@ export default {
   com_ui_limitation_incorrect_info: '可能会不时出现错误信息',
   com_ui_limitation_harmful_biased: '可能会提供有害指示或者偏见',
   com_ui_limitation_limited_2021: '训练基于2021年以前信息',
-  com_ui_limitation_limited_qima:
-    'WARNING: Data is not trained on QIMA specific information and has limited knowledge of the world and events after 2021.',
   com_ui_input: '输入',
   com_ui_close: '关闭',
   com_ui_clear: '清除',
@@ -90,7 +83,6 @@ export default {
   com_auth_to_try_again: '再试一次.',
   com_auth_submit_registration: '注册提交',
   com_auth_welcome_back: '欢迎',
-  com_auth_welcome_back_qima: '欢迎回来 QimaGPT',
   com_endpoint_open_menu: '打开菜单',
   com_endpoint_bing_enable_sydney: '启用 Sydney',
   com_endpoint_bing_to_enable_sydney: '启用 Sydney',

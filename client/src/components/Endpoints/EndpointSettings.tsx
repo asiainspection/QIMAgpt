@@ -1,13 +1,13 @@
 import { useRecoilValue } from 'recoil';
-import { BingAISettings, AnthropicSettings, OpenAIQimaSettings } from './Settings';
+import { OpenAISettings, BingAISettings, AnthropicSettings } from './Settings';
 import { GoogleSettings, PluginsSettings } from './Settings/MultiView';
 import type { TSettingsProps, TModelSelectProps, TBaseSettingsProps, TModels } from '~/common';
 import { cn } from '~/utils';
 import store from '~/store';
 
 const optionComponents: { [key: string]: React.FC<TModelSelectProps> } = {
-  openAI: OpenAIQimaSettings,
-  azureOpenAI: OpenAIQimaSettings,
+  openAI: OpenAISettings,
+  azureOpenAI: OpenAISettings,
   bingAI: BingAISettings,
   anthropic: AnthropicSettings,
 };

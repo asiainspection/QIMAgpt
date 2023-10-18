@@ -7,7 +7,7 @@ import {
   useGetStartupConfig,
 } from 'librechat-data-provider';
 
-import LandingQima from '~/components/ui/LandingQima';
+import Landing from '~/components/ui/Landing';
 import Messages from '~/components/Messages/Messages';
 import TextChat from '~/components/Input/TextChat';
 
@@ -146,7 +146,7 @@ export default function Chat() {
 
   return (
     <>
-      {conversationId === 'new' && !messagesTree?.length ? <LandingQima /> : <Messages />}
+      {conversationId === 'new' && !messagesTree?.length ? <Landing /> : <Messages />}
       <TextChat />
     </>
   );

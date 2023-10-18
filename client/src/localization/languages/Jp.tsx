@@ -6,11 +6,6 @@ export default {
   com_ui_example_quantum_computing: '量子コンピュータを簡単な単語で説明してください',
   com_ui_example_10_year_old_b_day: '10歳の誕生日で行うクリエイティブなアイデアはありますか？',
   com_ui_example_http_in_js: 'JavascriptでHTTPリクエストを作成するにはどうすればよいですか？',
-  com_ui_example_inspection:
-    'Can you write a pitch of 3 sentences to explain to a client the difference between a pre-shipment inspection and an inline inspection?',
-  com_ui_example_food_email: 'Create an automated response for incoming food related emails.',
-  com_ui_example_report:
-    'Can you summarize in 5 bullet points the key insights from this skin research report.',
   com_ui_capabilities: '能力(機能)',
   com_ui_capability_remember: 'ユーザと話した以前の会話の内容を思い出せます',
   com_ui_capability_correction: 'ユーザは内容を修正して改善できます',
@@ -19,8 +14,6 @@ export default {
   com_ui_limitation_incorrect_info: '誤った情報を生成することがあります',
   com_ui_limitation_harmful_biased: '有害な指示や偏った内容を生成する可能性があります',
   com_ui_limitation_limited_2021: '2021年以降の世界と出来事に関しては知識が乏しいです',
-  com_ui_limitation_limited_qima:
-    'WARNING: Data is not trained on QIMA specific information and has limited knowledge of the world and events after 2021.',
   com_ui_input: '入力',
   com_ui_close: '閉じる',
   com_ui_model: 'モデル',
@@ -107,7 +100,6 @@ export default {
   com_auth_to_try_again: 'to try again.',
   com_auth_submit_registration: '登録をする',
   com_auth_welcome_back: 'おかえりなさい',
-  com_auth_welcome_back_qima: 'Welcome back to QimaGPT',
   com_endpoint_open_menu: 'メニューを開く',
   com_endpoint_bing_enable_sydney: 'Sydney有効化',
   com_endpoint_bing_to_enable_sydney: '(Sydneyを利用する)',

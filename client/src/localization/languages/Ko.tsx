@@ -6,11 +6,6 @@ export default {
   com_ui_example_quantum_computing: '양자 컴퓨팅을 간단하게 설명해줄래?',
   com_ui_example_10_year_old_b_day: '10살 아이 생일 파티를 위한 참신한 아이디어 있을까?',
   com_ui_example_http_in_js: '자바스크립트에서 HTTP 요청을 어떻게 만드나요?',
-  com_ui_example_inspection:
-    'Can you write a pitch of 3 sentences to explain to a client the difference between a pre-shipment inspection and an inline inspection?',
-  com_ui_example_food_email: 'Create an automated response for incoming food related emails.',
-  com_ui_example_report:
-    'Can you summarize in 5 bullet points the key insights from this skin research report.',
   com_ui_capabilities: '기능',
   com_ui_capability_remember: '대화 중 사용자가 이전에 말한 것을 기억해요.',
   com_ui_capability_correction: '사용자가 수정 사항을 제공할 수 있어요.',
@@ -19,8 +14,6 @@ export default {
   com_ui_limitation_incorrect_info: '간혹 잘못된 정보를 생성할 수 있습니다.',
   com_ui_limitation_harmful_biased: '간혹 해로운 지시나 편향된 내용을 제공할 수 있습니다.',
   com_ui_limitation_limited_2021: '2021년 이후의 세계 및 이벤트에 대한 지식이 제한적입니다.',
-  com_ui_limitation_limited_qima:
-    'WARNING: Data is not trained on QIMA specific information and has limited knowledge of the world and events after 2021.',
   com_ui_input: '입력',
   com_ui_close: '닫기',
   com_ui_model: '모델',
@@ -105,7 +98,6 @@ export default {
   com_auth_to_try_again: '다시 시도하세요.',
   com_auth_submit_registration: '등록하기',
   com_auth_welcome_back: '다시 오신 것을 환영합니다',
-  com_auth_welcome_back_qima: 'Welcome back to QimaGPT',
   com_endpoint_open_menu: '메뉴 열기',
   com_endpoint_bing_enable_sydney: '시드니 활성화',
   com_endpoint_bing_to_enable_sydney: '시드니를 활성화하려면',
