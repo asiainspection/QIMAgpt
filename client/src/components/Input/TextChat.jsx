@@ -4,7 +4,7 @@ import { useRecoilValue, useRecoilState, useSetRecoilState } from 'recoil';
 import SubmitButton from './SubmitButton';
 import OptionsBar from './OptionsBar';
 import { EndpointMenu } from './EndpointMenu';
-import Footer from './Footer';
+import Footer from './FooterQima';
 import { useMessageHandler, ThemeContext } from '~/hooks';
 import { cn } from '~/utils';
 import store from '~/store';
