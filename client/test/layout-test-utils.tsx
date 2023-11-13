@@ -1,3 +1,4 @@
+import './matchMedia.mock';
 import React from 'react';
 import { render as rtlRender } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
