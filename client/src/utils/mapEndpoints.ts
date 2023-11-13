@@ -22,7 +22,6 @@ const getAvailableEndpoints = (filter: Record<string, boolean>) => {
 };
 
 export default function mapEndpoints(config: TEndpointsConfig) {
-  console.log(config);
   const filter = getEndpointsFilter(config);
   return getAvailableEndpoints(filter);
 }
