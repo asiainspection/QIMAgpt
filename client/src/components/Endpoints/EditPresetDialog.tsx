@@ -16,7 +16,7 @@ import store from '~/store';
 const EditPresetDialog = ({ open, onOpenChange, preset: _preset, title }: TEditPresetProps) => {
   const [preset, setPreset] = useRecoilState(store.preset);
   const setPresets = useSetRecoilState(store.presets);
-  const { data: availableEndpoints } = useGetEndpointsQuery({
+  const { data: availableEndpoints = [] } = useGetEndpointsQuery({
     select: mapEndpoints,
   });
   const { setOption } = useSetOptions(_preset);
@@ -91,14 +91,9 @@ const EditPresetDialog = ({ open, onOpenChange, preset: _preset, title }: TEditP
                   </Label>
                   <Dropdown
                     value={endpoint || ''}
-                    onChange={setOption('endpoint')}
+                    onChange={(value) => setOption('endpoint')(value)}
                     options={availableEndpoints}
-                    className={cn(
-                      defaultTextProps,
-                      'flex h-10 max-h-10 w-full resize-none ',
-                      removeFocusOutlines,
-                    )}
-                    containerClassName="flex w-full resize-none z-[51]"
+                    className={cn()}
                   />
                 </div>
               </div>

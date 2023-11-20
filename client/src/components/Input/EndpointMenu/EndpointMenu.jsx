@@ -42,7 +42,7 @@ export default function NewConversationMenu() {
   const [conversation, setConversation] = useRecoilState(store.conversation) ?? {};
   const [messages, setMessages] = useRecoilState(store.messages);
 
-  const { data: availableEndpoints } = useGetEndpointsQuery({
+  const { data: availableEndpoints = [] } = useGetEndpointsQuery({
     select: mapEndpoints,
   });
 
@@ -100,7 +100,7 @@ export default function NewConversationMenu() {
     if (!newEndpoint) {
       return;
     } else {
-      newConversation({}, { endpoint: newEndpoint });
+      newConversation(null, { endpoint: newEndpoint });
     }
   };
 

@@ -6,6 +6,7 @@ const { addImages, buildErrorInput, buildPromptPrefix } = require('./output_pars
 const checkBalance = require('../../models/checkBalance');
 const { formatLangChainMessages } = require('./prompts');
 const { isEnabled } = require('../../server/utils');
+const { extractBaseURL } = require('../../utils');
 const { SelfReflectionTool } = require('./tools');
 const { loadTools } = require('./tools/util');
 
@@ -34,7 +35,7 @@ class PluginsClient extends OpenAIClient {
     this.isGpt3 = this.modelOptions?.model?.includes('gpt-3');
 
     if (this.options.reverseProxyUrl) {
-      this.langchainProxy = this.options.reverseProxyUrl.match(/.*v1/)?.[0];
+      this.langchainProxy = extractBaseURL(this.options.reverseProxyUrl);
       !this.langchainProxy &&
         console.warn(`The reverse proxy URL ${this.options.reverseProxyUrl} is not valid for Plugins.
 The url must follow OpenAI specs, for example: https://localhost:8080/v1/chat/completions
@@ -357,6 +358,7 @@ If your reverse proxy is compatible to OpenAI specs in every other way, it may s
       const trimmedPartial = opts.getPartialText().replaceAll(':::plugin:::\n', '');
       responseMessage.text =
         trimmedPartial.length === 0 ? `${partialText}${this.result.output}` : partialText;
+      addImages(this.result.intermediateSteps, responseMessage);
       await this.generateTextStream(this.result.output, opts.onProgress, { delay: 5 });
       return await this.handleResponseMessage(responseMessage, saveOptions, user);
     }
