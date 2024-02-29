@@ -17,7 +17,6 @@ function Login() {
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/chat/new', { replace: true });
-      document.title = 'QIMA-GPT';
     }
   }, [isAuthenticated, navigate]);
 
