@@ -5,7 +5,7 @@ import { Google, Plugins, GoogleSettings, PluginSettings } from './MultiView';
 import AssistantsSettings from './Assistants';
 import AnthropicSettings from './Anthropic';
 import BingAISettings from './BingAI';
-import OpenAISettings from './OpenAI';
+import OpenAISettings from './OpenAIQima';
 
 const settings: { [key: string]: FC<TModelSelectProps> } = {
   [EModelEndpoint.assistants]: AssistantsSettings,
