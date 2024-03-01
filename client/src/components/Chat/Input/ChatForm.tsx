@@ -2,7 +2,7 @@ import { useRecoilState } from 'recoil';
 import type { ChangeEvent } from 'react';
 import { useChatContext } from '~/Providers';
 import { useRequiresKey } from '~/hooks';
-import AttachFile from './Files/AttachFile';
+import AttachFile from './Files/AttachFileQima';
 import StopButton from './StopButton';
 import SendButton from './SendButton';
 import FileRow from './Files/FileRow';

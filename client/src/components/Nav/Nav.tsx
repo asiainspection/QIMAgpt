@@ -16,7 +16,7 @@ import { Conversations } from '~/components/Conversations';
 import { Spinner } from '~/components/svg';
 import SearchBar from './SearchBar';
 import NavToggle from './NavToggle';
-import NavLinks from './NavLinks';
+import NavLinks from './NavLinksQima';
 import NewChat from './NewChat';
 import { cn } from '~/utils';
 import store from '~/store';
