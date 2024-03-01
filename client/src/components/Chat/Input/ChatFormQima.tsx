@@ -47,7 +47,7 @@ export default function ChatForm({ index = 0 }) {
                 setText={setText}
                 submitMessage={submitMessage}
                 endpoint={_endpoint}
-                endpointType={endpointType}
+                endpointType={endpointType || 'noGPT-4'}
               />
             )}
             {isSubmitting && showStopButton ? (
