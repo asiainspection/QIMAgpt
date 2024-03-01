@@ -4,7 +4,7 @@ import { useChatContext } from '~/Providers';
 import { useRequiresKey } from '~/hooks';
 import StopButton from './StopButton';
 import SendButton from './SendButton';
-import Textarea from './Textarea';
+import Textarea from './TextareaQima';
 import store from '~/store';
 
 export default function ChatForm({ index = 0 }) {
