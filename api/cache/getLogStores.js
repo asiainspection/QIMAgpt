@@ -1,5 +1,5 @@
 const Keyv = require('keyv');
-const { CacheKeys } = require('librechat-data-provider');
+const { CacheKeys, ViolationTypes } = require('librechat-data-provider');
 const { logFile, violationFile } = require('./keyvFiles');
 const { math, isEnabled } = require('~/server/utils');
 const keyvRedis = require('./keyvRedis');
@@ -37,7 +37,7 @@ const modelQueries = isEnabled(process.env.USE_REDIS)
 
 const abortKeys = isEnabled(USE_REDIS)
   ? new Keyv({ store: keyvRedis })
-  : new Keyv({ namespace: CacheKeys.ABORT_KEYS });
+  : new Keyv({ namespace: CacheKeys.ABORT_KEYS, ttl: 600000 });
 
 const namespaces = {
   [CacheKeys.CONFIG_STORE]: config,
@@ -47,9 +47,12 @@ const namespaces = {
   concurrent: createViolationInstance('concurrent'),
   non_browser: createViolationInstance('non_browser'),
   message_limit: createViolationInstance('message_limit'),
-  token_balance: createViolationInstance('token_balance'),
+  token_balance: createViolationInstance(ViolationTypes.TOKEN_BALANCE),
   registrations: createViolationInstance('registrations'),
-  [CacheKeys.FILE_UPLOAD_LIMIT]: createViolationInstance(CacheKeys.FILE_UPLOAD_LIMIT),
+  [ViolationTypes.FILE_UPLOAD_LIMIT]: createViolationInstance(ViolationTypes.FILE_UPLOAD_LIMIT),
+  [ViolationTypes.ILLEGAL_MODEL_REQUEST]: createViolationInstance(
+    ViolationTypes.ILLEGAL_MODEL_REQUEST,
+  ),
   logins: createViolationInstance('logins'),
   [CacheKeys.ABORT_KEYS]: abortKeys,
   [CacheKeys.TOKEN_CONFIG]: tokenConfig,
