@@ -36,7 +36,9 @@ Make your desired changes by uncommenting the relevant sections and customizing 
 
 > Warning: You can only specify every service name once (api, mongodb, meilisearch, ...) If you want to override multiple settings in one service you will have to edit accordingly.
 
-For example, if you want to make sure Docker can use your `librechat.yaml` file for [custom configuration](./custom_config.md), it would look like this:
+### Examples
+
+If you want to make sure Docker can use your `librechat.yaml` file for [custom configuration](./custom_config.md), it would look like this:
 
 ```yaml
 version: '3.4'
@@ -47,7 +49,7 @@ services:
       - ./librechat.yaml:/app/librechat.yaml
 ```
 
-Or, if you want to use a prebuilt image for the `api` service, use the LibreChat config file, and expose MongoDB's port, your `docker-compose.override.yml` might look like this:
+Or, if you want to locally build the image for the `api` service, use the LibreChat config file, and use the older Mongo that doesn't requires AVX support, your `docker-compose.override.yml` might look like this:
 
 ```yaml
 version: '3.4'
@@ -56,14 +58,16 @@ services:
   api:
     volumes:
       - ./librechat.yaml:/app/librechat.yaml
-    image: ghcr.io/danny-avila/librechat-dev:latest
+    image: librechat
+    build:
+      context: .
+      target: node
 
   mongodb:
-    ports:
-      - 27018:27017
+    image: mongo:4.4.18
 ```
 
-> Note: Be cautious with exposing ports like MongoDB to the public, as it can make your database vulnerable to attacks.
+> Note: Be cautious if you expose ports for MongoDB or Meilisearch to the public, as it can make your data vulnerable.
 
 ## Step 3: Apply the changes
 
@@ -169,14 +173,13 @@ use admin
 Replace the credentials as desired and keep in your secure records for the rest of the guide.
 
 Run command to create the admin user:
-```bash
-db.createUser({ user: "adminUser", pwd: "securePassword", roles: ["userAdminAnyDatabase", "readWriteAnyDatabase"] })
-```
 
-You should see an "ok" output:
-> { ok: 1 }
+`db.createUser({ user: "adminUser", pwd: "securePassword", roles: ["userAdminAnyDatabase", "readWriteAnyDatabase"] })`
+
+You should see an "ok" output.
 
 You can also confirm the admin was created by running `show users`:
+
 ```bash
 # example input/output
 admin> show users
@@ -269,12 +272,10 @@ use LibreChat
 ```
 
 Now we'll create the actual credentials to be used by our Mongo connection string, which will be limited to read/write access of the "LibreChat" database. As before, replace the example with your desired credentials:
-```bash
-db.createUser({ user: 'user', pwd: 'userpasswd', roles: [ { role: "readWrite", db: "LibreChat" } ] });
-```
 
-You should see an "ok" output again:
-> { ok: 1 }
+`db.createUser({ user: 'user', pwd: 'userpasswd', roles: [ { role: "readWrite", db: "LibreChat" } ] });`
+
+You should see an "ok" output again.
 
 You can verify the user creation with the `show users` command.
 
