@@ -7,11 +7,11 @@ import MessagesView from './Messages/MessagesView';
 import { useChatHelpers, useSSE } from '~/hooks';
 import { Spinner } from '~/components/svg';
 import Presentation from './Presentation';
-import ChatForm from './Input/ChatForm';
+import ChatForm from './Input/ChatFormQima';
 import { buildTree } from '~/utils';
 import Landing from './Landing';
 import Header from './Header';
-import Footer from './Footer';
+import Footer from '../Input/FooterQima';
 import store from '~/store';
 
 function ChatView({ index = 0 }: { index?: number }) {

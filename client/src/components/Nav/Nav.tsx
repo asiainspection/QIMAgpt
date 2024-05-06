@@ -16,7 +16,7 @@ import { Conversations } from '~/components/Conversations';
 import { Spinner } from '~/components/svg';
 import SearchBar from './SearchBar';
 import NavToggle from './NavToggle';
-import NavLinks from './NavLinks';
+import NavLinks from './NavLinksQima';
 import NewChat from './NewChat';
 import { cn } from '~/utils';
 import store from '~/store';
@@ -166,9 +166,9 @@ const Nav = ({ navVisible, setNavVisible }) => {
                         toggleNav={itemToggleNav}
                       />
                       {(isFetchingNextPage || showLoading) && (
-                        <Spinner
+                      <Spinner
                           className={cn('m-1 mx-auto mb-4 h-4 w-4 text-black dark:text-white')}
-                        />
+                      />
                       )}
                     </div>
                     <NavLinks />
