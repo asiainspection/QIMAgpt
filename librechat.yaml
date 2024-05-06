@@ -1,0 +1,16 @@
+# For more information, see the Configuration Guide:
+# https://docs.librechat.ai/install/configuration/custom_config.html
+
+# Configuration version (required)
+version: 1.0.5
+
+# Cache settings: Set to true to enable caching
+cache: true
+fileConfig:
+  endpoints:
+    azureOpenAI :
+      fileSizeLimit: 1  #Maximum size for an individual file in MB
+      totalSizeLimit: 10  #Maximum total size for all files in a single request in MB
+
+# See the Custom Configuration Guide for more information:
+# https://docs.librechat.ai/install/configuration/custom_config.html
