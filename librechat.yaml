@@ -9,8 +9,8 @@ cache: true
 fileConfig:
   endpoints:
     azureOpenAI :
-      fileSizeLimit: 1  #Maximum size for an individual file in MB
-      totalSizeLimit: 2  #Maximum total size for all files in a single request in MB
+      fileSizeLimit: 10  #Maximum size for an individual file in MB
+      totalSizeLimit: 25  #Maximum total size for all files in a single request in MB
 
 # See the Custom Configuration Guide for more information:
 # https://docs.librechat.ai/install/configuration/custom_config.html
