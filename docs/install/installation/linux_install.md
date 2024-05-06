@@ -34,12 +34,19 @@ In this video, you will learn how to install and run LibreChat, using Docker on 
 - Build the Docker image: `docker compose build`
 - Start LibreChat: `docker compose up -d`
 
-Note: If you run the command on the same computer and want to access it, navigate to `localhost:3080`. You should see a login page where you can create or sign in to your account. Then you can choose an AI model and start chatting.
+#### Notes
+
+- As of Docker Compose v2, `docker-compose` is now `docker compose`
+    - Your linux distribution may not have the latest version of Docker Compose, so you may need to use `docker-compose` instead of `docker compose`
+    - You can also see our guide on installing the latest versions of Docker & Docker Compose here: [Docker Ubuntu Deployment Guide](../../deployment/docker_ubuntu_deploy.md#part-i-installing-docker-and-other-dependencies)
+    - The guide is specific to Ubuntu but may be applicable to other Linux distributions as well
+
+- If you run the command on the same computer and want to access it, navigate to `localhost:3080`. You should see a login page where you can create or sign in to your account. Then you can choose an AI model and start chatting.
 
 - [Manage Your MongoDB Database (optional)](../../features/manage_your_database.md)
 Safely access and manage your MongoDB database using Mongo Express
 
-Have fun!
+#### Have fun!
 
 > Note: See the [Docker Compose Install Guide](./docker_compose_install.md) for more details 
 - 👆 Docker Compose installation is recommended for most use cases. It's the easiest, simplest, and most reliable method to get started.
@@ -77,13 +84,15 @@ Note: The above command extracts the files to "/usr/local/LibreChat". If you wan
 - Copy it to `/usr/local/LibreChat/`
 - Rename the file to `meilisearch`
 - Open a terminal and navigate to `/usr/local/LibreChat/`
+- Generate a Master Key or use the one already provided in th `.env` file (less secure)
+- Update the Master Key in the .env file (it must be the same everywhere) `MEILI_MASTER_KEY=` 
 - Run the following command:
 
 ```bash
 ./meilisearch --master-key=YOUR_MASTER_KEY
 ```
 
-Note: Replace `YOUR_MASTER_KEY` with the generated master key, which you saved earlier.
+Note: Replace `YOUR_MASTER_KEY` with the generated master key, which you saved earlier in the `.env` file.
 
 ## Install Node.js:
 
@@ -190,4 +199,4 @@ The above assumes that you're using the default terminal application on Linux an
 
 ---
 
->⚠️ Note: If you're having trouble, before creating a new issue, please search for similar ones on our [#issues thread on our discord](https://discord.gg/weqZFtD9C4) or our [troubleshooting discussion](https://github.com/danny-avila/LibreChat/discussions/categories/troubleshooting) on our Discussions page. If you don't find a relevant issue, feel free to create a new one and provide as much detail as possible.
+>⚠️ Note: If you're having trouble, before creating a new issue, please search for similar ones on our [#issues thread on our discord](https://discord.librechat.ai) or our [troubleshooting discussion](https://github.com/danny-avila/LibreChat/discussions/categories/troubleshooting) on our Discussions page. If you don't find a relevant issue, feel free to create a new one and provide as much detail as possible.

@@ -1,5 +1,20 @@
 import { defaultEndpoints } from 'librechat-data-provider';
 import type { EModelEndpoint, TEndpointsConfig, TConfig } from 'librechat-data-provider';
+import type { LocalizeFunction } from '~/common';
+
+export const getAssistantName = ({
+  name,
+  localize,
+}: {
+  name?: string;
+  localize: LocalizeFunction;
+}) => {
+  if (name && name.length > 0) {
+    return name;
+  } else {
+    return localize('com_ui_assistant');
+  }
+};
 
 export const getEndpointsFilter = (endpointsConfig: TEndpointsConfig) => {
   const filter: Record<string, boolean> = {};
@@ -55,4 +70,24 @@ export function mapEndpoints(endpointsConfig: TEndpointsConfig) {
   return getAvailableEndpoints(filter, endpointsConfig).sort(
     (a, b) => (endpointsConfig?.[a]?.order ?? 0) - (endpointsConfig?.[b]?.order ?? 0),
   );
+}
+
+export function updateLastSelectedModel({
+  endpoint,
+  model,
+}: {
+  endpoint: string;
+  model: string | undefined;
+}) {
+  if (!model) {
+    return;
+  }
+  const lastConversationSetup = JSON.parse(localStorage.getItem('lastConversationSetup') || '{}');
+  const lastSelectedModels = JSON.parse(localStorage.getItem('lastSelectedModel') || '{}');
+  if (lastConversationSetup.endpoint === endpoint) {
+    lastConversationSetup.model = model;
+    localStorage.setItem('lastConversationSetup', JSON.stringify(lastConversationSetup));
+  }
+  lastSelectedModels[endpoint] = model;
+  localStorage.setItem('lastSelectedModel', JSON.stringify(lastSelectedModels));
 }

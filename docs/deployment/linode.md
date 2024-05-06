@@ -3,7 +3,7 @@ title: 🐧 Linode
 description: How to deploy LibreChat on Linode.
 weight: -8
 ---
-<img src="https://github.com/danny-avila/LibreChat/assets/32828263/d6e430db-518a-4779-83d3-a2d177907df1" width="250">
+<img src="https://github.com/danny-avila/LibreChat/assets/32828263/d6e430db-518a-4779-83d3-a2d177907df1" width="250"/>
 
 # Linode
 
@@ -87,4 +87,4 @@ Password: changeme
 
 ---
 
-### Note: If you're still having trouble, before creating a new issue, please search for similar ones on our [#issues thread on our discord](https://discord.gg/weqZFtD9C4) or our [troubleshooting discussion](https://github.com/danny-avila/LibreChat/discussions/categories/troubleshooting) on our Discussions page. If you don't find a relevant issue, feel free to create a new one and provide as much detail as possible.
+### Note: If you're still having trouble, before creating a new issue, please search for similar ones on our [#issues thread on our discord](https://discord.librechat.ai) or our [troubleshooting discussion](https://github.com/danny-avila/LibreChat/discussions/categories/troubleshooting) on our Discussions page. If you don't find a relevant issue, feel free to create a new one and provide as much detail as possible.
