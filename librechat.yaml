@@ -1,16 +1,25 @@
-# For more information, see the Configuration Guide:
-# https://docs.librechat.ai/install/configuration/custom_config.html
-
-# Configuration version (required)
 version: 1.0.5
-
-# Cache settings: Set to true to enable caching
 cache: true
+# fileStrategy: "firebase"  # If using Firebase CDN
 fileConfig:
   endpoints:
-    azureOpenAI :
-      fileSizeLimit: 10  #Maximum size for an individual file in MB
-      totalSizeLimit: 25  #Maximum total size for all files in a single request in MB
-
-# See the Custom Configuration Guide for more information:
-# https://docs.librechat.ai/install/configuration/custom_config.html
+    azureOpenAI:
+      fileLimit: 5
+      # Maximum size for an individual file in MB
+      fileSizeLimit: 10
+      # Maximum total size for all files in a single request in MB
+      totalSizeLimit: 50
+      # In case you wish to limit certain filetypes
+      # supportedMimeTypes:
+      #   - "image/.*"
+      #   - "application/pdf"
+  # Limit for user avatar image size in MB, default: 2 MB
+  avatarSizeLimit: 4
+endpoints:
+  assistants:
+    # Disable Assistants Builder Interface by setting to `true`
+    disableBuilder: false
+    # Polling interval for checking assistant updates
+    pollIntervalMs: 750
+    # Timeout for assistant operations
+    timeoutMs: 180000
