@@ -15,11 +15,4 @@ fileConfig:
       #   - "application/pdf"
   # Limit for user avatar image size in MB, default: 2 MB
   avatarSizeLimit: 4
-endpoints:
-  assistants:
-    # Disable Assistants Builder Interface by setting to `true`
-    disableBuilder: false
-    # Polling interval for checking assistant updates
-    pollIntervalMs: 750
-    # Timeout for assistant operations
-    timeoutMs: 180000
+
