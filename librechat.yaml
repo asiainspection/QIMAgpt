@@ -6,9 +6,9 @@ fileConfig:
     azureOpenAI:
       fileLimit: 5
       # Maximum size for an individual file in MB
-      fileSizeLimit: 15
+      fileSizeLimit: 25
       # Maximum total size for all files in a single request in MB
-      totalSizeLimit: 50
+      totalSizeLimit: 100
       # In case you wish to limit certain filetypes
       # supportedMimeTypes:
       #   - "image/.*"
