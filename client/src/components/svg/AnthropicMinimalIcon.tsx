@@ -1,10 +1,6 @@
-import { cn } from '~/utils';
+import React from 'react';
 
-<<<<<<<< HEAD:client/src/components/svg/CheckMark.tsx
-export default function CheckMark({ className = '' }: { className?: string }) {
-========
 export default function AzureMinimalistIcon() {
->>>>>>>> refs/heads/v0.7.3-rc:client/src/components/svg/AnthropicMinimalIcon.tsx
   return (
     <svg
       stroke="currentColor"
@@ -13,7 +9,7 @@ export default function AzureMinimalistIcon() {
       viewBox="0 0 24 24"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={cn('h-4 w-4', className)}
+      className="h-4 w-4"
       height="1em"
       width="1em"
       xmlns="http://www.w3.org/2000/svg"

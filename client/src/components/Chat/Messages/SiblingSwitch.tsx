@@ -43,11 +43,7 @@ export default function SiblingSwitch({
           <polyline points="15 18 9 12 15 6" />
         </svg>
       </button>
-<<<<<<<< HEAD:client/src/components/Messages/SiblingSwitch.tsx
-      <span className="flex-shrink-0 flex-grow">
-========
       <span className="flex-shrink-0 flex-grow tabular-nums">
->>>>>>>> refs/heads/v0.7.3-rc:client/src/components/Chat/Messages/SiblingSwitch.tsx
         {siblingIdx + 1} / {siblingCount}
       </span>
       <button
