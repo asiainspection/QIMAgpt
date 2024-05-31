@@ -44,8 +44,7 @@ fileConfig:
 endpoints:
   azureOpenAI:
     # Endpoint-level configuration
-    #titleModel: "gpt-4-turbo-2024-04-09" # Assuming you want to use this model for titles
-    titleModel: "gpt-4o"
+    titleModel: "gpt-4-turbo-2024-04-09" # Assuming you want to use this model for titles
     plugins: true # Since PLUGINS_USE_AZURE is set to "true"
     # assistants: true # Assuming you want to enable assistants
     groups:
@@ -56,6 +55,6 @@ endpoints:
         version: "2024-02-01" # Your Azure OpenAI API version
         # Model-level configuration
         models:
-          gpt-4o:
-            deploymentName: "qimagpt-4o-PROD" # Your Azure OpenAI deployment name
-            version: "2024-02-01" # Your Azure OpenAI API versionn
+          gpt-4-turbo-2024-04-09:
+            deploymentName: "qimagpt-turbo-2024-04-09-PROD" # Your Azure OpenAI deployment name
+            version: "2024-02-01" # Your Azure OpenAI API version
