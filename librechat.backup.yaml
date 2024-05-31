@@ -57,5 +57,5 @@ endpoints:
         # Model-level configuration
         models:
           gpt-4o:
-            deploymentName: "qimagpt-4o-DEV" # Your Azure OpenAI deployment name
+            deploymentName: "qimagpt-4o-PROD" # Your Azure OpenAI deployment name
             version: "2024-02-01" # Your Azure OpenAI API versionn
