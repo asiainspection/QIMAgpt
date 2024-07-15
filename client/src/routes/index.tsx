@@ -53,8 +53,6 @@ export const router = createBrowserRouter([
     element: <AuthLayout />,
     children: [
       {
-        path: '/',
-        element: <LoginLayout />,
         children: [
           {
             path: 'login',
