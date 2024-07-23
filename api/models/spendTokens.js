@@ -40,7 +40,7 @@ const spendTokens = async (txData, tokenUsage) => {
       });
     }
 
-    if (!completionTokens && isNaN(completionTokens)) {
+    if (!completionTokens) {
       logger.debug('[spendTokens] !completionTokens', { prompt, completion });
       return;
     }

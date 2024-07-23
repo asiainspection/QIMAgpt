@@ -3,7 +3,6 @@ import { useCallback, memo, ReactNode } from 'react';
 import { useGetEndpointsQuery } from 'librechat-data-provider/react-query';
 import type { TResPlugin, TInput } from 'librechat-data-provider';
 import { ChevronDownIcon, LucideProps } from 'lucide-react';
-import { useShareContext } from '~/Providers';
 import { cn, formatJSON } from '~/utils';
 import { Spinner } from '~/components';
 import CodeBlock from './CodeBlock';
@@ -32,9 +31,7 @@ type PluginProps = {
 };
 
 const Plugin: React.FC<PluginProps> = ({ plugin }) => {
-  const { isSharedConvo } = useShareContext();
   const { data: plugins = {} } = useGetEndpointsQuery({
-    enabled: !isSharedConvo,
     select: (data) => data?.gptPlugins?.plugins,
   });
 

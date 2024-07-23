@@ -78,7 +78,7 @@ async function createOnTextProgress({
  * @return {Promise<OpenAIAssistantFinish | OpenAIAssistantAction[] | ThreadMessage[] | RequiredActionFunctionToolCall[]>}
  */
 async function getResponse({ openai, run_id, thread_id }) {
-  const run = await waitForRun({ openai, run_id, thread_id, pollIntervalMs: 2000 });
+  const run = await waitForRun({ openai, run_id, thread_id, pollIntervalMs: 500 });
 
   if (run.status === RunStatus.COMPLETED) {
     const messages = await openai.beta.threads.messages.list(thread_id, defaultOrderQuery);
@@ -393,9 +393,8 @@ async function runAssistant({
     },
   });
 
-  const { endpoint = EModelEndpoint.azureAssistants } = openai.req.body;
   /** @type {TCustomConfig.endpoints.assistants} */
-  const assistantsEndpointConfig = openai.req.app.locals?.[endpoint] ?? {};
+  const assistantsEndpointConfig = openai.req.app.locals?.[EModelEndpoint.assistants] ?? {};
   const { pollIntervalMs, timeoutMs } = assistantsEndpointConfig;
 
   const run = await waitForRun({

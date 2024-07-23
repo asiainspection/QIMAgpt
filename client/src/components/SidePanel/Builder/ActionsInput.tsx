@@ -7,11 +7,10 @@ import {
   AuthTypeEnum,
 } from 'librechat-data-provider';
 import type {
+  ValidationResult,
   Action,
   FunctionTool,
   ActionMetadata,
-  ValidationResult,
-  AssistantsEndpoint,
 } from 'librechat-data-provider';
 import type { ActionAuthForm } from '~/common';
 import type { Spec } from './ActionsTable';
@@ -33,14 +32,10 @@ const debouncedValidation = debounce(
 export default function ActionsInput({
   action,
   assistant_id,
-  endpoint,
-  version,
   setAction,
 }: {
   action?: Action;
   assistant_id?: string;
-  endpoint: AssistantsEndpoint;
-  version: number | string;
   setAction: React.Dispatch<React.SetStateAction<Action | undefined>>;
 }) {
   const handleResult = (result: ValidationResult) => {
@@ -178,9 +173,7 @@ export default function ActionsInput({
       metadata,
       functions,
       assistant_id,
-      endpoint,
-      version,
-      model: assistantMap[endpoint][assistant_id].model,
+      model: assistantMap[assistant_id].model,
     });
   });
 

@@ -1,6 +1,4 @@
-import { FileSources } from 'librechat-data-provider';
 import ProgressCircle from './ProgressCircle';
-import SourceIcon from './SourceIcon';
 import { cn } from '~/utils';
 
 type styleProps = {
@@ -15,13 +13,11 @@ const ImagePreview = ({
   url,
   progress = 1,
   className = '',
-  source,
 }: {
   imageBase64?: string;
   url?: string;
   progress?: number; // between 0 and 1
   className?: string;
-  source?: FileSources;
 }) => {
   let style: styleProps = {
     backgroundSize: 'cover',
@@ -69,7 +65,6 @@ const ImagePreview = ({
           circleCSSProperties={circleCSSProperties}
         />
       )}
-      <SourceIcon source={source} />
     </div>
   );
 };

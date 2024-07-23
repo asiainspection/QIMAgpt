@@ -14,11 +14,9 @@ const { logger } = require('~/config');
  * @returns {Promise<OpenAIFile>}
  */
 async function uploadOpenAIFile({ req, file, openai }) {
-  const { height, width } = req.body;
-  const isImage = height && width;
   const uploadedFile = await openai.files.create({
     file: fs.createReadStream(file.path),
-    purpose: isImage ? FilePurpose.Vision : FilePurpose.Assistants,
+    purpose: FilePurpose.Assistants,
   });
 
   logger.debug(
@@ -36,7 +34,7 @@ async function uploadOpenAIFile({ req, file, openai }) {
     await sleep(sleepTime);
   }
 
-  return isImage ? { ...uploadedFile, height, width } : uploadedFile;
+  return uploadedFile;
 }
 
 /**

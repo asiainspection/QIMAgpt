@@ -1,15 +1,13 @@
 import { cn } from '~/utils';
 
-export default function RegenerateIcon({ className = '', size = '1em' }) {
+export default function RegenerateIcon({ className = '' }: { className?: string }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      height={size}
-      width={size}
+      width="24"
+      height="24"
       fill="none"
       viewBox="0 0 24 24"
-      strokeLinecap="round"
-      strokeLinejoin="round"
       className={cn('icon-md-heavy', className)}
     >
       <path

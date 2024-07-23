@@ -35,12 +35,19 @@ export default function ComboboxComponent({
   isCollapsed: boolean;
   SelectIcon?: React.ReactNode;
 }) {
-  const options: OptionWithIcon[] = (items ?? []).map((option: string | OptionWithIcon) => {
-    if (typeof option === 'string') {
-      return { label: option, value: option };
+  const options: OptionWithIcon[] = useMemo(() => {
+    if (!items) {
+      return [];
     }
-    return option;
-  });
+
+    return items.map((option: string | OptionWithIcon) => {
+      if (typeof option === 'string') {
+        return { label: option, value: option };
+      }
+
+      return option;
+    });
+  }, [items]);
 
   const { open, setOpen, setSearchValue, matches } = useCombobox({
     value: selectedValue,

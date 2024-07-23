@@ -1,10 +1,10 @@
 import { useEffect, useMemo } from 'react';
 import { Combobox } from '~/components/ui';
-import { isAssistantsEndpoint, LocalStorageKeys } from 'librechat-data-provider';
-import type { AssistantsEndpoint } from 'librechat-data-provider';
-import type { SwitcherProps, AssistantListItem } from '~/common';
-import { useSetIndexOptions, useSelectAssistant, useLocalize, useAssistantListMap } from '~/hooks';
+import { EModelEndpoint, defaultOrderQuery, LocalStorageKeys } from 'librechat-data-provider';
+import type { SwitcherProps } from '~/common';
+import { useSetIndexOptions, useSelectAssistant, useLocalize } from '~/hooks';
 import { useChatContext, useAssistantsMapContext } from '~/Providers';
+import { useListAssistantsQuery } from '~/data-provider';
 import Icon from '~/components/Endpoints/Icon';
 
 export default function AssistantSwitcher({ isCollapsed }: SwitcherProps) {
@@ -15,29 +15,26 @@ export default function AssistantSwitcher({ isCollapsed }: SwitcherProps) {
   /* `selectedAssistant` must be defined with `null` to cause re-render on update */
   const { assistant_id: selectedAssistant = null, endpoint } = conversation ?? {};
 
-  const assistantListMap = useAssistantListMap((res) =>
-    res.data.map(({ id, name, metadata }) => ({ id, name, metadata })),
-  );
-  const assistants: Omit<AssistantListItem, 'model'>[] = useMemo(
-    () => assistantListMap[endpoint ?? ''] ?? [],
-    [endpoint, assistantListMap],
-  );
+  const { data: assistants = [] } = useListAssistantsQuery(defaultOrderQuery, {
+    select: (res) => res.data.map(({ id, name, metadata }) => ({ id, name, metadata })),
+  });
+
   const assistantMap = useAssistantsMapContext();
-  const { onSelect } = useSelectAssistant(endpoint as AssistantsEndpoint);
+  const { onSelect } = useSelectAssistant();
 
   useEffect(() => {
     if (!selectedAssistant && assistants && assistants.length && assistantMap) {
       const assistant_id =
-        localStorage.getItem(`${LocalStorageKeys.ASST_ID_PREFIX}${index}${endpoint}`) ??
+        localStorage.getItem(`${LocalStorageKeys.ASST_ID_PREFIX}${index}`) ??
         assistants[0]?.id ??
         '';
-      const assistant = assistantMap?.[endpoint ?? '']?.[assistant_id];
+      const assistant = assistantMap?.[assistant_id];
 
       if (!assistant) {
         return;
       }
 
-      if (!isAssistantsEndpoint(endpoint)) {
+      if (endpoint !== EModelEndpoint.assistants) {
         return;
       }
 
@@ -46,7 +43,7 @@ export default function AssistantSwitcher({ isCollapsed }: SwitcherProps) {
     }
   }, [index, assistants, selectedAssistant, assistantMap, endpoint, setOption]);
 
-  const currentAssistant = assistantMap?.[endpoint ?? '']?.[selectedAssistant ?? ''];
+  const currentAssistant = assistantMap?.[selectedAssistant ?? ''];
 
   const assistantOptions = useMemo(() => {
     return assistants.map((assistant) => {
@@ -56,14 +53,14 @@ export default function AssistantSwitcher({ isCollapsed }: SwitcherProps) {
         icon: (
           <Icon
             isCreatedByUser={false}
-            endpoint={endpoint}
+            endpoint={EModelEndpoint.assistants}
             assistantName={assistant.name ?? ''}
             iconURL={(assistant.metadata?.avatar as string) ?? ''}
           />
         ),
       };
     });
-  }, [assistants, endpoint]);
+  }, [assistants]);
 
   return (
     <Combobox
@@ -81,7 +78,7 @@ export default function AssistantSwitcher({ isCollapsed }: SwitcherProps) {
       SelectIcon={
         <Icon
           isCreatedByUser={false}
-          endpoint={endpoint}
+          endpoint={EModelEndpoint.assistants}
           assistantName={currentAssistant?.name ?? ''}
           iconURL={(currentAssistant?.metadata?.avatar as string) ?? ''}
         />

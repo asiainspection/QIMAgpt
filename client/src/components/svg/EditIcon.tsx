@@ -1,17 +1,15 @@
-import { cn } from '~/utils';
-
-export default function EditIcon({ className = 'icon-md', size = '1.2em' }) {
+export default function EditIcon() {
   return (
     <svg
       fill="none"
       strokeWidth="2"
-      xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       strokeLinecap="round"
       strokeLinejoin="round"
-      height={size}
-      width={size}
-      className={cn(className)}
+      className="icon-md"
+      height="1em"
+      width="1em"
+      xmlns="http://www.w3.org/2000/svg"
     >
       <path
         fillRule="evenodd"

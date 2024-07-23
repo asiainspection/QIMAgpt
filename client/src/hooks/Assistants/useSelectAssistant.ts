@@ -1,30 +1,32 @@
 import { useCallback } from 'react';
-import { isAssistantsEndpoint } from 'librechat-data-provider';
-import type { AssistantsEndpoint, TConversation, TPreset } from 'librechat-data-provider';
+import { EModelEndpoint, defaultOrderQuery } from 'librechat-data-provider';
+import type { TConversation, TPreset } from 'librechat-data-provider';
 import useDefaultConvo from '~/hooks/Conversations/useDefaultConvo';
+import { useListAssistantsQuery } from '~/data-provider';
 import { useChatContext } from '~/Providers/ChatContext';
-import useAssistantListMap from './useAssistantListMap';
 import { mapAssistants } from '~/utils';
 
-export default function useSelectAssistant(endpoint: AssistantsEndpoint) {
+export default function useSelectAssistant() {
   const getDefaultConversation = useDefaultConvo();
   const { conversation, newConversation } = useChatContext();
-  const assistantMap = useAssistantListMap((res) => mapAssistants(res.data));
+  const { data: assistantMap = {} } = useListAssistantsQuery(defaultOrderQuery, {
+    select: (res) => mapAssistants(res.data),
+  });
 
   const onSelect = useCallback(
     (value: string) => {
-      const assistant = assistantMap?.[endpoint]?.[value];
+      const assistant = assistantMap?.[value];
       if (!assistant) {
         return;
       }
       const template: Partial<TPreset | TConversation> = {
-        endpoint,
+        endpoint: EModelEndpoint.assistants,
         assistant_id: assistant.id,
         model: assistant.model,
         conversationId: 'new',
       };
 
-      if (isAssistantsEndpoint(conversation?.endpoint)) {
+      if (conversation?.endpoint === EModelEndpoint.assistants) {
         const currentConvo = getDefaultConversation({
           conversation: { ...(conversation ?? {}) },
           preset: template,
@@ -42,7 +44,7 @@ export default function useSelectAssistant(endpoint: AssistantsEndpoint) {
         preset: template as Partial<TPreset>,
       });
     },
-    [endpoint, assistantMap, conversation, getDefaultConversation, newConversation],
+    [assistantMap, conversation, getDefaultConversation, newConversation],
   );
 
   return { onSelect };

@@ -250,7 +250,6 @@ class PluginsClient extends OpenAIClient {
       this.setOptions(opts);
       return super.sendMessage(message, opts);
     }
-
     logger.debug('[PluginsClient] sendMessage', { userMessageText: message, opts });
     const {
       user,
@@ -264,14 +263,6 @@ class PluginsClient extends OpenAIClient {
       onToolStart,
       onToolEnd,
     } = await this.handleStartMethods(message, opts);
-
-    if (opts.progressCallback) {
-      opts.onProgress = opts.progressCallback.call(null, {
-        ...(opts.progressOptions ?? {}),
-        parentMessageId: userMessage.messageId,
-        messageId: responseMessageId,
-      });
-    }
 
     this.currentMessages.push(userMessage);
 

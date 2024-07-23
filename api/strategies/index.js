@@ -5,7 +5,6 @@ const discordLogin = require('./discordStrategy');
 const facebookLogin = require('./facebookStrategy');
 const setupOpenId = require('./openidStrategy');
 const jwtLogin = require('./jwtStrategy');
-const ldapLogin = require('./ldapStrategy');
 
 module.exports = {
   passportLogin,
@@ -15,5 +14,4 @@ module.exports = {
   jwtLogin,
   facebookLogin,
   setupOpenId,
-  ldapLogin,
 };

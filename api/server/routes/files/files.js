@@ -1,6 +1,6 @@
 const fs = require('fs').promises;
 const express = require('express');
-const { isUUID, checkOpenAIStorage } = require('librechat-data-provider');
+const { isUUID, FileSources } = require('librechat-data-provider');
 const {
   filterFile,
   processFileUpload,
@@ -89,7 +89,7 @@ router.get('/download/:userId/:file_id', async (req, res) => {
       return res.status(403).send('Forbidden');
     }
 
-    if (checkOpenAIStorage(file.source) && !file.model) {
+    if (file.source === FileSources.openai && !file.model) {
       logger.warn(`${errorPrefix} has no associated model: ${file_id}`);
       return res.status(400).send('The model used when creating this file is not available');
     }
@@ -110,8 +110,7 @@ router.get('/download/:userId/:file_id', async (req, res) => {
     let passThrough;
     /** @type {ReadableStream | undefined} */
     let fileStream;
-
-    if (checkOpenAIStorage(file.source)) {
+    if (file.source === FileSources.openai) {
       req.body = { model: file.model };
       const { openai } = await initializeClient({ req, res });
       logger.debug(`Downloading file ${file_id} from OpenAI`);

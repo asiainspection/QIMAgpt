@@ -340,26 +340,29 @@ async function processRequiredActions(client, requiredActions) {
       currentAction.toolInput = currentAction.toolInput.input;
     }
 
-    const handleToolError = (error) => {
-      logger.error(
-        `tool_call_id: ${currentAction.toolCallId} | Error processing tool ${currentAction.tool}`,
-        error,
-      );
-      return {
-        tool_call_id: currentAction.toolCallId,
-        output: `Error processing tool ${currentAction.tool}: ${redactMessage(error.message, 256)}`,
-      };
-    };
-
     try {
       const promise = tool
         ._call(currentAction.toolInput)
         .then(handleToolOutput)
-        .catch(handleToolError);
+        .catch((error) => {
+          logger.error(`Error processing tool ${currentAction.tool}`, error);
+          return {
+            tool_call_id: currentAction.toolCallId,
+            output: `Error processing tool ${currentAction.tool}: ${redactMessage(error.message)}`,
+          };
+        });
       promises.push(promise);
     } catch (error) {
-      const toolOutputError = handleToolError(error);
-      promises.push(Promise.resolve(toolOutputError));
+      logger.error(
+        `tool_call_id: ${currentAction.toolCallId} | Error processing tool ${currentAction.tool}`,
+        error,
+      );
+      promises.push(
+        Promise.resolve({
+          tool_call_id: currentAction.toolCallId,
+          error: error.message,
+        }),
+      );
     }
   }
 

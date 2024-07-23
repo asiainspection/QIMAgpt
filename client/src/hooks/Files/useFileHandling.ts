@@ -1,18 +1,13 @@
 import { v4 } from 'uuid';
 import debounce from 'lodash/debounce';
-import { useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useCallback } from 'react';
 import {
   megabyte,
-  QueryKeys,
   EModelEndpoint,
   codeTypeMapping,
   mergeFileConfig,
-  isAssistantsEndpoint,
-  defaultAssistantsVersion,
   fileConfig as defaultFileConfig,
 } from 'librechat-data-provider';
-import type { TEndpointsConfig, TError } from 'librechat-data-provider';
 import type { ExtendedFile, FileSetter } from '~/common';
 import { useUploadFileMutation, useGetFileConfig } from '~/data-provider';
 import { useDelayedUploadToast } from './useDelayedUploadToast';
@@ -25,12 +20,10 @@ const { checkType } = defaultFileConfig;
 type UseFileHandling = {
   overrideEndpoint?: EModelEndpoint;
   fileSetter?: FileSetter;
-  fileFilter?: (file: File) => boolean;
-  additionalMetadata?: Record<string, string | undefined>;
+  additionalMetadata?: Record<string, string>;
 };
 
 const useFileHandling = (params?: UseFileHandling) => {
-  const queryClient = useQueryClient();
   const { showToast } = useToastContext();
   const [errors, setErrors] = useState<string[]>([]);
   const { startUploadTimer, clearUploadTimer } = useDelayedUploadToast();
@@ -118,7 +111,8 @@ const useFileHandling = (params?: UseFileHandling) => {
       clearUploadTimer(file_id as string);
       deleteFileById(file_id as string);
       setError(
-        (error as TError)?.response?.data?.message ?? 'An error occurred while uploading the file.',
+        (error as { response: { data: { message?: string } } })?.response?.data?.message ??
+          'An error occurred while uploading the file.',
       );
     },
   });
@@ -147,20 +141,15 @@ const useFileHandling = (params?: UseFileHandling) => {
 
     if (params?.additionalMetadata) {
       for (const [key, value] of Object.entries(params.additionalMetadata)) {
-        if (value) {
-          formData.append(key, value);
-        }
+        formData.append(key, value);
       }
     }
 
     if (
-      isAssistantsEndpoint(endpoint) &&
+      endpoint === EModelEndpoint.assistants &&
       !formData.get('assistant_id') &&
       conversation?.assistant_id
     ) {
-      const endpointsConfig = queryClient.getQueryData<TEndpointsConfig>([QueryKeys.endpoints]);
-      const version = endpointsConfig?.[endpoint]?.version ?? defaultAssistantsVersion[endpoint];
-      formData.append('version', version);
       formData.append('assistant_id', conversation.assistant_id);
       formData.append('model', conversation?.model ?? '');
       formData.append('message_file', 'true');

@@ -12,9 +12,16 @@ export default function Files({ open, onOpenChange }) {
   const { data: files = [] } = useGetFiles<TFile[]>({
     select: (files) =>
       files.map((file) => {
-        file.context = file.context ?? FileContext.unknown;
-        file.filterSource = file.source === FileSources.firebase ? FileSources.local : file.source;
-        return file;
+        if (file.source === FileSources.local || file.source === FileSources.openai) {
+          file.context = file.context ?? FileContext.unknown;
+          return file;
+        } else {
+          return {
+            ...file,
+            context: file.context ?? FileContext.unknown,
+            source: FileSources.local,
+          };
+        }
       }),
   });
 

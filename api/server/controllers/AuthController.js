@@ -1,29 +1,45 @@
 const crypto = require('crypto');
 const cookies = require('cookie');
 const jwt = require('jsonwebtoken');
+const { Session, User } = require('~/models');
 const {
   registerUser,
   resetPassword,
   setAuthTokens,
   requestPasswordReset,
 } = require('~/server/services/AuthService');
-const { Session, getUserById } = require('~/models');
 const { logger } = require('~/config');
 
 const registrationController = async (req, res) => {
   try {
     const response = await registerUser(req.body);
-    const { status, message } = response;
-    res.status(status).send({ message });
+    if (response.status === 200) {
+      const { status, user } = response;
+      let newUser = await User.findOne({ _id: user._id });
+      if (!newUser) {
+        newUser = new User(user);
+        await newUser.save();
+      }
+      const token = await setAuthTokens(user._id, res);
+      res.setHeader('Authorization', `Bearer ${token}`);
+      res.status(status).send({ user });
+    } else {
+      const { status, message } = response;
+      res.status(status).send({ message });
+    }
   } catch (err) {
     logger.error('[registrationController]', err);
     return res.status(500).json({ message: err.message });
   }
 };
 
+const getUserController = async (req, res) => {
+  return res.status(200).send(req.user);
+};
+
 const resetPasswordRequestController = async (req, res) => {
   try {
-    const resetService = await requestPasswordReset(req);
+    const resetService = await requestPasswordReset(req.body.email);
     if (resetService instanceof Error) {
       return res.status(400).json(resetService);
     } else {
@@ -61,7 +77,7 @@ const refreshController = async (req, res) => {
 
   try {
     const payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
-    const user = await getUserById(payload.id, '-password -__v');
+    const user = await User.findOne({ _id: payload.id });
     if (!user) {
       return res.status(401).redirect('/login');
     }
@@ -70,7 +86,8 @@ const refreshController = async (req, res) => {
 
     if (process.env.NODE_ENV === 'CI') {
       const token = await setAuthTokens(userId, res);
-      return res.status(200).send({ token, user });
+      const userObj = user.toJSON();
+      return res.status(200).send({ token, user: userObj });
     }
 
     // Hash the refresh token
@@ -81,7 +98,8 @@ const refreshController = async (req, res) => {
     const session = await Session.findOne({ user: userId, refreshTokenHash: hashedToken });
     if (session && session.expiration > new Date()) {
       const token = await setAuthTokens(userId, res, session._id);
-      res.status(200).send({ token, user });
+      const userObj = user.toJSON();
+      res.status(200).send({ token, user: userObj });
     } else if (req?.query?.retry) {
       // Retrying from a refresh token request that failed (401)
       res.status(403).send('No session found');
@@ -97,6 +115,7 @@ const refreshController = async (req, res) => {
 };
 
 module.exports = {
+  getUserController,
   refreshController,
   registrationController,
   resetPasswordController,

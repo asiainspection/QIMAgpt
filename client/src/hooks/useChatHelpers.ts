@@ -3,10 +3,10 @@ import { useCallback, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   Constants,
+  EModelEndpoint,
   QueryKeys,
-  ContentTypes,
   parseCompactConvo,
-  isAssistantsEndpoint,
+  ContentTypes,
 } from 'librechat-data-provider';
 import { useRecoilState, useResetRecoilState, useSetRecoilState } from 'recoil';
 import { useGetMessagesByConvoId } from 'librechat-data-provider/react-query';
@@ -215,7 +215,7 @@ export default function useChatHelpers(index = 0, paramId: string | undefined) {
       error: false,
     };
 
-    if (isAssistantsEndpoint(endpoint)) {
+    if (endpoint === EModelEndpoint.assistants) {
       initialResponse.model = conversation?.assistant_id ?? '';
       initialResponse.text = '';
       initialResponse.content = [
@@ -240,7 +240,7 @@ export default function useChatHelpers(index = 0, paramId: string | undefined) {
         conversationId,
       },
       endpointOption,
-      userMessage: {
+      message: {
         ...currentMsg,
         generation,
         responseMessageId,

@@ -18,11 +18,9 @@ import { Panel } from '~/common';
 export default function ActionsPanel({
   // activePanel,
   action,
-  endpoint,
-  version,
   setAction,
-  assistant_id,
   setActivePanel,
+  assistant_id,
 }: AssistantPanelProps) {
   const localize = useLocalize();
   const { showToast } = useToastContext();
@@ -132,10 +130,9 @@ export default function ActionsPanel({
                     const confirmed = confirm('Are you sure you want to delete this action?');
                     if (confirmed) {
                       deleteAction.mutate({
-                        model: assistantMap[endpoint][assistant_id].model,
+                        model: assistantMap[assistant_id].model,
                         action_id: action.action_id,
                         assistant_id,
-                        endpoint,
                       });
                     }
                   }}
@@ -188,13 +185,7 @@ export default function ActionsPanel({
             </DialogTrigger>
             <ActionsAuth setOpenAuthDialog={setOpenAuthDialog} />
           </Dialog>
-          <ActionsInput
-            action={action}
-            assistant_id={assistant_id}
-            setAction={setAction}
-            endpoint={endpoint}
-            version={version}
-          />
+          <ActionsInput action={action} assistant_id={assistant_id} setAction={setAction} />
         </div>
       </form>
     </FormProvider>

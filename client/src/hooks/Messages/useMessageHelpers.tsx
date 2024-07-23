@@ -1,9 +1,8 @@
+import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useCallback } from 'react';
-import { isAssistantsEndpoint } from 'librechat-data-provider';
+import { EModelEndpoint, ContentTypes } from 'librechat-data-provider';
 import type { TMessageProps } from '~/common';
 import { useChatContext, useAssistantsMapContext } from '~/Providers';
-import { getLatestText, getLengthAndFirstFiveChars } from '~/utils';
-import useCopyToClipboard from './useCopyToClipboard';
 
 export default function useMessageHelpers(props: TMessageProps) {
   const latestText = useRef<string | number>('');
@@ -11,7 +10,6 @@ export default function useMessageHelpers(props: TMessageProps) {
 
   const {
     ask,
-    index,
     regenerate,
     isSubmitting,
     conversation,
@@ -27,25 +25,20 @@ export default function useMessageHelpers(props: TMessageProps) {
   const isLast = !children?.length;
 
   useEffect(() => {
-    if (conversation?.conversationId === 'new') {
-      return;
+    let contentChanged = message?.content
+      ? message?.content?.length !== latestText.current
+      : message?.text !== latestText.current;
+
+    if (!isLast) {
+      contentChanged = false;
     }
+
     if (!message) {
       return;
+    } else if (isLast && conversation?.conversationId !== 'new' && contentChanged) {
+      setLatestMessage({ ...message });
+      latestText.current = message?.content ? message.content.length : message.text;
     }
-    if (!isLast) {
-      return;
-    }
-
-    const text = getLatestText(message);
-    const textKey = `${message?.messageId ?? ''}${getLengthAndFirstFiveChars(text)}`;
-
-    if (textKey === latestText.current) {
-      return;
-    }
-
-    latestText.current = textKey;
-    setLatestMessage({ ...message });
   }, [isLast, message, setLatestMessage, conversation?.conversationId]);
 
   const enterEdit = useCallback(
@@ -62,8 +55,7 @@ export default function useMessageHelpers(props: TMessageProps) {
   }, [isSubmitting, setAbortScroll]);
 
   const assistant =
-    isAssistantsEndpoint(conversation?.endpoint) &&
-    assistantMap?.[conversation?.endpoint ?? '']?.[message?.model ?? ''];
+    conversation?.endpoint === EModelEndpoint.assistants && assistantMap?.[message?.model ?? ''];
 
   const regenerateMessage = () => {
     if ((isSubmitting && isCreatedByUser) || !message) {
@@ -73,12 +65,30 @@ export default function useMessageHelpers(props: TMessageProps) {
     regenerate(message);
   };
 
-  const copyToClipboard = useCopyToClipboard({ text, content });
+  const copyToClipboard = useCallback(
+    (setIsCopied: React.Dispatch<React.SetStateAction<boolean>>) => {
+      setIsCopied(true);
+      let messageText = text ?? '';
+      if (content) {
+        messageText = content.reduce((acc, curr, i) => {
+          if (curr.type === ContentTypes.TEXT) {
+            return acc + curr.text.value + (i === content.length - 1 ? '' : '\n');
+          }
+          return acc;
+        }, '');
+      }
+      copy(messageText ?? '');
+
+      setTimeout(() => {
+        setIsCopied(false);
+      }, 3000);
+    },
+    [text, content],
+  );
 
   return {
     ask,
     edit,
-    index,
     isLast,
     assistant,
     enterEdit,

@@ -1,7 +1,6 @@
-const { isEnabled } = require('~/server/utils');
-
 function validateRegistration(req, res, next) {
-  if (isEnabled(process.env.ALLOW_REGISTRATION)) {
+  const setting = process.env.ALLOW_REGISTRATION?.toLowerCase();
+  if (setting === 'true') {
     next();
   } else {
     res.status(403).send('Registration is not allowed.');

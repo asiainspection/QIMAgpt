@@ -11,7 +11,6 @@ const messageSchema = mongoose.Schema(
     },
     conversationId: {
       type: String,
-      index: true,
       required: true,
       meiliIndex: true,
     },

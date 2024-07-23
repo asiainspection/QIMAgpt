@@ -555,6 +555,18 @@ export const generateGoogleSchema = (customGoogle: GoogleSettings) => {
       maxContextTokens: true,
     })
     .transform((obj) => {
+      const isGemini = obj?.model?.toLowerCase()?.includes('gemini');
+
+      const maxOutputTokensMax = isGemini
+        ? defaults.maxOutputTokens.maxGemini
+        : defaults.maxOutputTokens.max;
+      const maxOutputTokensDefault = isGemini
+        ? defaults.maxOutputTokens.defaultGemini
+        : defaults.maxOutputTokens.default;
+
+      let maxOutputTokens = obj.maxOutputTokens ?? maxOutputTokensDefault;
+      maxOutputTokens = Math.min(maxOutputTokens, maxOutputTokensMax);
+
       return {
         ...obj,
         model: obj.model ?? defaults.model.default,
@@ -562,7 +574,7 @@ export const generateGoogleSchema = (customGoogle: GoogleSettings) => {
         promptPrefix: obj.promptPrefix ?? null,
         examples: obj.examples ?? [{ input: { content: '' }, output: { content: '' } }],
         temperature: obj.temperature ?? defaults.temperature.default,
-        maxOutputTokens: obj.maxOutputTokens ?? defaults.maxOutputTokens.default,
+        maxOutputTokens,
         topP: obj.topP ?? defaults.topP.default,
         topK: obj.topK ?? defaults.topK.default,
         maxContextTokens: obj.maxContextTokens ?? undefined,

@@ -112,12 +112,11 @@ const EditController = async (req, res, next, initializeClient) => {
       getReqData,
       onStart,
       abortController,
-      progressCallback,
-      progressOptions: {
+      onProgress: progressCallback.call(null, {
         res,
         text,
-        // parentMessageId: overrideParentMessageId || userMessageId,
-      },
+        parentMessageId: overrideParentMessageId || userMessageId,
+      }),
     });
 
     const conversation = await getConvo(user, conversationId);

@@ -1,7 +1,6 @@
 import { useRecoilValue } from 'recoil';
 import { useAuthContext, useLocalize } from '~/hooks';
 import type { TMessageProps } from '~/common';
-import MinimalHoverButtons from '~/components/Chat/Messages/MinimalHoverButtons';
 import Icon from '~/components/Chat/Messages/MessageIcon';
 import SearchContent from './Content/SearchContent';
 import SearchButtons from './SearchButtons';
@@ -51,7 +50,6 @@ export default function Message({ message }: Pick<TMessageProps, 'message'>) {
                 </div>
               </div>
               <SubRow classes="text-xs">
-                <MinimalHoverButtons message={message} />
                 <SearchButtons message={message} />
               </SubRow>
             </div>

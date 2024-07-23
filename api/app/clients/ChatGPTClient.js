@@ -438,17 +438,9 @@ class ChatGPTClient extends BaseClient {
 
       if (message.eventType === 'text-generation' && message.text) {
         onTokenProgress(message.text);
-        reply += message.text;
-      }
-      /*
-      Cohere API Chinese Unicode character replacement hotfix.
-      Should be un-commented when the following issue is resolved:
-      https://github.com/cohere-ai/cohere-typescript/issues/151
-
-      else if (message.eventType === 'stream-end' && message.response) {
+      } else if (message.eventType === 'stream-end' && message.response) {
         reply = message.response.text;
       }
-      */
     }
 
     return reply;

@@ -144,7 +144,6 @@ describe('OpenAIClient', () => {
 
   const defaultOptions = {
     // debug: true,
-    req: {},
     openaiApiKey: 'new-api-key',
     modelOptions: {
       model,

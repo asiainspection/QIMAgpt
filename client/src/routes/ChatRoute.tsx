@@ -1,15 +1,15 @@
 import { useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { EModelEndpoint } from 'librechat-data-provider';
+import { defaultOrderQuery } from 'librechat-data-provider';
 import {
   useGetModelsQuery,
   useGetStartupConfig,
   useGetEndpointsQuery,
 } from 'librechat-data-provider/react-query';
 import type { TPreset } from 'librechat-data-provider';
-import { useNewConvo, useAppStartup, useAssistantListMap } from '~/hooks';
+import { useGetConvoIdQuery, useListAssistantsQuery } from '~/data-provider';
 import { getDefaultModelSpec, getModelSpecIconURL } from '~/utils';
-import { useGetConvoIdQuery } from '~/data-provider';
+import { useNewConvo, useAppStartup } from '~/hooks';
 import ChatView from '~/components/Chat/ChatView';
 import useAuthRedirect from './useAuthRedirect';
 import { Spinner } from '~/components/svg';
@@ -35,7 +35,10 @@ export default function ChatRoute() {
     enabled: isAuthenticated && conversationId !== 'new',
   });
   const endpointsQuery = useGetEndpointsQuery({ enabled: isAuthenticated });
-  const assistantListMap = useAssistantListMap();
+  const { data: assistants = null } = useListAssistantsQuery(defaultOrderQuery, {
+    select: (res) =>
+      res.data.map(({ id, name, metadata, model }) => ({ id, name, metadata, model })),
+  });
 
   useEffect(() => {
     if (
@@ -84,8 +87,7 @@ export default function ChatRoute() {
       !hasSetConversation.current &&
       !modelsQuery.data?.initial &&
       conversationId === 'new' &&
-      assistantListMap[EModelEndpoint.assistants] &&
-      assistantListMap[EModelEndpoint.azureAssistants]
+      assistants
     ) {
       const spec = getDefaultModelSpec(startupConfig.modelSpecs?.list);
       newConversation({
@@ -106,8 +108,7 @@ export default function ChatRoute() {
       startupConfig &&
       !hasSetConversation.current &&
       !modelsQuery.data?.initial &&
-      assistantListMap[EModelEndpoint.assistants] &&
-      assistantListMap[EModelEndpoint.azureAssistants]
+      assistants
     ) {
       newConversation({
         template: initialConvoQuery.data,
@@ -119,13 +120,7 @@ export default function ChatRoute() {
     }
     /* Creates infinite render if all dependencies included due to newConversation invocations exceeding call stack before hasSetConversation.current becomes truthy */
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    startupConfig,
-    initialConvoQuery.data,
-    endpointsQuery.data,
-    modelsQuery.data,
-    assistantListMap,
-  ]);
+  }, [startupConfig, initialConvoQuery.data, endpointsQuery.data, modelsQuery.data, assistants]);
 
   if (endpointsQuery.isLoading || modelsQuery.isLoading) {
     return <Spinner className="m-auto text-black dark:text-white" />;

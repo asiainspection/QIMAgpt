@@ -15,13 +15,12 @@ import {
   MultiSelectDropDown,
 } from '~/components/ui';
 import {
-  removeFocusOutlines,
+  cn,
   defaultTextProps,
-  removeFocusRings,
+  optionText,
+  removeFocusOutlines,
   processPlugins,
   selectPlugins,
-  optionText,
-  cn,
 } from '~/utils';
 import OptionHoverAlt from '~/components/SidePanel/Parameters/OptionHover';
 import { useLocalize, useDebouncedInput } from '~/hooks';
@@ -127,7 +126,7 @@ export default function Settings({
             setValue={setModel}
             availableValues={models}
             disabled={readonly}
-            className={cn(defaultTextProps, 'flex w-full resize-none', removeFocusRings)}
+            className={cn(defaultTextProps, 'flex w-full resize-none', removeFocusOutlines)}
             containerClassName="flex w-full resize-none"
           />
         </div>

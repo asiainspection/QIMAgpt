@@ -15,6 +15,7 @@ const ClearConvos = ({ open, onOpenChange }) => {
   // Clear all conversations
   const clearConvos = () => {
     if (confirmClear) {
+      console.log('Clearing conversations...');
       clearConvosMutation.mutate(
         {},
         {

@@ -1,5 +1,5 @@
 import debounce from 'lodash/debounce';
-import { FileSources, EToolResources } from 'librechat-data-provider';
+import { FileSources } from 'librechat-data-provider';
 import { useCallback, useState, useEffect } from 'react';
 import type {
   BatchFile,
@@ -16,20 +16,18 @@ type FileMapSetter = GenericSetter<Map<string, ExtendedFile>>;
 const useFileDeletion = ({
   mutateAsync,
   assistant_id,
-  tool_resource,
 }: {
   mutateAsync: UseMutateAsyncFunction<DeleteFilesResponse, unknown, DeleteFilesBody, unknown>;
   assistant_id?: string;
-  tool_resource?: EToolResources;
 }) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_batch, setFileDeleteBatch] = useState<BatchFile[]>([]);
   const setFilesToDelete = useSetFilesToDelete();
 
   const executeBatchDelete = useCallback(
-    (filesToDelete: BatchFile[], assistant_id?: string, tool_resource?: EToolResources) => {
-      console.log('Deleting files:', filesToDelete, assistant_id, tool_resource);
-      mutateAsync({ files: filesToDelete, assistant_id, tool_resource });
+    (filesToDelete: BatchFile[], assistant_id?: string) => {
+      console.log('Deleting files:', filesToDelete, assistant_id);
+      mutateAsync({ files: filesToDelete, assistant_id });
       setFileDeleteBatch([]);
     },
     [mutateAsync],
@@ -83,11 +81,11 @@ const useFileDeletion = ({
 
       setFileDeleteBatch((prevBatch) => {
         const newBatch = [...prevBatch, file];
-        debouncedDelete(newBatch, assistant_id, tool_resource);
+        debouncedDelete(newBatch, assistant_id);
         return newBatch;
       });
     },
-    [debouncedDelete, setFilesToDelete, assistant_id, tool_resource],
+    [debouncedDelete, setFilesToDelete, assistant_id],
   );
 
   const deleteFiles = useCallback(

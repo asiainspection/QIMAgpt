@@ -3,7 +3,6 @@ import {
   defaultEndpoints,
   modularEndpoints,
   LocalStorageKeys,
-  isAssistantsEndpoint,
 } from 'librechat-data-provider';
 import type {
   TConfig,
@@ -140,8 +139,8 @@ export function getConvoSwitchLogic(params: ConversationInitParams): InitiatedTe
   };
 
   const isAssistantSwitch =
-    isAssistantsEndpoint(newEndpoint) &&
-    isAssistantsEndpoint(currentEndpoint) &&
+    newEndpoint === EModelEndpoint.assistants &&
+    currentEndpoint === EModelEndpoint.assistants &&
     currentEndpoint === newEndpoint;
 
   const conversationId = conversation?.conversationId;

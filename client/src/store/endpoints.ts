@@ -4,7 +4,6 @@ import type { TEndpointsConfig } from 'librechat-data-provider';
 
 const defaultConfig: TEndpointsConfig = {
   [EModelEndpoint.azureOpenAI]: null,
-  [EModelEndpoint.azureAssistants]: null,
   [EModelEndpoint.assistants]: null,
   [EModelEndpoint.openAI]: null,
   [EModelEndpoint.bingAI]: null,

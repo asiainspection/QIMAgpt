@@ -1,6 +1,6 @@
 const { ErrorTypes } = require('librechat-data-provider');
 const { encrypt, decrypt } = require('~/server/utils');
-const { updateUser, Key } = require('~/models');
+const { User, Key } = require('~/models');
 const { logger } = require('~/config');
 
 /**
@@ -16,13 +16,16 @@ const { logger } = require('~/config');
  */
 const updateUserPluginsService = async (user, pluginKey, action) => {
   try {
-    const userPlugins = user.plugins || [];
     if (action === 'install') {
-      return await updateUser(user._id, { plugins: [...userPlugins, pluginKey] });
+      return await User.updateOne(
+        { _id: user._id },
+        { $set: { plugins: [...user.plugins, pluginKey] } },
+      );
     } else if (action === 'uninstall') {
-      return await updateUser(user._id, {
-        plugins: userPlugins.filter((plugin) => plugin !== pluginKey),
-      });
+      return await User.updateOne(
+        { _id: user._id },
+        { $set: { plugins: user.plugins.filter((plugin) => plugin !== pluginKey) } },
+      );
     }
   } catch (err) {
     logger.error('[updateUserPluginsService]', err);
@@ -164,11 +167,11 @@ const checkUserKeyExpiry = (expiresAt, endpoint) => {
 };
 
 module.exports = {
+  updateUserPluginsService,
   getUserKey,
-  updateUserKey,
-  deleteUserKey,
   getUserKeyValues,
   getUserKeyExpiry,
+  updateUserKey,
+  deleteUserKey,
   checkUserKeyExpiry,
-  updateUserPluginsService,
 };

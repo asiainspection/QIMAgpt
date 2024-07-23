@@ -79,13 +79,11 @@ export default function Part({
         initialProgress={toolCall.progress ?? 0.1}
         code={code_interpreter.input}
         outputs={code_interpreter.outputs ?? []}
-        isSubmitting={isSubmitting}
       />
     );
   } else if (
     part.type === ContentTypes.TOOL_CALL &&
-    (part[ContentTypes.TOOL_CALL].type === ToolCallTypes.RETRIEVAL ||
-      part[ContentTypes.TOOL_CALL].type === ToolCallTypes.FILE_SEARCH)
+    part[ContentTypes.TOOL_CALL].type === ToolCallTypes.RETRIEVAL
   ) {
     const toolCall = part[ContentTypes.TOOL_CALL];
     return <RetrievalCall initialProgress={toolCall.progress ?? 0.1} isSubmitting={isSubmitting} />;

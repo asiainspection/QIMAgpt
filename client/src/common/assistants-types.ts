@@ -4,11 +4,7 @@ import type { Option, ExtendedFile } from './types';
 
 export type TAssistantOption =
   | string
-  | (Option &
-      Assistant & {
-        files?: Array<[string, ExtendedFile]>;
-        code_files?: Array<[string, ExtendedFile]>;
-      });
+  | (Option & Assistant & { files?: Array<[string, ExtendedFile]> });
 
 export type Actions = {
   [Capabilities.code_interpreter]: boolean;

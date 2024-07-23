@@ -1,16 +1,40 @@
 const { Strategy: GitHubStrategy } = require('passport-github2');
-const socialLogin = require('./socialLogin');
+const { createNewUser, handleExistingUser } = require('./process');
+const { logger } = require('~/config');
+const User = require('~/models/User');
 
-const getProfileDetails = (profile) => ({
-  email: profile.emails[0].value,
-  id: profile.id,
-  avatarUrl: profile.photos[0].value,
-  username: profile.username,
-  name: profile.displayName,
-  emailVerified: profile.emails[0].verified,
-});
+const githubLogin = async (accessToken, refreshToken, profile, cb) => {
+  try {
+    const email = profile.emails[0].value;
+    const githubId = profile.id;
+    const oldUser = await User.findOne({ email });
+    const ALLOW_SOCIAL_REGISTRATION =
+      process.env.ALLOW_SOCIAL_REGISTRATION?.toLowerCase() === 'true';
+    const avatarUrl = profile.photos[0].value;
 
-const githubLogin = socialLogin('github', getProfileDetails);
+    if (oldUser) {
+      await handleExistingUser(oldUser, avatarUrl);
+      return cb(null, oldUser);
+    }
+
+    if (ALLOW_SOCIAL_REGISTRATION) {
+      const newUser = await createNewUser({
+        email,
+        avatarUrl,
+        provider: 'github',
+        providerKey: 'githubId',
+        providerId: githubId,
+        username: profile.username,
+        name: profile.displayName,
+        emailVerified: profile.emails[0].verified,
+      });
+      return cb(null, newUser);
+    }
+  } catch (err) {
+    logger.error('[githubLogin]', err);
+    return cb(err);
+  }
+};
 
 module.exports = () =>
   new GitHubStrategy(

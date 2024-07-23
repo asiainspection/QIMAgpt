@@ -6,7 +6,6 @@ import ArchiveButton from '~/components/Conversations/ArchiveButton';
 import DeleteButton from '~/components/Conversations/DeleteButton';
 import { Spinner } from '~/components/svg';
 import { cn } from '~/utils';
-import { ConversationListResponse } from 'librechat-data-provider';
 
 export default function ArchivedChatsTable({ className }: { className?: string }) {
   const localize = useLocalize();
@@ -18,7 +17,7 @@ export default function ArchivedChatsTable({ className }: { className?: string }
     { enabled: isAuthenticated },
   );
 
-  const { containerRef, moveToTop } = useNavScrolling<ConversationListResponse>({
+  const { containerRef, moveToTop } = useNavScrolling({
     setShowLoading,
     hasNextPage: hasNextPage,
     fetchNextPage: fetchNextPage,

@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { EToolResources } from 'librechat-data-provider';
 import type { ExtendedFile } from '~/common';
 import { useDeleteFilesMutation } from '~/data-provider';
 import { useFileDeletion } from '~/hooks/Files';
@@ -11,7 +10,6 @@ export default function FileRow({
   setFiles,
   setFilesLoading,
   assistant_id,
-  tool_resource,
   fileFilter,
   Wrapper,
 }: {
@@ -20,7 +18,6 @@ export default function FileRow({
   setFilesLoading: React.Dispatch<React.SetStateAction<boolean>>;
   fileFilter?: (file: ExtendedFile) => boolean;
   assistant_id?: string;
-  tool_resource?: EToolResources;
   Wrapper?: React.FC<{ children: React.ReactNode }>;
 }) {
   const files = Array.from(_files.values()).filter((file) =>
@@ -28,8 +25,7 @@ export default function FileRow({
   );
 
   const { mutateAsync } = useDeleteFilesMutation({
-    onMutate: async () =>
-      console.log('Deleting files: assistant_id, tool_resource', assistant_id, tool_resource),
+    onMutate: async () => console.log('Deleting files: assistant_id', assistant_id),
     onSuccess: () => {
       console.log('Files deleted');
     },
@@ -38,7 +34,7 @@ export default function FileRow({
     },
   });
 
-  const { deleteFile } = useFileDeletion({ mutateAsync, assistant_id, tool_resource });
+  const { deleteFile } = useFileDeletion({ mutateAsync, assistant_id });
 
   useEffect(() => {
     if (!files) {
@@ -83,10 +79,9 @@ export default function FileRow({
               return (
                 <Image
                   key={index}
-                  url={file.preview || file.filepath}
+                  url={file.preview}
                   onDelete={handleDelete}
                   progress={file.progress}
-                  source={file.source}
                 />
               );
             }

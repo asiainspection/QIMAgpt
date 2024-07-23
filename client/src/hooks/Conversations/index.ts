@@ -8,4 +8,3 @@ export { default as useDebouncedInput } from './useDebouncedInput';
 export { default as useNavigateToConvo } from './useNavigateToConvo';
 export { default as useSetIndexOptions } from './useSetIndexOptions';
 export { default as useParameterEffects } from './useParameterEffects';
-export { default as useExportConversation } from './useExportConversation';

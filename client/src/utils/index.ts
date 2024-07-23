@@ -5,10 +5,8 @@ export * from './latex';
 export * from './convos';
 export * from './presets';
 export * from './textarea';
-export * from './messages';
 export * from './languages';
 export * from './endpoints';
-export * from './sharedLink';
 export { default as cn } from './cn';
 export { default as buildTree } from './buildTree';
 export { default as getLoginError } from './getLoginError';
@@ -48,8 +46,7 @@ export const languages = [
   'pascal',
 ];
 
-export const removeFocusOutlines = '';
-export const removeFocusRings =
+export const removeFocusOutlines =
   'focus:outline-none focus:ring-0 focus:ring-opacity-0 focus:ring-offset-0';
 
 export const cardStyle =

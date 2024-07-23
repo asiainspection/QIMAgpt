@@ -4,13 +4,9 @@ import {
   Registration,
   RequestPasswordReset,
   ResetPassword,
-  VerifyEmail,
   ApiErrorWatcher,
 } from '~/components/Auth';
 import { AuthContextProvider } from '~/hooks/AuthContext';
-import StartupLayout from './Layouts/Startup';
-import LoginLayout from './Layouts/Login';
-import ShareRoute from './ShareRoute';
 import ChatRoute from './ChatRoute';
 import Search from './Search';
 import Root from './Root';
@@ -24,41 +20,23 @@ const AuthLayout = () => (
 
 export const router = createBrowserRouter([
   {
-    path: 'share/:shareId',
-    element: <ShareRoute />,
+    path: 'register',
+    element: <Registration />,
   },
   {
-    path: '/',
-    element: <StartupLayout />,
-    children: [
-      {
-        path: 'register',
-        element: <Registration />,
-      },
-      {
-        path: 'forgot-password',
-        element: <RequestPasswordReset />,
-      },
-      {
-        path: 'reset-password',
-        element: <ResetPassword />,
-      },
-    ],
+    path: 'forgot-password',
+    element: <RequestPasswordReset />,
   },
   {
-    path: 'verify',
-    element: <VerifyEmail />,
+    path: 'reset-password',
+    element: <ResetPassword />,
   },
   {
     element: <AuthLayout />,
     children: [
       {
-        children: [
-          {
-            path: 'login',
-            element: <Login />,
-          },
-        ],
+        path: 'login',
+        element: <Login />,
       },
       {
         path: '/',

@@ -35,14 +35,13 @@ any) => {
               />
             );
           })}
-        {/* Temporarily remove this */}
-        {/* {!isSubmitting && unfinished && (
+        {!isSubmitting && unfinished && (
           <Suspense>
             <DelayedRender delay={250}>
               <UnfinishedMessage message={message} key={`unfinished-${messageId}`} />
             </DelayedRender>
           </Suspense>
-        )} */}
+        )}
       </>
     );
   }
