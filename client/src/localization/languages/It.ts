@@ -19,6 +19,7 @@ export default {
   com_sidepanel_hide_panel: 'Nascondi Pannello',
   com_sidepanel_attach_files: 'Allega File',
   com_sidepanel_manage_files: 'Gestisci File',
+  com_sidepanel_conversation_tags: 'Segnalibri',
   com_assistants_capabilities: 'Capacità',
   com_assistants_knowledge: 'Conoscenza',
   com_assistants_knowledge_info:
@@ -124,8 +125,6 @@ export default {
   com_ui_none_selected: 'Nessuna selezionata',
   com_ui_upload_success: 'File caricato con successo',
   com_ui_upload_error: 'Si è verificato un errore durante il caricamento del file',
-  com_ui_upload_invalid:
-    'File non valido per il caricamento. Deve essere un\'immagine non superiore a 2 MB',
   com_ui_cancel: 'Annulla',
   com_ui_save: 'Salva',
   com_ui_save_submit: 'Salva e Invia',
@@ -194,7 +193,11 @@ export default {
   com_ui_create_link: 'Crea link',
   com_ui_share_link_to_chat: 'Condividi link a chat',
   com_ui_share_error: 'Si è verificato un errore durante la condivisione del link della chat',
-  com_ui_share_create_message: 'Il tuo nome e qualsiasi messaggio aggiunto dopo la condivisione rimarranno privati.',
+  com_ui_share_retrieve_error:
+    'Si è verificato un errore durante l\'eliminazione del link condiviso.',
+  com_ui_share_delete_error: 'Si è verificato un errore durante l\'eliminazione del link condiviso.',
+  com_ui_share_create_message:
+    'Il tuo nome e qualsiasi messaggio aggiunto dopo la condivisione rimarranno privati.',
   com_ui_share_created_message:
     'È stato creato un link condiviso per la tua chat. Gestisci le chat condivise in precedenza in qualsiasi momento tramite Impostazioni.',
   com_ui_share_update_message:
@@ -203,7 +206,7 @@ export default {
     'Il link condiviso per la tua chat è stato aggiornato. Gestisci le chat condivise in precedenza in qualsiasi momento tramite Impostazioni.',
   com_ui_shared_link_not_found: 'Link condiviso non trovato',
   com_ui_delete_conversation: 'Eliminare la chat?',
-  com_ui_delete_conversation_confirm: 'Questo eliminerà',
+  com_ui_delete_confirm: 'Questo eliminerà',
   com_ui_rename: 'Rinominare',
   com_ui_archive: 'Arsip',
   com_ui_archive_error: 'Errore durante l\'archiviazione della conversazione',
@@ -222,6 +225,20 @@ export default {
   com_ui_terms_of_service: 'Termini di servizio',
   com_ui_min_tags: 'Impossibile rimuovere altri valori, è richiesto un minimo di {0}.',
   com_ui_max_tags: 'Il numero massimo consentito è {0}, verranno utilizzati gli ultimi valori.',
+  com_ui_bookmarks: 'Segnalibri',
+  com_ui_bookmarks_rebuild: 'Ricostruisci',
+  com_ui_bookmarks_new: 'Nuovo Segnalibro',
+  com_ui_bookmark_delete_confirm: 'Sei sicuro di voler eliminare questo segnalibro?',
+  com_ui_bookmarks_title: 'Titolo',
+  com_ui_bookmarks_count: 'Conteggio',
+  com_ui_bookmarks_description: 'Descrizione',
+  com_ui_bookmarks_create_success: 'Segnalibro creato con successo',
+  com_ui_bookmarks_update_success: 'Segnalibro aggiornato con successo',
+  com_ui_bookmarks_delete_success: 'Segnalibro eliminato con successo',
+  com_ui_bookmarks_create_error: 'Si è verificato un errore durante la creazione del segnalibro',
+  com_ui_bookmarks_update_error: 'Si è verificato un errore durante l\'aggiornamento del segnalibro',
+  com_ui_bookmarks_delete_error: 'Si è verificato un errore durante l\'eliminazione del segnalibro',
+  com_ui_bookmarks_add_to_conversation: 'Aggiungi alla conversazione attuale',
   com_auth_error_login:
     'Impossibile eseguire l\'accesso con le informazioni fornite. Controlla le tue credenziali e riprova.',
   com_auth_error_login_rl:
@@ -291,7 +308,6 @@ export default {
     'ATTENZIONE: L\'uso improprio di questa funzione può farti BANNARE dall\'utilizzo di Bing! Clicca su "Messaggio di sistema" per le istruzioni complete e il messaggio predefinito se omesso, che è il preset "Sydney" considerato sicuro.',
   com_endpoint_system_message: 'Messaggio di sistema',
   com_endpoint_message: 'Messaggio',
-  com_endpoint_messages: 'Messaggi',
   com_endpoint_message_not_appendable: 'Modifica il tuo messaggio o Rigenera.',
   com_endpoint_default_blank: 'predefinito: vuoto',
   com_endpoint_default_false: 'predefinito: falso',
@@ -534,6 +550,8 @@ export default {
   com_dialog_delete_warning: 'ATTENZIONE: Questo cancellerà permanentemente il tuo account.',
   com_dialog_delete_data_info: 'Tutti i tuoi dati verranno eliminati.',
   com_dialog_delete_help_center: 'Per più informazioni, visita il nostro centro assistenza.',
+  com_nav_info_bookmarks_rebuild:
+    'Se il conteggio dei segnalibri è errato, ricostruisci le informazioni sui segnalibri. Il conteggio dei segnalibri verrà ricalcolato e i dati verranno ripristinati al loro stato corretto.',
   com_nav_setting_general: 'Generale',
   com_nav_setting_beta: 'Funzioni Beta',
   com_nav_setting_data: 'Controlli dati',
@@ -660,6 +678,10 @@ export const comparisons = {
   com_sidepanel_manage_files: {
     english: 'Manage Files',
     translated: 'Gestisci File',
+  },
+  com_sidepanel_conversation_tags: {
+    english: 'Bookmarks',
+    translated: 'Segnalibri',
   },
   com_assistants_capabilities: {
     english: 'Capabilities',
@@ -1287,13 +1309,22 @@ export const comparisons = {
     english: 'Share link to chat',
     translated: 'Condividi link a chat',
   },
+  com_ui_share_retrieve_error: {
+    english: 'There was an error deleting the shared link.',
+    translated: 'Si è verificato un errore durante l\'eliminazione del link condiviso.',
+  },
+  com_ui_share_delete_error: {
+    english: 'There was an error deleting the shared link.',
+    translated: 'Si è verificato un errore durante l\'eliminazione del link condiviso.',
+  },
   com_ui_share_error: {
     english: 'There was an error sharing the chat link',
     translated: 'Si è verificato un errore durante la condivisione del link della chat',
   },
   com_ui_share_create_message: {
     english: 'Your name and any messages you add after sharing stay private.',
-    translated: 'Il tuo nome e qualsiasi messaggio aggiunto dopo la condivisione rimarranno privati.',
+    translated:
+      'Il tuo nome e qualsiasi messaggio aggiunto dopo la condivisione rimarranno privati.',
   },
   com_ui_share_created_message: {
     english:
@@ -1303,7 +1334,8 @@ export const comparisons = {
   },
   com_ui_share_update_message: {
     english: 'Your name, custom instructions, and any messages you add after sharing stay private.',
-    translated: 'Il tuo nome, istruzioni personalizzate e qualsiasi messaggio aggiunto dopo la condivisione rimarranno privati.',
+    translated:
+      'Il tuo nome, istruzioni personalizzate e qualsiasi messaggio aggiunto dopo la condivisione rimarranno privati.',
   },
   com_ui_share_updated_message: {
     english:
@@ -1319,7 +1351,7 @@ export const comparisons = {
     english: 'Delete chat?',
     translated: 'Eliminare la chat?',
   },
-  com_ui_delete_conversation_confirm: {
+  com_ui_delete_confirm: {
     english: 'This will delete',
     translated: 'Questo eliminerà',
   },
@@ -1385,6 +1417,62 @@ export const comparisons = {
   com_ui_max_tags: {
     english: 'Maximum number allowed is {0}, using latest values.',
     translated: 'Il numero massimo consentito è {0}, verranno utilizzati gli ultimi valori.',
+  },
+  com_ui_bookmarks: {
+    english: 'Bookmarks',
+    translated: 'Segnalibri',
+  },
+  com_ui_bookmarks_rebuild: {
+    english: 'Rebuild',
+    translated: 'Ricostruisci',
+  },
+  com_ui_bookmarks_new: {
+    english: 'New Bookmark',
+    translated: 'Nuovo Segnalibro',
+  },
+  com_ui_bookmark_delete_confirm: {
+    english: 'Are you sure you want to delete this bookmark?',
+    translated: 'Sei sicuro di voler eliminare questo segnalibro?',
+  },
+  com_ui_bookmarks_title: {
+    english: 'Title',
+    translated: 'Titolo',
+  },
+  com_ui_bookmarks_count: {
+    english: 'Count',
+    translated: 'Conteggio',
+  },
+  com_ui_bookmarks_description: {
+    english: 'Description',
+    translated: 'Descrizione',
+  },
+  com_ui_bookmarks_create_success: {
+    english: 'Bookmark created successfully',
+    translated: 'Segnalibro creato con successo',
+  },
+  com_ui_bookmarks_update_success: {
+    english: 'Bookmark updated successfully',
+    translated: 'Segnalibro aggiornato con successo',
+  },
+  com_ui_bookmarks_delete_success: {
+    english: 'Bookmark deleted successfully',
+    translated: 'Segnalibro eliminato con successo',
+  },
+  com_ui_bookmarks_create_error: {
+    english: 'There was an error creating the bookmark',
+    translated: 'Si è verificato un errore durante la creazione del segnalibro',
+  },
+  com_ui_bookmarks_update_error: {
+    english: 'There was an error updating the bookmark',
+    translated: 'Si è verificato un errore durante l\'aggiornamento del segnalibro',
+  },
+  com_ui_bookmarks_delete_error: {
+    english: 'There was an error deleting the bookmark',
+    translated: 'Si è verificato un errore durante l\'eliminazione del segnalibro',
+  },
+  com_ui_bookmarks_add_to_conversation: {
+    english: 'Add to current conversation',
+    translated: 'Aggiungi alla conversazione attuale',
   },
   com_auth_error_login: {
     english:
@@ -1636,10 +1724,6 @@ export const comparisons = {
   com_endpoint_message: {
     english: 'Message',
     translated: 'Messaggio',
-  },
-  com_endpoint_messages: {
-    english: 'Messages',
-    translated: 'Messaggi',
   },
   com_endpoint_message_not_appendable: {
     english: 'Edit your message or Regenerate.',
@@ -2371,6 +2455,10 @@ export const comparisons = {
     english: 'Light',
     translated: 'Chiaro',
   },
+  com_nav_font_size: {
+    english: 'Font Size',
+    translate: 'Dimensione del font',
+  },
   com_nav_enter_to_send: {
     english: 'Press Enter to send messages',
     translated: 'Premi Invio per inviare messaggi',
@@ -2463,6 +2551,12 @@ export const comparisons = {
   com_nav_search_placeholder: {
     english: 'Search messages',
     translated: 'Cerca messaggi',
+  },
+  com_nav_info_bookmarks_rebuild: {
+    english:
+      'If the bookmark count is incorrect, please rebuild the bookmark information. The bookmark count will be recalculated and the data will be restored to its correct state.',
+    translated:
+      'Se il conteggio dei segnalibri è errato, ricostruisci le informazioni sui segnalibri. Il conteggio dei segnalibri verrà ricalcolato e i dati verranno ripristinati al loro stato corretto.',
   },
   com_nav_setting_general: {
     english: 'General',

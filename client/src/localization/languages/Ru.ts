@@ -28,21 +28,20 @@ export default {
   com_ui_close: 'Закрыть',
   com_ui_model: 'Модель',
   com_ui_select_model: 'Выберите модель',
-  com_ui_use_prompt: 'Использовать промт',
+  com_ui_use_prompt: 'Использовать промпт',
   com_ui_prev: 'Предыдущий',
   com_ui_next: 'Следующий',
   com_ui_stop: 'Остановить генерацию',
-  com_ui_prompt_templates: 'Шаблоны промтов',
-  com_ui_hide_prompt_templates: 'Скрыть шаблоны промтов',
+  com_ui_prompt_templates: 'Шаблоны промптов',
+  com_ui_hide_prompt_templates: 'Скрыть шаблоны промптов',
   com_ui_showing: 'Показано',
   com_ui_of: 'из',
   com_ui_entries: 'записей',
-  com_ui_pay_per_call: 'Все AI-разговоры в одном месте. Оплачивайте за вызовы, а не за месяц',
-  com_ui_new_footer: 'Все AI-разговоры в одном месте.',
+  com_ui_pay_per_call: 'Все AI-чаты в одном месте. Оплачивайте за вызовы, а не за месяц',
+  com_ui_new_footer: 'Все AI-чаты в одном месте.',
   com_ui_enter: 'Ввести',
   com_ui_submit: 'Отправить',
   com_ui_upload_success: 'Файл успешно загружен',
-  com_ui_upload_invalid: 'Недопустимый файл для загрузки',
   com_ui_cancel: 'Отмена',
   com_ui_save: 'Сохранить',
   com_ui_save_submit: 'Сохранить и отправить',
@@ -72,7 +71,10 @@ export default {
   com_ui_create_link: 'Создать ссылку',
   com_ui_share_link_to_chat: 'Поделиться ссылкой в чате',
   com_ui_share_error: 'Произошла ошибка при попытке поделиться ссылкой на чат',
-  com_ui_share_create_message: 'Ваше имя и любые сообщения, которые вы добавите после обмена, останутся конфиденциальными.',
+  com_ui_share_retrieve_error: 'Произошла ошибка при удалении общей ссылки.',
+  com_ui_share_delete_error: 'Произошла ошибка при удалении общей ссылки.',
+  com_ui_share_create_message:
+    'Ваше имя и любые сообщения, которые вы добавите после обмена, останутся конфиденциальными.',
   com_ui_share_created_message:
     'Создана общая ссылка на ваш чат. Управляйте ранее общими чатами в любое время через Настройки.',
   com_ui_share_update_message:
@@ -81,13 +83,27 @@ export default {
     'Обновлена общая ссылка на ваш чат. Управляйте ранее общими чатами в любое время через Настройки.',
   com_ui_shared_link_not_found: 'Общая ссылка не найдена',
   com_ui_delete_conversation: 'Удалить чат?',
-  com_ui_delete_conversation_confirm: 'Будет удален следующий чат: ',
+  com_ui_delete_confirm: 'Будет удален следующий чат: ',
   com_ui_rename: 'Переименовать',
   com_ui_archive: 'Архивировать',
-  com_ui_archive_error: 'Nie udało się archiwizować rozmowy',
+  com_ui_archive_error: 'Не удалось заархивировать чат',
   com_ui_unarchive: 'разархивировать',
-  com_ui_unarchive_error: 'Nie udało się odtworzyć rozmowy z archiwum',
+  com_ui_unarchive_error: 'Не удалось восстановить чат из архива',
   com_ui_more_options: 'Еще',
+  com_ui_bookmarks: 'Закладки',
+  com_ui_bookmarks_rebuild: 'Перестроить',
+  com_ui_bookmarks_new: 'Новая закладка',
+  com_ui_bookmark_delete_confirm: 'Вы уверены, что хотите удалить эту закладку?',
+  com_ui_bookmarks_title: 'Заголовок',
+  com_ui_bookmarks_count: 'Количество',
+  com_ui_bookmarks_description: 'Описание',
+  com_ui_bookmarks_create_success: 'Закладка успешно создана',
+  com_ui_bookmarks_update_success: 'Закладка успешно обновлена',
+  com_ui_bookmarks_delete_success: 'Закладка успешно удалена',
+  com_ui_bookmarks_create_error: 'Произошла ошибка при создании закладки',
+  com_ui_bookmarks_update_error: 'Произошла ошибка при обновлении закладки',
+  com_ui_bookmarks_delete_error: 'Произошла ошибка при удалении закладки',
+  com_ui_bookmarks_add_to_conversation: 'Добавить в текущий разговор',
   com_auth_error_login:
     'Не удалось войти с предоставленной информацией. Пожалуйста, проверьте ваши учетные данные и попробуйте снова.',
   com_auth_error_login_rl:
@@ -179,7 +195,7 @@ export default {
   com_endpoint_prompt_prefix_placeholder:
     'Задайте пользовательские инструкции или контекст. Игнорируется, если пусто.',
   com_endpoint_custom_name: 'Кастомное имя',
-  com_endpoint_prompt_prefix: 'Префикс промта',
+  com_endpoint_prompt_prefix: 'Префикс промпта',
   com_endpoint_temperature: 'Температура',
   com_endpoint_default: 'по умолчанию',
   com_endpoint_top_p: 'Top P',
@@ -197,7 +213,7 @@ export default {
     'Число от -2.0 до 2.0. Положительные значения штрафуют новые токены на основе того, появляются ли они в тексте до сих пор, увеличивая вероятность модели говорить о новых темах.',
   com_endpoint_openai_custom_name_placeholder: 'Задайте кастомное имя для ChatGPT',
   com_endpoint_openai_prompt_prefix_placeholder:
-    'Задайте кастомные промты для включения в системное сообщение. По умолчанию: нет',
+    'Задайте кастомные промпты для включения в системное сообщение. По умолчанию: нет',
   com_endpoint_anthropic_temp:
     'Диапазон значений от 0 до 1. Используйте значение temp ближе к 0 для аналитических / множественного выбора и ближе к 1 для креативных и генеративных задач. Мы рекомендуем изменять это или Top P, но не оба значения одновременно.',
   com_endpoint_anthropic_topp:
@@ -232,7 +248,7 @@ export default {
   com_endpoint_preset_default_none: 'Активных пресетов по умолчанию нет.',
   com_endpoint_preset_title: 'Пресет',
   com_endpoint_preset_saved: 'Сохранено!',
-  com_endpoint_preset_default: 'теперь пресет По умолчаанию.',
+  com_endpoint_preset_default: 'теперь пресет "По умолчаанию".',
   com_endpoint_preset: 'пресет',
   com_endpoint_presets: 'пресеты',
   com_endpoint_preset_selected: 'Пресет Активирован!',
@@ -327,6 +343,7 @@ export default {
   com_nav_theme_system: 'Системная',
   com_nav_theme_dark: 'Темная',
   com_nav_theme_light: 'Светлая',
+  com_nav_font_size: 'Размер шрифта',
   com_nav_user_name_display: 'Отображать имя пользователя в сообщениях',
   com_nav_save_drafts: 'Сохранить черновики локально',
   com_nav_language: 'Локализация',
@@ -344,23 +361,25 @@ export default {
   com_nav_user: 'ПОЛЬЗОВАТЕЛЬ',
   com_nav_archived_chats: 'Архивированные чаты',
   com_nav_archived_chats_manage: 'Управление',
-  com_nav_archived_chats_empty: 'У вас нет архивированных разговоров.',
+  com_nav_archived_chats_empty: 'У вас нет архивированных чатов.',
   com_nav_archive_all_chats: 'Архивировать все чаты',
   com_nav_archive_all: 'Архивировать все',
   com_nav_archive_name: 'Имя',
   com_nav_archive_created_at: 'Дата создания',
-  com_nav_clear_conversation: 'Удалить разговоры',
+  com_nav_clear_conversation: 'Удалить чаты',
   com_nav_clear_conversation_confirm_message:
-    'Вы уверены, что хотите удалить все разговоры? Это действие нельзя отменить.',
+    'Вы уверены, что хотите удалить все чаты? Это действие нельзя отменить.',
   com_nav_help_faq: 'Помощь и Вопросы',
   com_nav_settings: 'Настройки',
   com_nav_search_placeholder: 'Поиск сообщений',
+  com_nav_info_bookmarks_rebuild:
+    'Если количество закладок некорректно, пожалуйста, перестройте информацию о закладках. Количество закладок будет пересчитано, и данные будут восстановлены до правильного состояния.',
   com_nav_setting_general: 'Общие',
   com_nav_setting_beta: 'Бета-функции',
   com_nav_setting_data: 'Управление данными',
   com_assistants_knowledge: 'База знаний',
   com_assistants_knowledge_info:
-    'Если вы загрузите файлы в раздел Знания, разговоры с вашим ассистентом могут включать содержимое файлов.',
+    'Если вы загрузите файлы в раздел Знания, чаты с вашим ассистентом могут включать содержимое файлов.',
   com_assistants_knowledge_disabled:
     'Ассистент должен быть сохранён, и Интерпретатор кода (Code Interpreter) или Поиск (Retrieval) должны быть включены и сохранены перед загрузкой файлов к Базе Знаний.',
   com_assistants_retrieval: 'Поиск (Retrieval)',
@@ -429,6 +448,7 @@ export default {
   com_files_number_selected: 'Выбрано {0} из {1} файл(а/ов)',
   com_sidepanel_parameters: 'Параметры',
   com_sidepanel_hide_panel: 'Скрыть панель',
+  com_sidepanel_conversation_tags: 'Закладки',
   com_assistants_capabilities: 'Возможности',
   com_assistants_image_vision: 'Анализ изображений',
   com_assistants_search_name: 'Поиск ассистентов по имени',
@@ -484,7 +504,7 @@ export default {
   com_ui_fork_info_remember:
     'Отметьте это, чтобы запомнить выбранные вами параметры для будущего использования, что позволит быстрее создавать ответвления бесед по вашим предпочтениям.',
   com_ui_fork_success: 'Разветвление беседы успешно выполнено',
-  com_ui_fork_processing: 'Разделение беседы...',
+  com_ui_fork_processing: 'Разветвление беседы...',
   com_ui_fork_error: 'Произошла ошибка при создании ответвления разговора',
   com_ui_fork_change_default: 'Изменить вариант ветвления по умолчанию',
   com_ui_fork_default: 'Использовать вариант по умолчанию',
@@ -516,7 +536,6 @@ export default {
   com_ui_terms_of_service: 'Условия использования',
   com_ui_min_tags: 'Нельзя удалить больше значений, требуется минимум {0}.',
   com_ui_max_tags: 'Максимально допустимое количество - {0}, используются последние значения.',
-  com_endpoint_messages: 'Сообщения',
   com_endpoint_context_tokens: 'Максимальное количество контекстных токенов',
   com_endpoint_context_info:
     'Максимальное количество токенов, которое может быть использовано для контекста. Используется для контроля количества токенов, отправляемых за один запрос. Если не указано, будут использованы системные значения по умолчанию, основанные на известном размере контекста моделей. Установка более высоких значений может привести к ошибкам и/или более высокой стоимости токенов.',
@@ -544,13 +563,13 @@ export default {
   com_endpoint_assistant: 'Ассистент',
   com_endpoint_use_active_assistant: 'Использовать активного ассистента',
   com_endpoint_assistant_model: 'Модель ассистента',
-  com_endpoint_assistant_placeholder: 'Выберите Ассистента в правой боковой панели',
+  com_endpoint_assistant_placeholder: 'Выберите ассистента в правой боковой панели',
   com_nav_welcome_assistant: 'Выберите ассистента',
   com_nav_plugin_install: 'Установить',
   com_nav_plugin_uninstall: 'Удалить',
   com_nav_tool_add: 'Добавить',
   com_nav_tool_remove: 'Удалить',
-  com_nav_tool_dialog: 'Инструменты помощника',
+  com_nav_tool_dialog: 'Инструменты ассистента',
   com_nav_tool_dialog_description:
     'Ассистент должен быть сохранен для применения выбранных инструментов.',
   com_show_agent_settings: 'Настройки агента',
@@ -569,11 +588,11 @@ export default {
   com_nav_lang_polish: 'Польский',
   com_nav_lang_brazilian_portuguese: 'Португальский (Бразилия)',
   com_nav_lang_russian: 'Русский',
-  com_nav_lang_japanese: 'Язык',
+  com_nav_lang_japanese: 'Японский',
   com_nav_lang_swedish: 'Шведский',
   com_nav_lang_korean: 'Корейский',
   com_nav_lang_vietnamese: 'Вьетнамский',
-  com_nav_lang_traditionalchinese: 'Традиционный китайский',
+  com_nav_lang_traditionalchinese: 'Китайский (Традиционный)',
   com_nav_lang_arabic: 'Арабский',
   com_nav_lang_turkish: 'Турецкий',
   com_nav_lang_dutch: 'Голландский',
@@ -684,7 +703,7 @@ export const comparisons = {
   },
   com_ui_use_prompt: {
     english: 'Use prompt',
-    translated: 'Использовать промт',
+    translated: 'Использовать промпт',
   },
   com_ui_prev: {
     english: 'Prev',
@@ -700,11 +719,11 @@ export const comparisons = {
   },
   com_ui_prompt_templates: {
     english: 'Prompt Templates',
-    translated: 'Шаблоны промтов',
+    translated: 'Шаблоны промптов',
   },
   com_ui_hide_prompt_templates: {
     english: 'Hide Prompt Templates',
-    translated: 'Скрыть шаблоны промтов',
+    translated: 'Скрыть шаблоны промптов',
   },
   com_ui_showing: {
     english: 'Showing',
@@ -720,11 +739,11 @@ export const comparisons = {
   },
   com_ui_pay_per_call: {
     english: 'All AI conversations in one place. Pay per call and not per month',
-    translated: 'Все AI-разговоры в одном месте. Оплачивайте за вызовы, а не за месяц',
+    translated: 'Все AI-чаты в одном месте. Оплачивайте за запрос, а не за месяц',
   },
   com_ui_new_footer: {
     english: 'All AI conversations in one place.',
-    translated: 'Все AI-разговоры в одном месте.',
+    translated: 'Все AI-чаты в одном месте.',
   },
   com_ui_enter: {
     english: 'Enter',
@@ -854,13 +873,22 @@ export const comparisons = {
     english: 'Share link to chat',
     translated: 'Поделиться ссылкой в чате',
   },
+  com_ui_share_retrieve_error: {
+    english: 'There was an error deleting the shared link.',
+    translated: 'Произошла ошибка при удалении общей ссылки.',
+  },
+  com_ui_share_delete_error: {
+    english: 'There was an error deleting the shared link.',
+    translated: 'Произошла ошибка при удалении общей ссылки.',
+  },
   com_ui_share_error: {
     english: 'There was an error sharing the chat link',
     translated: 'Произошла ошибка при попытке поделиться ссылкой на чат',
   },
   com_ui_share_create_message: {
     english: 'Your name and any messages you add after sharing stay private.',
-    translated: 'Ваше имя и любые сообщения, которые вы добавите после обмена, останутся конфиденциальными.',
+    translated:
+      'Ваше имя и любые сообщения, которые вы добавите после обмена, останутся конфиденциальными.',
   },
   com_ui_share_created_message: {
     english:
@@ -887,7 +915,7 @@ export const comparisons = {
     english: 'Delete chat?',
     translated: 'Удалить чат?',
   },
-  com_ui_delete_conversation_confirm: {
+  com_ui_delete_confirm: {
     english: 'This will delete',
     translated: 'Будет удален следующий чат: ',
   },
@@ -901,19 +929,75 @@ export const comparisons = {
   },
   com_ui_archive_error: {
     english: 'Failed to archive conversation',
-    translated: 'Nie udało się archiwizować rozmowy',
+    translated: 'Не удалось заархивировать чат',
   },
   com_ui_unarchive: {
     english: 'Unarchive',
-    translated: 'разархивировать',
+    translated: 'Разархивировать',
   },
   com_ui_unarchive_error: {
     english: 'Failed to unarchive conversation',
-    translated: 'Nie udało się odtworzyć rozmowy z archiwum',
+    translated: 'Не удалось разархивировать чат',
   },
   com_ui_more_options: {
     english: 'More',
     translated: 'Еще',
+  },
+  com_ui_bookmarks: {
+    english: 'Bookmarks',
+    translated: 'Закладки',
+  },
+  com_ui_bookmarks_rebuild: {
+    english: 'Rebuild',
+    translated: 'Перестроить',
+  },
+  com_ui_bookmarks_new: {
+    english: 'New Bookmark',
+    translated: 'Новая закладка',
+  },
+  com_ui_bookmark_delete_confirm: {
+    english: 'Are you sure you want to delete this bookmark?',
+    translated: 'Вы уверены, что хотите удалить эу закладку?',
+  },
+  com_ui_bookmarks_title: {
+    english: 'Title',
+    translated: 'Заголовок',
+  },
+  com_ui_bookmarks_count: {
+    english: 'Count',
+    translated: 'Количество',
+  },
+  com_ui_bookmarks_description: {
+    english: 'Description',
+    translated: 'Описание',
+  },
+  com_ui_bookmarks_create_success: {
+    english: 'Bookmark created successfully',
+    translated: 'Закладка успешно создана',
+  },
+  com_ui_bookmarks_update_success: {
+    english: 'Bookmark updated successfully',
+    translated: 'Закладка успешно обновлена',
+  },
+  com_ui_bookmarks_delete_success: {
+    english: 'Bookmark deleted successfully',
+    translated: 'Закладка успешно удалена',
+  },
+  com_ui_bookmarks_create_error: {
+    english: 'There was an error creating the bookmark',
+    translated: 'Произошла ошибка при создании закладки',
+  },
+  com_ui_bookmarks_update_error: {
+    english: 'There was an error updating the bookmark',
+    translated: 'Произошла ошибка при обновлении закладки',
+  },
+  com_ui_bookmarks_delete_error: {
+    english: 'There was an error deleting the bookmark',
+    translated: 'Произошла ошибка при удалении закладки',
+  },
+  com_ui_bookmarks_add_to_conversation: {
+    english: 'Add to current conversation',
+    translated: 'Добавить в текущий разговор',
   },
   com_auth_error_login: {
     english:
@@ -1245,7 +1329,7 @@ export const comparisons = {
   },
   com_endpoint_prompt_prefix: {
     english: 'Custom Instructions',
-    translated: 'Префикс промта',
+    translated: 'Префикс промпта',
   },
   com_endpoint_temperature: {
     english: 'Temperature',
@@ -1303,7 +1387,7 @@ export const comparisons = {
   },
   com_endpoint_openai_prompt_prefix_placeholder: {
     english: 'Set custom instructions to include in System Message. Default: none',
-    translated: 'Задайте кастомные промты для включения в системное сообщение. По умолчанию: нет',
+    translated: 'Задайте кастомные промпты для включения в системное сообщение. По умолчанию: нет',
   },
   com_endpoint_anthropic_temp: {
     english:
@@ -1724,7 +1808,7 @@ export const comparisons = {
   },
   com_nav_shared_links: {
     english: 'Shared links',
-    translated: 'Связываемые ссылки',
+    translated: 'Общие ссылки',
   },
   com_nav_shared_links_manage: {
     english: 'Manage',
@@ -1732,11 +1816,11 @@ export const comparisons = {
   },
   com_nav_shared_links_empty: {
     english: 'You have no shared links.',
-    translated: 'У вас нет связываемых ссылок.',
+    translated: 'У вас нет общих ссылок.',
   },
   com_nav_shared_links_name: {
     english: 'Name',
-    translated: 'Naam',
+    translated: 'Имя',
   },
   com_nav_shared_links_date_shared: {
     english: 'Date shared',
@@ -1848,11 +1932,11 @@ export const comparisons = {
   },
   com_nav_clear_conversation: {
     english: 'Clear conversations',
-    translated: 'Удалить разговоры',
+    translated: 'Удалить чаты',
   },
   com_nav_clear_conversation_confirm_message: {
     english: 'Are you sure you want to clear all conversations? This is irreversible.',
-    translated: 'Вы уверены, что хотите удалить все разговоры? Это действие нельзя отменить.',
+    translated: 'Вы уверены, что хотите удалить все чаты? Это действие нельзя отменить.',
   },
   com_nav_help_faq: {
     english: 'Help & FAQ',
@@ -1865,6 +1949,12 @@ export const comparisons = {
   com_nav_search_placeholder: {
     english: 'Search messages',
     translated: 'Поиск сообщений',
+  },
+  com_nav_info_bookmarks_rebuild: {
+    english:
+      'If the bookmark count is incorrect, please rebuild the bookmark information. The bookmark count will be recalculated and the data will be restored to its correct state.',
+    translated:
+      'Если количество закладок некорректно, пожалуйста, перестройте информацию о закладках. Количество закладок будет пересчитано, и данные будут восстановлены до правильного состояния.',
   },
   com_nav_setting_general: {
     english: 'General',
@@ -1886,7 +1976,7 @@ export const comparisons = {
     english:
       'If you upload files under Knowledge, conversations with your Assistant may include file contents.',
     translated:
-      'Если вы загрузите файлы в раздел Знания, разговоры с вашим ассистентом могут включать содержимое файлов.',
+      'Если вы загрузите файлы в раздел Знания, чаты с вашим ассистентом могут включать содержимое файлов.',
   },
   com_assistants_knowledge_disabled: {
     english:
@@ -2133,6 +2223,10 @@ export const comparisons = {
     english: 'Hide Panel',
     translated: 'Скрыть панель',
   },
+  com_sidepanel_conversation_tags: {
+    english: 'Bookmarks',
+    translated: 'Закладки',
+  },
   com_assistants_capabilities: {
     english: 'Capabilities',
     translated: 'Возможности',
@@ -2337,7 +2431,7 @@ export const comparisons = {
   },
   com_ui_fork_processing: {
     english: 'Forking conversation...',
-    translated: 'Разделение беседы...',
+    translated: 'Разветвление беседы...',
   },
   com_ui_fork_error: {
     english: 'There was an error forking the conversation',
@@ -2454,10 +2548,6 @@ export const comparisons = {
   com_ui_max_tags: {
     english: 'Maximum number allowed is {0}, using latest values.',
     translated: 'Максимально допустимое количество - {0}, используются последние значения.',
-  },
-  com_endpoint_messages: {
-    english: 'Messages',
-    translated: 'Сообщения',
   },
   com_endpoint_context_tokens: {
     english: 'Max Context Tokens',
@@ -2648,7 +2738,7 @@ export const comparisons = {
   },
   com_nav_lang_japanese: {
     english: '日本語',
-    translated: 'Язык',
+    translated: 'Японский',
   },
   com_nav_lang_swedish: {
     english: 'Svenska',
@@ -2664,7 +2754,7 @@ export const comparisons = {
   },
   com_nav_lang_traditionalchinese: {
     english: '繁體中文',
-    translated: 'Традиционный китайский',
+    translated: 'Китайский (Традиционный)',
   },
   com_nav_lang_arabic: {
     english: 'العربية',

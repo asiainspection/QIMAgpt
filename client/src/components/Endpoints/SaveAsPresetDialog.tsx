@@ -1,13 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useCreatePresetMutation } from 'librechat-data-provider/react-query';
 import type { TEditPresetProps } from '~/common';
-import {
-  cn,
-  defaultTextPropsLabel,
-  removeFocusOutlines,
-  cleanupPreset,
-  defaultTextProps,
-} from '~/utils/';
+import { cn, removeFocusOutlines, cleanupPreset, defaultTextProps } from '~/utils/';
 import DialogTemplate from '~/components/ui/DialogTemplate';
 import { Dialog, Input, Label } from '~/components/ui/';
 import { NotificationSeverity } from '~/common';
@@ -15,7 +9,7 @@ import { useToastContext } from '~/Providers';
 import { useLocalize } from '~/hooks';
 
 const SaveAsPresetDialog = ({ open, onOpenChange, preset }: TEditPresetProps) => {
-  const [title, setTitle] = useState<string>(preset?.title || 'My Preset');
+  const [title, setTitle] = useState<string>(preset.title || 'My Preset');
   const createPresetMutation = useCreatePresetMutation();
   const { showToast } = useToastContext();
   const localize = useLocalize();
@@ -48,7 +42,7 @@ const SaveAsPresetDialog = ({ open, onOpenChange, preset }: TEditPresetProps) =>
   };
 
   useEffect(() => {
-    setTitle(preset?.title || localize('com_endpoint_my_preset'));
+    setTitle(preset.title || localize('com_endpoint_my_preset'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
@@ -61,11 +55,11 @@ const SaveAsPresetDialog = ({ open, onOpenChange, preset }: TEditPresetProps) =>
         main={
           <div className="flex w-full flex-col items-center gap-2">
             <div className="grid w-full items-center gap-2">
-              <Label htmlFor="chatGptLabel" className="text-left text-sm font-medium">
+              <Label htmlFor="dialog-preset-name" className="text-left text-sm font-medium">
                 {localize('com_endpoint_preset_name')}
               </Label>
               <Input
-                id="chatGpt"
+                id="preset-custom-name"
                 value={title || ''}
                 onChange={(e) => setTitle(e.target.value || '')}
                 placeholder="Set a custom name for this preset"
