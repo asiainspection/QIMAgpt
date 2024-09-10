@@ -53,10 +53,14 @@ export const router = createBrowserRouter([
   {
     element: <AuthLayout />,
     children: [
+      {
+        children: [
           {
             path: 'login',
             element: <Login />,
           },
+        ],
+      },
       dashboardRoutes,
       {
         path: '/',
