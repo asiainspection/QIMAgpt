@@ -17,10 +17,10 @@ import Search from './Search';
 import Root from './Root';
 
 const AuthLayout = () => (
-  <AuthContextProvider>
-    <Outlet />
-    <ApiErrorWatcher />
-  </AuthContextProvider>
+    <AuthContextProvider>
+      <Outlet />
+      <ApiErrorWatcher />
+    </AuthContextProvider>
 );
 
 export const router = createBrowserRouter([
@@ -54,6 +54,8 @@ export const router = createBrowserRouter([
     element: <AuthLayout />,
     children: [
       {
+        path: '/',
+        element: <LoginLayout />,
         children: [
           {
             path: 'login',
