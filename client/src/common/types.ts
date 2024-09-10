@@ -1,26 +1,47 @@
+import React from 'react';
 import { FileSources } from 'librechat-data-provider';
 import type * as InputNumberPrimitive from 'rc-input-number';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { SetterOrUpdater } from 'recoil';
 import type {
+  TRole,
   TUser,
   Action,
   TPreset,
   TPlugin,
   TMessage,
   Assistant,
+  TResPlugin,
   TLoginUser,
   AuthTypeEnum,
+  TModelsConfig,
   TConversation,
   TStartupConfig,
   EModelEndpoint,
   AssistantsEndpoint,
+  TMessageContentParts,
   AuthorizationTypeEnum,
   TSetOption as SetOption,
   TokenExchangeMethodEnum,
 } from 'librechat-data-provider';
 import type { UseMutationResult } from '@tanstack/react-query';
 import type { LucideIcon } from 'lucide-react';
+
+export enum PromptsEditorMode {
+  SIMPLE = 'simple',
+  ADVANCED = 'advanced',
+}
+
+export enum STTEndpoints {
+  browser = 'browser',
+  external = 'external',
+}
+
+export enum TTSEndpoints {
+  browser = 'browser',
+  edge = 'edge',
+  external = 'external',
+}
 
 export type AudioChunk = {
   audio: string;
@@ -52,6 +73,8 @@ export type LastSelectedModels = Record<EModelEndpoint, string>;
 
 export type LocalizeFunction = (phraseKey: string, ...values: string[]) => string;
 
+export type ChatFormValues = { text: string };
+
 export const mainTextareaId = 'prompt-textarea';
 export const globalAudioId = 'global-audio';
 
@@ -75,9 +98,9 @@ export type IconMapProps = {
 export type NavLink = {
   title: string;
   label?: string;
-  icon: LucideIcon;
+  icon: LucideIcon | React.FC;
   Component?: React.ComponentType;
-  onClick?: () => void;
+  onClick?: (e?: React.MouseEvent) => void;
   variant?: 'default' | 'ghost';
   id: string;
 };
@@ -89,10 +112,12 @@ export interface NavProps {
   defaultActive?: string;
 }
 
-interface ColumnMeta {
-  meta: {
-    size: number | string;
-  };
+export interface DataColumnMeta {
+  meta:
+    | {
+        size: number | string;
+      }
+    | undefined;
 }
 
 export enum Panel {
@@ -134,7 +159,7 @@ export type AssistantPanelProps = {
   setActivePanel: React.Dispatch<React.SetStateAction<Panel>>;
 };
 
-export type AugmentedColumnDef<TData, TValue> = ColumnDef<TData, TValue> & ColumnMeta;
+export type AugmentedColumnDef<TData, TValue> = ColumnDef<TData, TValue> & DataColumnMeta;
 
 export type TSetOption = SetOption;
 
@@ -225,6 +250,8 @@ export type TGenButtonProps = {
 
 export type TAskProps = {
   text: string;
+  overrideConvoId?: string;
+  overrideUserMessageId?: string;
   parentMessageId?: string | null;
   conversationId?: string | null;
   messageId?: string | null;
@@ -237,6 +264,7 @@ export type TOptions = {
   isRegenerate?: boolean;
   isContinued?: boolean;
   isEdited?: boolean;
+  overrideMessages?: TMessage[];
 };
 
 export type TAskFunction = (props: TAskProps, options?: TOptions) => void;
@@ -299,6 +327,7 @@ export type TDangerButtonProps = {
   actionTextCode: string;
   dataTestIdInitial: string;
   dataTestIdConfirm: string;
+  infoDescriptionCode?: string;
   confirmActionTextCode?: string;
 };
 
@@ -325,6 +354,7 @@ export type TAuthContext = {
   login: (data: TLoginUser) => void;
   logout: () => void;
   setError: React.Dispatch<React.SetStateAction<string | undefined>>;
+  roles?: Record<string, TRole | null | undefined>;
 };
 
 export type TUserContext = {
@@ -358,11 +388,27 @@ export type Option = Record<string, unknown> & {
   value: string | number | null;
 };
 
+export type VoiceOption = {
+  value: string;
+  label: string;
+};
+
+export type TMessageAudio = {
+  messageId?: string;
+  content?: TMessageContentParts[] | string;
+  className?: string;
+  isLast: boolean;
+  index: number;
+};
+
 export type OptionWithIcon = Option & { icon?: React.ReactNode };
 export type MentionOption = OptionWithIcon & {
   type: string;
   value: string;
   description?: string;
+};
+export type PromptOption = MentionOption & {
+  id: string;
 };
 
 export type TOptionSettings = {
@@ -394,7 +440,6 @@ export interface SwitcherProps {
   endpointKeyProvided: boolean;
   isCollapsed: boolean;
 }
-
 export type TLoginLayoutContext = {
   startupConfig: TStartupConfig | null;
   startupConfigError: unknown;
@@ -404,3 +449,51 @@ export type TLoginLayoutContext = {
   headerText: string;
   setHeaderText: React.Dispatch<React.SetStateAction<string>>;
 };
+
+export type NewConversationParams = {
+  template?: Partial<TConversation>;
+  preset?: Partial<TPreset>;
+  modelsData?: TModelsConfig;
+  buildDefault?: boolean;
+  keepLatestMessage?: boolean;
+  keepAddedConvos?: boolean;
+};
+
+export type ConvoGenerator = (params: NewConversationParams) => void | TConversation;
+
+export type TBaseResData = {
+  plugin?: TResPlugin;
+  final?: boolean;
+  initial?: boolean;
+  previousMessages?: TMessage[];
+  conversation: TConversation;
+  conversationId?: string;
+  runMessages?: TMessage[];
+};
+
+export type TResData = TBaseResData & {
+  requestMessage: TMessage;
+  responseMessage: TMessage;
+};
+
+export type TFinalResData = TBaseResData & {
+  requestMessage?: TMessage;
+  responseMessage?: TMessage;
+};
+
+export type TVectorStore = {
+  _id: string;
+  object: 'vector_store';
+  created_at: string | Date;
+  name: string;
+  bytes?: number;
+  file_counts?: {
+    in_progress: number;
+    completed: number;
+    failed: number;
+    cancelled: number;
+    total: number;
+  };
+};
+
+export type TThread = { id: string; createdAt: string };

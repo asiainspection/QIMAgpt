@@ -1,6 +1,9 @@
 const express = require('express');
-const { defaultSocialLogins } = require('librechat-data-provider');
+const { CacheKeys, defaultSocialLogins } = require('librechat-data-provider');
+const { getLdapConfig } = require('~/server/services/Config/ldap');
+const { getProjectByName } = require('~/models/Project');
 const { isEnabled } = require('~/server/utils');
+const { getLogStores } = require('~/cache');
 const { logger } = require('~/config');
 
 const router = express.Router();
@@ -17,13 +20,22 @@ const publicSharedLinksEnabled =
     isEnabled(process.env.ALLOW_SHARED_LINKS_PUBLIC));
 
 router.get('/', async function (req, res) {
+  const cache = getLogStores(CacheKeys.CONFIG_STORE);
+  const cachedStartupConfig = await cache.get(CacheKeys.STARTUP_CONFIG);
+  if (cachedStartupConfig) {
+    res.send(cachedStartupConfig);
+    return;
+  }
+
   const isBirthday = () => {
     const today = new Date();
     return today.getMonth() === 1 && today.getDate() === 11;
   };
 
-  const ldapLoginEnabled =
-    !!process.env.LDAP_URL && !!process.env.LDAP_BIND_DN && !!process.env.LDAP_USER_SEARCH_BASE;
+  const instanceProject = await getProjectByName('instance', '_id');
+
+  const ldap = getLdapConfig();
+
   try {
     /** @type {TStartupConfig} */
     const payload = {
@@ -41,10 +53,9 @@ router.get('/', async function (req, res) {
         !!process.env.OPENID_SESSION_SECRET,
       openidLabel: process.env.OPENID_BUTTON_LABEL || 'Continue with OpenID',
       openidImageUrl: process.env.OPENID_IMAGE_URL,
-      ldapLoginEnabled,
       serverDomain: process.env.DOMAIN_SERVER || 'http://localhost:3080',
       emailLoginEnabled,
-      registrationEnabled: !ldapLoginEnabled && isEnabled(process.env.ALLOW_REGISTRATION),
+      registrationEnabled: !ldap?.enabled && isEnabled(process.env.ALLOW_REGISTRATION),
       socialLoginEnabled: isEnabled(process.env.ALLOW_SOCIAL_LOGIN),
       emailEnabled:
         (!!process.env.EMAIL_SERVICE || !!process.env.EMAIL_HOST) &&
@@ -63,12 +74,18 @@ router.get('/', async function (req, res) {
       sharedLinksEnabled,
       publicSharedLinksEnabled,
       analyticsGtmId: process.env.ANALYTICS_GTM_ID,
+      instanceProjectId: instanceProject._id.toString(),
     };
+
+    if (ldap) {
+      payload.ldap = ldap;
+    }
 
     if (typeof process.env.CUSTOM_FOOTER === 'string') {
       payload.customFooter = process.env.CUSTOM_FOOTER;
     }
 
+    await cache.set(CacheKeys.STARTUP_CONFIG, payload);
     return res.status(200).send(payload);
   } catch (err) {
     logger.error('Error in startup config', err);

@@ -150,6 +150,7 @@ export const useConversationsInfiniteQuery = (
         ...params,
         pageNumber: pageParam?.toString(),
         isArchived: params?.isArchived || false,
+        tags: params?.tags || [],
       }),
     {
       getNextPageParam: (lastPage) => {
@@ -185,6 +186,21 @@ export const useSharedLinksInfiniteQuery = (
         // If the current page number is less than total pages, return the next page number
         return currentPageNumber < totalPages ? currentPageNumber + 1 : undefined;
       },
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      refetchOnMount: false,
+      ...config,
+    },
+  );
+};
+
+export const useConversationTagsQuery = (
+  config?: UseQueryOptions<t.TConversationTagsResponse>,
+): QueryObserverResult<t.TConversationTagsResponse> => {
+  return useQuery<t.TConversationTag[]>(
+    [QueryKeys.conversationTags],
+    () => dataService.getConversationTags(),
+    {
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
       refetchOnMount: false,
@@ -250,7 +266,7 @@ export const useListAssistantsQuery = <TData = AssistantListResponse>(
       refetchOnMount: false,
       retry: false,
       ...config,
-      enabled: config?.enabled !== undefined ? config?.enabled && enabled : enabled,
+      enabled: config?.enabled !== undefined ? config.enabled && enabled : enabled,
     },
   );
 };
@@ -317,7 +333,7 @@ export const useGetAssistantByIdQuery = (
       retry: false,
       ...config,
       // Query will not execute until the assistant_id exists
-      enabled: config?.enabled !== undefined ? config?.enabled && enabled : enabled,
+      enabled: config?.enabled !== undefined ? config.enabled && enabled : enabled,
     },
   );
 };
@@ -348,7 +364,7 @@ export const useGetActionsQuery = <TData = Action[]>(
       refetchOnReconnect: false,
       refetchOnMount: false,
       ...config,
-      enabled: config?.enabled !== undefined ? config?.enabled && enabled : enabled,
+      enabled: config?.enabled !== undefined ? config.enabled && enabled : enabled,
     },
   );
 };
@@ -378,7 +394,7 @@ export const useGetAssistantDocsQuery = (
       refetchOnReconnect: false,
       refetchOnMount: false,
       ...config,
-      enabled: config?.enabled !== undefined ? config?.enabled && enabled : enabled,
+      enabled: config?.enabled !== undefined ? config.enabled && enabled : enabled,
     },
   );
 };
@@ -421,4 +437,128 @@ export const useFileDownload = (userId?: string, file_id?: string): QueryObserve
 /* Text to speech voices */
 export const useVoicesQuery = (): UseQueryResult<t.VoiceResponse> => {
   return useQuery([QueryKeys.voices], () => dataService.getVoices());
+};
+
+/* Custom config speech */
+export const useCustomConfigSpeechQuery = () => {
+  return useQuery([QueryKeys.customConfigSpeech], () => dataService.getCustomConfigSpeech());
+};
+
+/** Prompt */
+
+export const usePromptGroupsInfiniteQuery = (
+  params?: t.TPromptGroupsWithFilterRequest,
+  config?: UseInfiniteQueryOptions<t.PromptGroupListResponse, unknown>,
+) => {
+  const { name, pageSize, category, ...rest } = params || {};
+  return useInfiniteQuery<t.PromptGroupListResponse, unknown>(
+    [QueryKeys.promptGroups, name, category, pageSize],
+    ({ pageParam = '1' }) =>
+      dataService.getPromptGroups({
+        ...rest,
+        name,
+        category: category || '',
+        pageNumber: pageParam?.toString(),
+        pageSize: (pageSize || 10).toString(),
+      }),
+    {
+      getNextPageParam: (lastPage) => {
+        const currentPageNumber = Number(lastPage.pageNumber);
+        const totalPages = Number(lastPage.pages);
+        return currentPageNumber < totalPages ? currentPageNumber + 1 : undefined;
+      },
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      refetchOnMount: false,
+      ...config,
+    },
+  );
+};
+
+export const useGetPromptGroup = (
+  id: string,
+  config?: UseQueryOptions<t.TPromptGroup>,
+): QueryObserverResult<t.TPromptGroup> => {
+  return useQuery<t.TPromptGroup>(
+    [QueryKeys.promptGroup, id],
+    () => dataService.getPromptGroup(id),
+    {
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      refetchOnMount: false,
+      retry: false,
+      ...config,
+      enabled: config?.enabled !== undefined ? config.enabled : true,
+    },
+  );
+};
+
+export const useGetPrompts = (
+  filter: t.TPromptsWithFilterRequest,
+  config?: UseQueryOptions<t.TPrompt[]>,
+): QueryObserverResult<t.TPrompt[]> => {
+  return useQuery<t.TPrompt[]>(
+    [QueryKeys.prompts, filter.groupId ?? ''],
+    () => dataService.getPrompts(filter),
+    {
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      refetchOnMount: false,
+      retry: false,
+      ...config,
+      enabled: config?.enabled !== undefined ? config.enabled : true,
+    },
+  );
+};
+
+export const useGetAllPromptGroups = <TData = t.AllPromptGroupsResponse>(
+  filter?: t.AllPromptGroupsFilterRequest,
+  config?: UseQueryOptions<t.AllPromptGroupsResponse, unknown, TData>,
+): QueryObserverResult<TData> => {
+  return useQuery<t.AllPromptGroupsResponse, unknown, TData>(
+    [QueryKeys.allPromptGroups],
+    () => dataService.getAllPromptGroups(),
+    {
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      refetchOnMount: false,
+      retry: false,
+      ...config,
+    },
+  );
+};
+
+export const useGetCategories = <TData = t.TGetCategoriesResponse>(
+  config?: UseQueryOptions<t.TGetCategoriesResponse, unknown, TData>,
+): QueryObserverResult<TData> => {
+  return useQuery<t.TGetCategoriesResponse, unknown, TData>(
+    [QueryKeys.categories],
+    () => dataService.getCategories(),
+    {
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      refetchOnMount: false,
+      retry: false,
+      ...config,
+      enabled: config?.enabled !== undefined ? config.enabled : true,
+    },
+  );
+};
+
+export const useGetRandomPrompts = (
+  filter: t.TGetRandomPromptsRequest,
+  config?: UseQueryOptions<t.TGetRandomPromptsResponse>,
+): QueryObserverResult<t.TGetRandomPromptsResponse> => {
+  return useQuery<t.TGetRandomPromptsResponse>(
+    [QueryKeys.randomPrompts],
+    () => dataService.getRandomPrompts(filter),
+    {
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      refetchOnMount: false,
+      retry: false,
+      ...config,
+      enabled: config?.enabled !== undefined ? config.enabled : true,
+    },
+  );
 };

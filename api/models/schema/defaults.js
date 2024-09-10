@@ -74,6 +74,10 @@ const conversationPreset = {
   resendImages: {
     type: Boolean,
   },
+  /* Anthropic only */
+  promptCache: {
+    type: Boolean,
+  },
   // files
   resendFiles: {
     type: Boolean,
@@ -102,6 +106,10 @@ const conversationPreset = {
   },
   spec: {
     type: String,
+  },
+  tags: {
+    type: [String],
+    default: [],
   },
   tools: { type: [{ type: String }], default: undefined },
   maxContextTokens: {

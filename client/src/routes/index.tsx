@@ -10,6 +10,7 @@ import {
 import { AuthContextProvider } from '~/hooks/AuthContext';
 import StartupLayout from './Layouts/Startup';
 import LoginLayout from './Layouts/Login';
+import dashboardRoutes from './Dashboard';
 import ShareRoute from './ShareRoute';
 import ChatRoute from './ChatRoute';
 import Search from './Search';
@@ -53,6 +54,8 @@ export const router = createBrowserRouter([
     element: <AuthLayout />,
     children: [
       {
+        path: '/',
+        element: <LoginLayout />,
         children: [
           {
             path: 'login',
@@ -60,6 +63,7 @@ export const router = createBrowserRouter([
           },
         ],
       },
+      dashboardRoutes,
       {
         path: '/',
         element: <Root />,
@@ -77,10 +81,6 @@ export const router = createBrowserRouter([
             element: <Search />,
           },
         ],
-      },
-      {
-        path: '*',
-        element: <Navigate to="/c/new" replace={true} />,
       },
     ],
   },

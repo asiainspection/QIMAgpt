@@ -1,9 +1,9 @@
-import { ThemeSelector } from '~/components/ui';
 import { useLocalize } from '~/hooks';
 import { BlinkAnimation } from './BlinkAnimation';
 import { TStartupConfig } from 'librechat-data-provider';
 import SocialLoginRender from './SocialLoginRender';
-import Footer from '../Input/FooterQima';
+import { ThemeSelector } from '~/components/ui';
+import Footer from './Footer';
 
 const ErrorRender = ({ children }: { children: React.ReactNode }) => (
   <div className="mt-16 flex justify-center">
