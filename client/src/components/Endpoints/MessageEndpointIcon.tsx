@@ -1,6 +1,6 @@
 import { EModelEndpoint, isAssistantsEndpoint, alternateName } from 'librechat-data-provider';
 import UnknownIcon from '~/components/Chat/Menus/Endpoints/UnknownIcon';
-import { BrainCircuit } from 'lucide-react';
+import { Feather } from 'lucide-react';
 import {
   Plugin,
   GPTIcon,
@@ -16,6 +16,14 @@ import {
 
 import { IconProps } from '~/common';
 import { cn } from '~/utils';
+
+function getOpenAIColor(_model: string | null | undefined) {
+  const model = _model?.toLowerCase() ?? '';
+  if (model && /\bo1\b/i.test(model)) {
+    return '#000000';
+  }
+  return model.includes('gpt-4') ? '#AB68FF' : '#19C37D';
+}
 
 function getGoogleIcon(model: string | null | undefined, size: number) {
   if (model?.toLowerCase().includes('code') === true) {
@@ -101,7 +109,7 @@ const MessageEndpointIcon: React.FC<IconProps> = (props) => {
     ) : (
       <div className="h-6 w-6">
         <div className="shadow-stroke flex h-6 w-6 items-center justify-center overflow-hidden rounded-full">
-          <BrainCircuit className="h-2/3 w-2/3 text-gray-400" />
+          <Feather className="h-2/3 w-2/3 text-gray-400" />
         </div>
       </div>
     ),
@@ -119,8 +127,7 @@ const MessageEndpointIcon: React.FC<IconProps> = (props) => {
     },
     [EModelEndpoint.openAI]: {
       icon: <GPTIcon size={size * 0.5555555555555556} />,
-      bg:
-        typeof model === 'string' && model.toLowerCase().includes('gpt-4') ? '#AB68FF' : '#19C37D',
+      bg: getOpenAIColor(model),
       name: 'ChatGPT',
     },
     [EModelEndpoint.gptPlugins]: {

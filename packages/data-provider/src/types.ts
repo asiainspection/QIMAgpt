@@ -8,6 +8,7 @@ import type {
   TConversation,
   EModelEndpoint,
   TConversationTag,
+  TBanner,
 } from './schemas';
 import type { TSpecsConfig } from './models';
 export type TOpenAIMessage = OpenAI.Chat.ChatCompletionMessageParam;
@@ -92,7 +93,7 @@ export type TCategory = {
 
 export type TError = {
   message: string;
-  code?: number;
+  code?: number | string;
   response?: {
     data?: {
       message?: string;
@@ -310,7 +311,7 @@ export type TInterfaceConfig = {
     openNewTab?: boolean;
     modalAcceptance?: boolean;
     modalTitle?: string;
-    modalContent?: string | string[];
+    modalContent?: string;
   };
   endpointsMenu: boolean;
   modelSelect: boolean;
@@ -518,3 +519,5 @@ export type TUserTermsResponse = {
 export type TAcceptTermsResponse = {
   success: boolean;
 };
+
+export type TBannerResponse = TBanner | null;

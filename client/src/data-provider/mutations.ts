@@ -1,6 +1,5 @@
 import {
   Constants,
-  EToolResources,
   LocalStorageKeys,
   InfiniteCollections,
   defaultAssistantsVersion,
@@ -9,7 +8,7 @@ import {
 import { useSetRecoilState } from 'recoil';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { dataService, MutationKeys, QueryKeys, defaultOrderQuery } from 'librechat-data-provider';
-import type t from 'librechat-data-provider';
+import type * as t from 'librechat-data-provider';
 import type { InfiniteData, UseMutationResult } from '@tanstack/react-query';
 import useUpdateTagsInConvo from '~/hooks/Conversations/useUpdateTagsInConvo';
 import { updateConversationTag } from '~/utils/conversationTags';
@@ -138,7 +137,8 @@ export const useArchiveConversationMutation = (
     (payload: t.TArchiveConversationRequest) => dataService.archiveConversation(payload),
     {
       onSuccess: (_data, vars) => {
-        if (vars.isArchived) {
+        const isArchived = vars.isArchived === true;
+        if (isArchived) {
           queryClient.setQueryData([QueryKeys.conversation, id], null);
         } else {
           queryClient.setQueryData([QueryKeys.conversation, id], _data);
@@ -151,17 +151,17 @@ export const useArchiveConversationMutation = (
           const pageSize = convoData.pages[0].pageSize as number;
 
           return normalizeData(
-            vars.isArchived ? deleteConversation(convoData, id) : addConversation(convoData, _data),
+            isArchived ? deleteConversation(convoData, id) : addConversation(convoData, _data),
             'conversations',
             pageSize,
           );
         });
 
-        if (vars.isArchived) {
+        if (isArchived) {
           const current = queryClient.getQueryData<t.ConversationData>([
             QueryKeys.allConversations,
           ]);
-          refetch({ refetchPage: (page, index) => index === (current?.pages.length || 1) - 1 });
+          refetch({ refetchPage: (page, index) => index === (current?.pages.length ?? 1) - 1 });
         }
 
         queryClient.setQueryData<t.ConversationData>(
@@ -172,24 +172,76 @@ export const useArchiveConversationMutation = (
             }
             const pageSize = convoData.pages[0].pageSize as number;
             return normalizeData(
-              vars.isArchived
-                ? addConversation(convoData, _data)
-                : deleteConversation(convoData, id),
+              isArchived ? addConversation(convoData, _data) : deleteConversation(convoData, id),
               'conversations',
               pageSize,
             );
           },
         );
 
-        if (!vars.isArchived) {
+        if (!isArchived) {
           const currentArchive = queryClient.getQueryData<t.ConversationData>([
             QueryKeys.archivedConversations,
           ]);
           archiveRefetch({
-            refetchPage: (page, index) => index === (currentArchive?.pages.length || 1) - 1,
+            refetchPage: (page, index) => index === (currentArchive?.pages.length ?? 1) - 1,
           });
         }
       },
+    },
+  );
+};
+
+export const useArchiveConvoMutation = (options?: t.ArchiveConvoOptions) => {
+  const queryClient = useQueryClient();
+  const { onSuccess, ..._options } = options ?? {};
+
+  return useMutation<t.TArchiveConversationResponse, unknown, t.TArchiveConversationRequest>(
+    (payload: t.TArchiveConversationRequest) => dataService.archiveConversation(payload),
+    {
+      onSuccess: (_data, vars) => {
+        const { conversationId } = vars;
+        const isArchived = vars.isArchived === true;
+        if (isArchived) {
+          queryClient.setQueryData([QueryKeys.conversation, conversationId], null);
+        } else {
+          queryClient.setQueryData([QueryKeys.conversation, conversationId], _data);
+        }
+
+        queryClient.setQueryData<t.ConversationData>([QueryKeys.allConversations], (convoData) => {
+          if (!convoData) {
+            return convoData;
+          }
+          const pageSize = convoData.pages[0].pageSize as number;
+          return normalizeData(
+            isArchived
+              ? deleteConversation(convoData, conversationId)
+              : addConversation(convoData, _data),
+            'conversations',
+            pageSize,
+          );
+        });
+
+        queryClient.setQueryData<t.ConversationData>(
+          [QueryKeys.archivedConversations],
+          (convoData) => {
+            if (!convoData) {
+              return convoData;
+            }
+            const pageSize = convoData.pages[0].pageSize as number;
+            return normalizeData(
+              isArchived
+                ? addConversation(convoData, _data)
+                : deleteConversation(convoData, conversationId),
+              'conversations',
+              pageSize,
+            );
+          },
+        );
+
+        onSuccess?.(_data, vars);
+      },
+      ..._options,
     },
   );
 };
@@ -484,32 +536,33 @@ export const useDeleteConversationMutation = (
     (payload: t.TDeleteConversationRequest) => dataService.deleteConversation(payload),
     {
       onSuccess: (_data, vars, context) => {
-        if (!vars.conversationId) {
+        const conversationId = vars.conversationId ?? '';
+        if (!conversationId) {
           return;
         }
 
-        const handleDelete = (convoData) => {
+        const handleDelete = (convoData: t.ConversationData | undefined) => {
           if (!convoData) {
             return convoData;
           }
           return normalizeData(
-            deleteConversation(convoData, vars.conversationId as string),
+            deleteConversation(convoData, conversationId),
             'conversations',
-            convoData.pages[0].pageSize,
+            Number(convoData.pages[0].pageSize),
           );
         };
 
-        queryClient.setQueryData([QueryKeys.conversation, vars.conversationId], null);
+        queryClient.setQueryData([QueryKeys.conversation, conversationId], null);
         queryClient.setQueryData<t.ConversationData>([QueryKeys.allConversations], handleDelete);
         queryClient.setQueryData<t.ConversationData>(
           [QueryKeys.archivedConversations],
           handleDelete,
         );
         const current = queryClient.getQueryData<t.ConversationData>([QueryKeys.allConversations]);
-        refetch({ refetchPage: (page, index) => index === (current?.pages.length || 1) - 1 });
+        refetch({ refetchPage: (page, index) => index === (current?.pages.length ?? 1) - 1 });
         onSuccess?.(_data, vars, context);
       },
-      ...(_options || {}),
+      ..._options,
     },
   );
 };
@@ -540,7 +593,7 @@ export const useForkConvoMutation = (
       );
       onSuccess?.(data, vars, context);
     },
-    ...(_options || {}),
+    ..._options,
   });
 };
 
@@ -565,116 +618,6 @@ export const useUploadConversationsMutation = (
       }
     },
     onMutate,
-  });
-};
-
-export const useUploadFileMutation = (
-  _options?: t.UploadMutationOptions,
-): UseMutationResult<
-  t.TFileUpload, // response data
-  unknown, // error
-  FormData, // request
-  unknown // context
-> => {
-  const queryClient = useQueryClient();
-  const { onSuccess, ...options } = _options || {};
-  return useMutation([MutationKeys.fileUpload], {
-    mutationFn: (body: FormData) => {
-      const width = body.get('width');
-      const height = body.get('height');
-      const version = body.get('version') as number | string;
-      if (height && width && (!version || version != 2)) {
-        return dataService.uploadImage(body);
-      }
-
-      return dataService.uploadFile(body);
-    },
-    ...(options || {}),
-    onSuccess: (data, formData, context) => {
-      queryClient.setQueryData<t.TFile[] | undefined>([QueryKeys.files], (_files) => [
-        data,
-        ...(_files ?? []),
-      ]);
-
-      const endpoint = formData.get('endpoint');
-      const assistant_id = formData.get('assistant_id');
-      const message_file = formData.get('message_file');
-      const tool_resource = formData.get('tool_resource');
-
-      if (!assistant_id || message_file === 'true') {
-        onSuccess?.(data, formData, context);
-        return;
-      }
-
-      queryClient.setQueryData<t.AssistantListResponse>(
-        [QueryKeys.assistants, endpoint, defaultOrderQuery],
-        (prev) => {
-          if (!prev) {
-            return prev;
-          }
-
-          return {
-            ...prev,
-            data: prev.data.map((assistant) => {
-              if (assistant.id !== assistant_id) {
-                return assistant;
-              }
-
-              const update = {};
-              if (!tool_resource) {
-                update['file_ids'] = [...(assistant.file_ids ?? []), data.file_id];
-              }
-              if (tool_resource === EToolResources.code_interpreter) {
-                const prevResources = assistant.tool_resources ?? {};
-                const prevResource = assistant.tool_resources?.[tool_resource as string] ?? {
-                  file_ids: [],
-                };
-                prevResource.file_ids.push(data.file_id);
-                update['tool_resources'] = {
-                  ...prevResources,
-                  [tool_resource as string]: prevResource,
-                };
-              }
-              return {
-                ...assistant,
-                ...update,
-              };
-            }),
-          };
-        },
-      );
-      onSuccess?.(data, formData, context);
-    },
-  });
-};
-
-export const useDeleteFilesMutation = (
-  _options?: t.DeleteMutationOptions,
-): UseMutationResult<
-  t.DeleteFilesResponse, // response data
-  unknown, // error
-  t.DeleteFilesBody, // request
-  unknown // context
-> => {
-  const queryClient = useQueryClient();
-  const { onSuccess, ...options } = _options || {};
-  return useMutation([MutationKeys.fileDelete], {
-    mutationFn: (body: t.DeleteFilesBody) =>
-      dataService.deleteFiles(body.files, body.assistant_id, body.tool_resource),
-    ...(options || {}),
-    onSuccess: (data, ...args) => {
-      queryClient.setQueryData<t.TFile[] | undefined>([QueryKeys.files], (cachefiles) => {
-        const { files: filesDeleted } = args[0];
-
-        const fileMap = filesDeleted.reduce((acc, file) => {
-          acc.set(file.file_id, file);
-          return acc;
-        }, new Map<string, t.BatchFile>());
-
-        return (cachefiles ?? []).filter((file) => !fileMap.has(file.file_id));
-      });
-      onSuccess?.(data, ...args);
-    },
   });
 };
 
@@ -863,7 +806,7 @@ export const useUpdateAssistantMutation = (
       const { endpoint } = data;
       const endpointsConfig = queryClient.getQueryData<t.TEndpointsConfig>([QueryKeys.endpoints]);
       const endpointConfig = endpointsConfig?.[endpoint];
-      const version = endpointConfig.version ?? defaultAssistantsVersion[endpoint];
+      const version = endpointConfig?.version ?? defaultAssistantsVersion[endpoint];
       return dataService.updateAssistant({
         data,
         version,
@@ -1175,6 +1118,8 @@ export const useUpdateAgentMutation = (
             return agent;
           }),
         });
+
+        queryClient.setQueryData<t.Agent>([QueryKeys.agent, variables.agent_id], updatedAgent);
         return options?.onSuccess?.(updatedAgent, variables, context);
       },
     },

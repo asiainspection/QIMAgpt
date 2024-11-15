@@ -37,9 +37,12 @@ const tokenValues = Object.assign(
     '4k': { prompt: 1.5, completion: 2 },
     '16k': { prompt: 3, completion: 4 },
     'gpt-3.5-turbo-1106': { prompt: 1, completion: 2 },
-    'gpt-4o-2024-08-06': { prompt: 2.5, completion: 10 },
+    'o1-preview': { prompt: 15, completion: 60 },
+    'o1-mini': { prompt: 3, completion: 12 },
+    o1: { prompt: 15, completion: 60 },
     'gpt-4o-mini': { prompt: 0.15, completion: 0.6 },
-    'gpt-4o': { prompt: 5, completion: 15 },
+    'gpt-4o': { prompt: 2.5, completion: 10 },
+    'gpt-4o-2024-05-13': { prompt: 5, completion: 15 },
     'gpt-4-1106': { prompt: 10, completion: 30 },
     'gpt-3.5-turbo-0125': { prompt: 0.5, completion: 1.5 },
     'claude-3-opus': { prompt: 15, completion: 75 },
@@ -95,8 +98,14 @@ const getValueKey = (model, endpoint) => {
     return 'gpt-3.5-turbo-1106';
   } else if (modelName.includes('gpt-3.5')) {
     return '4k';
-  } else if (modelName.includes('gpt-4o-2024-08-06')) {
-    return 'gpt-4o-2024-08-06';
+  } else if (modelName.includes('o1-preview')) {
+    return 'o1-preview';
+  } else if (modelName.includes('o1-mini')) {
+    return 'o1-mini';
+  } else if (modelName.includes('o1')) {
+    return 'o1';
+  } else if (modelName.includes('gpt-4o-2024-05-13')) {
+    return 'gpt-4o-2024-05-13';
   } else if (modelName.includes('gpt-4o-mini')) {
     return 'gpt-4o-mini';
   } else if (modelName.includes('gpt-4o')) {

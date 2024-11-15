@@ -6,10 +6,11 @@ import {
 } from 'librechat-data-provider/react-query';
 import { useNavigate } from 'react-router-dom';
 import {
+  Constants,
   FileSources,
+  isParamEndpoint,
   LocalStorageKeys,
   isAssistantsEndpoint,
-  paramEndpoints,
 } from 'librechat-data-provider';
 import { useRecoilState, useRecoilValue, useSetRecoilState, useRecoilCallback } from 'recoil';
 import type {
@@ -116,7 +117,7 @@ const useNewConvo = (index = 0) => {
               ) ?? assistants[0]?.id;
           }
 
-          if (currentAssistantId && isAssistantEndpoint && conversation.conversationId === 'new') {
+          if (currentAssistantId && isAssistantEndpoint && conversation.conversationId === Constants.NEW_CONVO) {
             const assistant = assistants.find((asst) => asst.id === currentAssistantId);
             conversation.model = assistant?.model;
             updateLastSelectedModel({
@@ -147,12 +148,12 @@ const useNewConvo = (index = 0) => {
           clearAllLatestMessages();
         }
 
-        if (conversation.conversationId === 'new' && !modelsData) {
+        if (conversation.conversationId === Constants.NEW_CONVO && !modelsData) {
           const appTitle = localStorage.getItem(LocalStorageKeys.APP_TITLE) ?? '';
           if (appTitle) {
             document.title = appTitle;
           }
-          navigate('/c/new');
+          navigate(`/c/${Constants.NEW_CONVO}`);
         }
 
         clearTimeout(timeoutIdRef.current);
@@ -185,17 +186,16 @@ const useNewConvo = (index = 0) => {
       pauseGlobalAudio();
 
       const templateConvoId = _template.conversationId ?? '';
-      const isParamEndpoint =
-        paramEndpoints.has(_template.endpoint ?? '') ||
-        paramEndpoints.has(_preset?.endpoint ?? '') ||
-        paramEndpoints.has(_template.endpointType ?? '');
+      const paramEndpoint =
+        isParamEndpoint(_template.endpoint ?? '', _template.endpointType ?? '') === true ||
+        isParamEndpoint(_preset?.endpoint ?? '', _preset?.endpointType ?? '');
       const template =
-        isParamEndpoint && templateConvoId && templateConvoId === 'new'
+        paramEndpoint === true && templateConvoId && templateConvoId === Constants.NEW_CONVO
           ? { endpoint: _template.endpoint }
           : _template;
 
       const conversation = {
-        conversationId: 'new',
+        conversationId: Constants.NEW_CONVO as string,
         title: 'New Chat',
         endpoint: null,
         ...template,
