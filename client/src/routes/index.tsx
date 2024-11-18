@@ -84,6 +84,14 @@ export const router = createBrowserRouter([
         path: '*',
         element: <Navigate to="/c/new" replace />,
       },
+       {
+            children: [
+              {
+                path: 'login',
+                element: <Login />,
+              },
+            ],
+          }
     ],
   },
 ]);
