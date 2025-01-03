@@ -176,11 +176,16 @@ const Nav = ({
                           {isSearchEnabled === true && (
                             <SearchBar clearSearch={clearSearch} isSmallScreen={isSmallScreen} />
                           )}
-                          <BookmarkNav
-                            tags={tags}
-                            setTags={setTags}
-                            isSmallScreen={isSmallScreen}
-                          />
+                          {hasAccessToBookmarks === true && (
+                            <>
+                              <div className="mt-1.5" />
+                              <BookmarkNav
+                                tags={tags}
+                                setTags={setTags}
+                                isSmallScreen={isSmallScreen}
+                              />
+                            </>
+                          )}
                         </>
                       }
                     />

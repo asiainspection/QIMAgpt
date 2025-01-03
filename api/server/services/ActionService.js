@@ -7,6 +7,7 @@ const {
   actionDomainSeparator,
 } = require('librechat-data-provider');
 const { tool } = require('@langchain/core/tools');
+const { isActionDomainAllowed } = require('~/server/services/domains');
 const { encryptV2, decryptV2 } = require('~/server/utils/crypto');
 const { getActions, deleteActions } = require('~/models/Action');
 const { deleteAssistant } = require('~/models/Assistant');
@@ -14,6 +15,7 @@ const { getLogStores } = require('~/cache');
 const { logger } = require('~/config');
 
 const toolNameRegex = /^[a-zA-Z0-9_-]+$/;
+const replaceSeparatorRegex = new RegExp(actionDomainSeparator, 'g');
 
 /**
  * Validates tool name against regex pattern and updates if necessary.
@@ -83,8 +85,6 @@ async function domainParser(req, domain, inverse = false) {
     return key;
   }
 
-  const replaceSeparatorRegex = new RegExp(actionDomainSeparator, 'g');
-
   if (!cachedDomain) {
     return domain.replace(replaceSeparatorRegex, '.');
   }
@@ -119,18 +119,28 @@ async function loadActionSets(searchParams) {
  * @param {string | undefined} [params.name] - The name of the tool.
  * @param {string | undefined} [params.description] - The description for the tool.
  * @param {import('zod').ZodTypeAny | undefined} [params.zodSchema] - The Zod schema for tool input validation/definition
- * @returns { Promsie<typeof tool | { _call: (toolInput: Object | string) => unknown}> } An object with `_call` method to execute the tool input.
+ * @returns { Promise<typeof tool | { _call: (toolInput: Object | string) => unknown}> } An object with `_call` method to execute the tool input.
  */
 async function createActionTool({ action, requestBuilder, zodSchema, name, description }) {
   action.metadata = await decryptMetadata(action.metadata);
+  const isDomainAllowed = await isActionDomainAllowed(action.metadata.domain);
+  if (!isDomainAllowed) {
+    return null;
+  }
   /** @type {(toolInput: Object | string) => Promise<unknown>} */
   const _call = async (toolInput) => {
     try {
-      requestBuilder.setParams(toolInput);
+      const executor = requestBuilder.createExecutor();
+
+      // Chain the operations
+      const preparedExecutor = executor.setParams(toolInput);
+
       if (action.metadata.auth && action.metadata.auth.type !== AuthTypeEnum.None) {
-        await requestBuilder.setAuth(action.metadata);
+        await preparedExecutor.setAuth(action.metadata);
       }
-      const res = await requestBuilder.execute();
+
+      const res = await preparedExecutor.execute();
+
       if (typeof res.data === 'object') {
         return JSON.stringify(res.data);
       }
@@ -150,7 +160,7 @@ async function createActionTool({ action, requestBuilder, zodSchema, name, descr
 
   if (name) {
     return tool(_call, {
-      name,
+      name: name.replace(replaceSeparatorRegex, '_'),
       description: description || '',
       schema: zodSchema,
     });
