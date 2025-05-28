@@ -103,6 +103,53 @@ describe('getModelMaxTokens', () => {
     );
   });
 
+  test('should return correct tokens for gpt-4.5 matches', () => {
+    expect(getModelMaxTokens('gpt-4.5')).toBe(maxTokensMap[EModelEndpoint.openAI]['gpt-4.5']);
+    expect(getModelMaxTokens('gpt-4.5-preview')).toBe(
+      maxTokensMap[EModelEndpoint.openAI]['gpt-4.5'],
+    );
+    expect(getModelMaxTokens('openai/gpt-4.5-preview')).toBe(
+      maxTokensMap[EModelEndpoint.openAI]['gpt-4.5'],
+    );
+  });
+
+  test('should return correct tokens for gpt-4.1 matches', () => {
+    expect(getModelMaxTokens('gpt-4.1')).toBe(maxTokensMap[EModelEndpoint.openAI]['gpt-4.1']);
+    expect(getModelMaxTokens('gpt-4.1-preview')).toBe(
+      maxTokensMap[EModelEndpoint.openAI]['gpt-4.1'],
+    );
+    expect(getModelMaxTokens('openai/gpt-4.1')).toBe(
+      maxTokensMap[EModelEndpoint.openAI]['gpt-4.1'],
+    );
+    expect(getModelMaxTokens('gpt-4.1-2024-08-06')).toBe(
+      maxTokensMap[EModelEndpoint.openAI]['gpt-4.1'],
+    );
+  });
+
+  test('should return correct tokens for gpt-4.1-mini matches', () => {
+    expect(getModelMaxTokens('gpt-4.1-mini')).toBe(
+      maxTokensMap[EModelEndpoint.openAI]['gpt-4.1-mini'],
+    );
+    expect(getModelMaxTokens('gpt-4.1-mini-preview')).toBe(
+      maxTokensMap[EModelEndpoint.openAI]['gpt-4.1-mini'],
+    );
+    expect(getModelMaxTokens('openai/gpt-4.1-mini')).toBe(
+      maxTokensMap[EModelEndpoint.openAI]['gpt-4.1-mini'],
+    );
+  });
+
+  test('should return correct tokens for gpt-4.1-nano matches', () => {
+    expect(getModelMaxTokens('gpt-4.1-nano')).toBe(
+      maxTokensMap[EModelEndpoint.openAI]['gpt-4.1-nano'],
+    );
+    expect(getModelMaxTokens('gpt-4.1-nano-preview')).toBe(
+      maxTokensMap[EModelEndpoint.openAI]['gpt-4.1-nano'],
+    );
+    expect(getModelMaxTokens('openai/gpt-4.1-nano')).toBe(
+      maxTokensMap[EModelEndpoint.openAI]['gpt-4.1-nano'],
+    );
+  });
+
   test('should return correct tokens for Anthropic models', () => {
     const models = [
       'claude-2.1',

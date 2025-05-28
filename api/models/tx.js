@@ -95,8 +95,30 @@ const getValueKey = (model, endpoint) => {
     return 'gpt-3.5-turbo-1106';
   } else if (modelName.includes('gpt-3.5')) {
     return '4k';
-  } else if (modelName.includes('gpt-4o-2024-08-06')) {
-    return 'gpt-4o-2024-08-06';
+  } else if (modelName.includes('o4-mini')) {
+    return 'o4-mini';
+  } else if (modelName.includes('o4')) {
+    return 'o4';
+  } else if (modelName.includes('o3-mini')) {
+    return 'o3-mini';
+  } else if (modelName.includes('o3')) {
+    return 'o3';
+  } else if (modelName.includes('o1-preview')) {
+    return 'o1-preview';
+  } else if (modelName.includes('o1-mini')) {
+    return 'o1-mini';
+  } else if (modelName.includes('o1')) {
+    return 'o1';
+  } else if (modelName.includes('gpt-4.5')) {
+    return 'gpt-4.5';
+  } else if (modelName.includes('gpt-4.1-nano')) {
+    return 'gpt-4.1-nano';
+  } else if (modelName.includes('gpt-4.1-mini')) {
+    return 'gpt-4.1-mini';
+  } else if (modelName.includes('gpt-4.1')) {
+    return 'gpt-4.1';
+  } else if (modelName.includes('gpt-4o-2024-05-13')) {
+    return 'gpt-4o-2024-05-13';
   } else if (modelName.includes('gpt-4o-mini')) {
     return 'gpt-4o-mini';
   } else if (modelName.includes('gpt-4o')) {
