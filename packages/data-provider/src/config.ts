@@ -11,6 +11,11 @@ export const defaultSocialLogins = ['google', 'facebook', 'openid', 'github', 'd
 
 export const defaultRetrievalModels = [
   'gpt-4o',
+  'o1-preview-2024-09-12',
+  'o1-preview',
+  'o1-mini-2024-09-12',
+  'o1-mini',
+  'o3-mini',
   'chatgpt-4o-latest',
   'gpt-4o-2024-05-13',
   'gpt-4o-2024-08-06',
@@ -578,6 +583,9 @@ export const alternateName = {
 const sharedOpenAIModels = [
   'gpt-4o-mini',
   'gpt-4o',
+  'gpt-4.1',
+  'gpt-4.1-mini',
+  'o4-mini',
   'gpt-3.5-turbo',
   'gpt-3.5-turbo-0125',
   'gpt-4-turbo',
@@ -734,10 +742,15 @@ export const supportsBalanceCheck = {
 };
 
 export const visionModels = [
-  'gpt-4o',
   'gpt-4o-mini',
+  'gpt-4o',
   'gpt-4-turbo',
   'gpt-4-vision',
+  'o4-mini',
+  'o3',
+  'o1',
+  'gpt-4.1',
+  'gpt-4.5',
   'llava',
   'llava-13b',
   'gemini-pro-vision',
