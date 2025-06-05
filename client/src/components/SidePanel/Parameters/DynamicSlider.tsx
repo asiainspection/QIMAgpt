@@ -2,7 +2,7 @@ import { useMemo, useCallback } from 'react';
 import { OptionTypes } from 'librechat-data-provider';
 import type { DynamicSettingProps } from 'librechat-data-provider';
 import { Label, Slider, HoverCard, Input, InputNumber, HoverCardTrigger } from '~/components/ui';
-import { useLocalize, useDebouncedInput, useParameterEffects } from '~/hooks';
+import { useLocalize, useDebouncedInput, useParameterEffects, TranslationKeys } from '~/hooks';
 import { cn, defaultTextProps, optionText } from '~/utils';
 import { ESide, defaultDebouncedDelay } from '~/common';
 import { useChatContext } from '~/Providers';
@@ -47,7 +47,6 @@ function DynamicSlider({
     conversation,
     inputValue,
     setInputValue: setLocalValue,
-    preventDelayedUpdate: isEnum,
   });
 
   const selectedValue = useMemo(() => {
@@ -118,7 +117,7 @@ function DynamicSlider({
               htmlFor={`${settingKey}-dynamic-setting`}
               className="text-left text-sm font-medium"
             >
-              {labelCode ? localize(label) ?? label : label || settingKey}{' '}
+              {labelCode ? localize(label as TranslationKeys) ?? label : label || settingKey}{' '}
               {showDefault && (
                 <small className="opacity-40">
                   ({localize('com_endpoint_default')}: {defaultValue})
@@ -168,17 +167,16 @@ function DynamicSlider({
                 : (inputValue as number) ?? (defaultValue as number),
             ]}
             onValueChange={(value) => handleValueChange(value[0])}
-            doubleClickHandler={() => setInputValue(defaultValue as string | number)}
+            onDoubleClick={() => setInputValue(defaultValue as string | number)}
             max={max}
             min={range ? range.min : 0}
             step={range ? range.step ?? 1 : 1}
             className="flex h-4 w-full"
-            trackClassName="bg-surface-hover"
           />
         </HoverCardTrigger>
         {description && (
           <OptionHover
-            description={descriptionCode ? localize(description) ?? description : description}
+            description={descriptionCode ? localize(description as TranslationKeys) ?? description : description}
             side={ESide.Left}
           />
         )}

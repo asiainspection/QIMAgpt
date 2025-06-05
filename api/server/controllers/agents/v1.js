@@ -1,5 +1,14 @@
+const fs = require('fs').promises;
 const { nanoid } = require('nanoid');
-const { FileContext, Constants } = require('librechat-data-provider');
+const {
+  Tools,
+  Constants,
+  FileContext,
+  FileSources,
+  SystemRoles,
+  EToolResources,
+  actionDelimiter,
+} = require('librechat-data-provider');
 const {
   getAgent,
   createAgent,
@@ -7,12 +16,19 @@ const {
   deleteAgent,
   getListAgents,
 } = require('~/models/Agent');
+const { uploadImageBuffer, filterFile } = require('~/server/services/Files/process');
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
-const { uploadImageBuffer } = require('~/server/services/Files/process');
-const { getProjectByName } = require('~/models/Project');
+const { refreshS3Url } = require('~/server/services/Files/S3/crud');
+const { updateAction, getActions } = require('~/models/Action');
 const { updateAgentProjects } = require('~/models/Agent');
+const { getProjectByName } = require('~/models/Project');
 const { deleteFileByFilter } = require('~/models/File');
 const { logger } = require('~/config');
+
+const systemTools = {
+  [Tools.execute_code]: true,
+  [Tools.file_search]: true,
+};
 
 /**
  * Creates an Agent.
@@ -27,9 +43,17 @@ const createAgentHandler = async (req, res) => {
     const { tools = [], provider, name, description, instructions, model, ...agentData } = req.body;
     const { id: userId } = req.user;
 
-    agentData.tools = tools
-      .map((tool) => (typeof tool === 'string' ? req.app.locals.availableTools[tool] : tool))
-      .filter(Boolean);
+    agentData.tools = [];
+
+    for (const tool of tools) {
+      if (req.app.locals.availableTools[tool]) {
+        agentData.tools.push(tool);
+      }
+
+      if (systemTools[tool]) {
+        agentData.tools.push(tool);
+      }
+    }
 
     Object.assign(agentData, {
       author: userId,
@@ -80,10 +104,31 @@ const getAgentHandler = async (req, res) => {
       return res.status(404).json({ error: 'Agent not found' });
     }
 
+    if (agent.avatar && agent.avatar?.source === FileSources.s3) {
+      const originalUrl = agent.avatar.filepath;
+      agent.avatar.filepath = await refreshS3Url(agent.avatar);
+      if (originalUrl !== agent.avatar.filepath) {
+        await updateAgent({ id }, { avatar: agent.avatar });
+      }
+    }
+
+    agent.author = agent.author.toString();
+    agent.isCollaborative = !!agent.isCollaborative;
+
     if (agent.author !== author) {
       delete agent.author;
     }
 
+    if (!agent.isCollaborative && agent.author !== author && req.user.role !== SystemRoles.ADMIN) {
+      return res.status(200).json({
+        id: agent.id,
+        name: agent.name,
+        avatar: agent.avatar,
+        author: agent.author,
+        projectIds: agent.projectIds,
+        isCollaborative: agent.isCollaborative,
+      });
+    }
     return res.status(200).json(agent);
   } catch (error) {
     logger.error('[/Agents/:id] Error retrieving agent', error);
@@ -104,19 +149,149 @@ const updateAgentHandler = async (req, res) => {
   try {
     const id = req.params.id;
     const { projectIds, removeProjectIds, ...updateData } = req.body;
+    const isAdmin = req.user.role === SystemRoles.ADMIN;
+    const existingAgent = await getAgent({ id });
+    const isAuthor = existingAgent.author.toString() === req.user.id;
 
-    let updatedAgent;
-    if (Object.keys(updateData).length > 0) {
-      updatedAgent = await updateAgent({ id, author: req.user.id }, updateData);
+    if (!existingAgent) {
+      return res.status(404).json({ error: 'Agent not found' });
+    }
+    const hasEditPermission = existingAgent.isCollaborative || isAdmin || isAuthor;
+
+    if (!hasEditPermission) {
+      return res.status(403).json({
+        error: 'You do not have permission to modify this non-collaborative agent',
+      });
     }
 
+    let updatedAgent =
+      Object.keys(updateData).length > 0 ? await updateAgent({ id }, updateData) : existingAgent;
+
     if (projectIds || removeProjectIds) {
-      updatedAgent = await updateAgentProjects(id, projectIds, removeProjectIds);
+      updatedAgent = await updateAgentProjects({
+        user: req.user,
+        agentId: id,
+        projectIds,
+        removeProjectIds,
+      });
+    }
+
+    if (updatedAgent.author) {
+      updatedAgent.author = updatedAgent.author.toString();
+    }
+
+    if (updatedAgent.author !== req.user.id) {
+      delete updatedAgent.author;
     }
 
     return res.json(updatedAgent);
   } catch (error) {
     logger.error('[/Agents/:id] Error updating Agent', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * Duplicates an Agent based on the provided ID.
+ * @route POST /Agents/:id/duplicate
+ * @param {object} req - Express Request
+ * @param {object} req.params - Request params
+ * @param {string} req.params.id - Agent identifier.
+ * @returns {Agent} 201 - success response - application/json
+ */
+const duplicateAgentHandler = async (req, res) => {
+  const { id } = req.params;
+  const { id: userId } = req.user;
+  const sensitiveFields = ['api_key', 'oauth_client_id', 'oauth_client_secret'];
+
+  try {
+    const agent = await getAgent({ id });
+    if (!agent) {
+      return res.status(404).json({
+        error: 'Agent not found',
+        status: 'error',
+      });
+    }
+
+    const {
+      id: _id,
+      _id: __id,
+      author: _author,
+      createdAt: _createdAt,
+      updatedAt: _updatedAt,
+      tool_resources: _tool_resources = {},
+      ...cloneData
+    } = agent;
+    cloneData.name = `${agent.name} (${new Date().toLocaleString('en-US', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+      hour12: false,
+    })})`;
+
+    if (_tool_resources?.[EToolResources.ocr]) {
+      cloneData.tool_resources = {
+        [EToolResources.ocr]: _tool_resources[EToolResources.ocr],
+      };
+    }
+
+    const newAgentId = `agent_${nanoid()}`;
+    const newAgentData = Object.assign(cloneData, {
+      id: newAgentId,
+      author: userId,
+    });
+
+    const newActionsList = [];
+    const originalActions = (await getActions({ agent_id: id }, true)) ?? [];
+    const promises = [];
+
+    /**
+     * Duplicates an action and returns the new action ID.
+     * @param {Action} action
+     * @returns {Promise<string>}
+     */
+    const duplicateAction = async (action) => {
+      const newActionId = nanoid();
+      const [domain] = action.action_id.split(actionDelimiter);
+      const fullActionId = `${domain}${actionDelimiter}${newActionId}`;
+
+      const newAction = await updateAction(
+        { action_id: newActionId },
+        {
+          metadata: action.metadata,
+          agent_id: newAgentId,
+          user: userId,
+        },
+      );
+
+      const filteredMetadata = { ...newAction.metadata };
+      for (const field of sensitiveFields) {
+        delete filteredMetadata[field];
+      }
+
+      newAction.metadata = filteredMetadata;
+      newActionsList.push(newAction);
+      return fullActionId;
+    };
+
+    for (const action of originalActions) {
+      promises.push(
+        duplicateAction(action).catch((error) => {
+          logger.error('[/agents/:id/duplicate] Error duplicating Action:', error);
+        }),
+      );
+    }
+
+    const agentActions = await Promise.all(promises);
+    newAgentData.actions = agentActions;
+    const newAgent = await createAgent(newAgentData);
+
+    return res.status(201).json({
+      agent: newAgent,
+      actions: newActionsList,
+    });
+  } catch (error) {
+    logger.error('[/Agents/:id/duplicate] Error duplicating Agent:', error);
+
     res.status(500).json({ error: error.message });
   }
 };
@@ -166,7 +341,7 @@ const getListAgentsHandler = async (req, res) => {
 
 /**
  * Uploads and updates an avatar for a specific agent.
- * @route POST /avatar/:agent_id
+ * @route POST /:agent_id/avatar
  * @param {object} req - Express Request
  * @param {object} req.params - Request params
  * @param {string} req.params.agent_id - The ID of the agent.
@@ -177,25 +352,25 @@ const getListAgentsHandler = async (req, res) => {
  */
 const uploadAgentAvatarHandler = async (req, res) => {
   try {
+    filterFile({ req, file: req.file, image: true, isAvatar: true });
     const { agent_id } = req.params;
     if (!agent_id) {
       return res.status(400).json({ message: 'Agent ID is required' });
     }
 
-    let { avatar: _avatar = '{}' } = req.body;
-
+    const buffer = await fs.readFile(req.file.path);
     const image = await uploadImageBuffer({
       req,
       context: FileContext.avatar,
-      metadata: {
-        buffer: req.file.buffer,
-      },
+      metadata: { buffer },
     });
 
+    let _avatar;
     try {
-      _avatar = JSON.parse(_avatar);
+      const agent = await getAgent({ id: agent_id });
+      _avatar = agent.avatar;
     } catch (error) {
-      logger.error('[/avatar/:agent_id] Error parsing avatar', error);
+      logger.error('[/:agent_id/avatar] Error fetching agent', error);
       _avatar = {};
     }
 
@@ -203,9 +378,9 @@ const uploadAgentAvatarHandler = async (req, res) => {
       const { deleteFile } = getStrategyFunctions(_avatar.source);
       try {
         await deleteFile(req, { filepath: _avatar.filepath });
-        await deleteFileByFilter({ filepath: _avatar.filepath });
+        await deleteFileByFilter({ user: req.user.id, filepath: _avatar.filepath });
       } catch (error) {
-        logger.error('[/avatar/:agent_id] Error deleting old avatar', error);
+        logger.error('[/:agent_id/avatar] Error deleting old avatar', error);
       }
     }
 
@@ -226,6 +401,13 @@ const uploadAgentAvatarHandler = async (req, res) => {
     const message = 'An error occurred while updating the Agent Avatar';
     logger.error(message, error);
     res.status(500).json({ message });
+  } finally {
+    try {
+      await fs.unlink(req.file.path);
+      logger.debug('[/:agent_id/avatar] Temp. image upload file deleted');
+    } catch (error) {
+      logger.debug('[/:agent_id/avatar] Temp. image upload file already deleted');
+    }
   }
 };
 
@@ -233,6 +415,7 @@ module.exports = {
   createAgent: createAgentHandler,
   getAgent: getAgentHandler,
   updateAgent: updateAgentHandler,
+  duplicateAgent: duplicateAgentHandler,
   deleteAgent: deleteAgentHandler,
   getListAgents: getListAgentsHandler,
   uploadAgentAvatar: uploadAgentAvatarHandler,

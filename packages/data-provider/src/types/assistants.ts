@@ -3,6 +3,7 @@ import type { AssistantsEndpoint, AgentProvider } from 'src/schemas';
 import type { ContentTypes } from './runs';
 import type { Agents } from './agents';
 import type { TFile } from './files';
+import { ArtifactModes } from 'src/artifacts';
 
 export type Schema = OpenAPIV3.SchemaObject & { description?: string };
 export type Reference = OpenAPIV3.ReferenceObject & { description?: string };
@@ -15,6 +16,7 @@ export type Metadata = {
 };
 
 export enum Tools {
+  execute_code = 'execute_code',
   code_interpreter = 'code_interpreter',
   file_search = 'file_search',
   retrieval = 'retrieval',
@@ -23,7 +25,10 @@ export enum Tools {
 
 export enum EToolResources {
   code_interpreter = 'code_interpreter',
+  execute_code = 'execute_code',
   file_search = 'file_search',
+  image_edit = 'image_edit',
+  ocr = 'ocr',
 }
 
 export type Tool = {
@@ -36,6 +41,8 @@ export type FunctionTool = {
     description: string;
     name: string;
     parameters: Record<string, unknown>;
+    strict?: boolean;
+    additionalProperties?: boolean; // must be false if strict is true https://platform.openai.com/docs/guides/structured-outputs/some-type-specific-keywords-are-not-yet-supported
   };
 };
 
@@ -98,6 +105,7 @@ export type AssistantCreateParams = {
   tools?: Array<FunctionTool | string>;
   endpoint: AssistantsEndpoint;
   version: number | string;
+  append_current_datetime?: boolean;
 };
 
 export type AssistantUpdateParams = {
@@ -111,6 +119,7 @@ export type AssistantUpdateParams = {
   tools?: Array<FunctionTool | string>;
   tool_resources?: ToolResources;
   endpoint: AssistantsEndpoint;
+  append_current_datetime?: boolean;
 };
 
 export type AssistantListParams = {
@@ -142,32 +151,77 @@ export type File = {
 
 /* Agent types */
 
+export type AgentParameterValue = number | string | null;
+
 export type AgentModelParameters = {
-  temperature: number | null;
-  max_context_tokens: number | null;
-  max_output_tokens: number | null;
-  top_p: number | null;
-  frequency_penalty: number | null;
-  presence_penalty: number | null;
+  model?: string;
+  temperature: AgentParameterValue;
+  maxContextTokens: AgentParameterValue;
+  max_context_tokens: AgentParameterValue;
+  max_output_tokens: AgentParameterValue;
+  top_p: AgentParameterValue;
+  frequency_penalty: AgentParameterValue;
+  presence_penalty: AgentParameterValue;
 };
+
+export interface AgentBaseResource {
+  /**
+   * A list of file IDs made available to the tool.
+   */
+  file_ids?: Array<string>;
+  /**
+   * A list of files already fetched.
+   */
+  files?: Array<TFile>;
+}
+
+export interface AgentToolResources {
+  [EToolResources.image_edit]?: AgentBaseResource;
+  [EToolResources.execute_code]?: ExecuteCodeResource;
+  [EToolResources.file_search]?: AgentFileResource;
+  [EToolResources.ocr]?: AgentBaseResource;
+}
+/**
+ * A resource for the execute_code tool.
+ * Contains file IDs made available to the tool (max 20 files) and already fetched files.
+ */
+export type ExecuteCodeResource = AgentBaseResource;
+
+export interface AgentFileResource extends AgentBaseResource {
+  /**
+   * The ID of the vector store attached to this agent. There
+   * can be a maximum of 1 vector store attached to the agent.
+   */
+  vector_store_ids?: Array<string>;
+}
 
 export type Agent = {
   id: string;
   name: string | null;
+  author?: string | null;
+  /** The original custom endpoint name, lowercased */
+  endpoint?: string | null;
+  authorName?: string | null;
   description: string | null;
   created_at: number;
   avatar: AgentAvatar | null;
-  file_ids: string[];
   instructions: string | null;
+  additional_instructions?: string | null;
   tools?: string[];
   projectIds?: string[];
   tool_kwargs?: Record<string, unknown>;
-  tool_resources?: ToolResources;
   metadata?: Record<string, unknown>;
   provider: AgentProvider;
   model: string | null;
   model_parameters: AgentModelParameters;
-  object: string;
+  conversation_starters?: string[];
+  isCollaborative?: boolean;
+  tool_resources?: AgentToolResources;
+  agent_ids?: string[];
+  end_after_tools?: boolean;
+  hide_sequential_outputs?: boolean;
+  artifacts?: ArtifactModes;
+  recursion_limit?: number;
 };
 
 export type TAgentsMap = Record<string, Agent | undefined>;
@@ -182,7 +236,10 @@ export type AgentCreateParams = {
   provider: AgentProvider;
   model: string | null;
   model_parameters: AgentModelParameters;
-};
+} & Pick<
+  Agent,
+  'agent_ids' | 'end_after_tools' | 'hide_sequential_outputs' | 'artifacts' | 'recursion_limit'
+>;
 
 export type AgentUpdateParams = {
   name?: string | null;
@@ -197,7 +254,11 @@ export type AgentUpdateParams = {
   model_parameters?: AgentModelParameters;
   projectIds?: string[];
   removeProjectIds?: string[];
-};
+  isCollaborative?: boolean;
+} & Pick<
+  Agent,
+  'agent_ids' | 'end_after_tools' | 'hide_sequential_outputs' | 'artifacts' | 'recursion_limit'
+>;
 
 export type AgentListParams = {
   limit?: number;
@@ -369,6 +430,8 @@ export type PartMetadata = {
   asset_pointer?: string;
   status?: string;
   action?: boolean;
+  auth?: string;
+  expires_at?: number;
 };
 
 export type ContentPart = (
@@ -383,7 +446,8 @@ export type ContentPart = (
   PartMetadata;
 
 export type TMessageContentParts =
-  | { type: ContentTypes.ERROR; text: Text & PartMetadata }
+  | { type: ContentTypes.ERROR; text?: string | (Text & PartMetadata); error?: string }
+  | { type: ContentTypes.THINK; think: string | (Text & PartMetadata) }
   | { type: ContentTypes.TEXT; text: string | (Text & PartMetadata); tool_call_ids?: string[] }
   | {
       type: ContentTypes.TOOL_CALL;
@@ -397,6 +461,7 @@ export type TMessageContentParts =
         PartMetadata;
     }
   | { type: ContentTypes.IMAGE_FILE; image_file: ImageFile & PartMetadata }
+  | Agents.AgentUpdate
   | Agents.MessageContentImageUrl;
 
 export type StreamContentData = TMessageContentParts & {
@@ -457,6 +522,12 @@ export type ActionMetadata = {
   oauth_client_secret?: string;
 };
 
+export type ActionMetadataRuntime = ActionMetadata & {
+  oauth_access_token?: string;
+  oauth_refresh_token?: string;
+  oauth_token_expires_at?: Date;
+};
+
 /* Assistant types */
 
 export type Action = {
@@ -482,6 +553,7 @@ export type AssistantDocument = {
   actions?: string[];
   createdAt?: Date;
   updatedAt?: Date;
+  append_current_datetime?: boolean;
 };
 
 /* Agent types */

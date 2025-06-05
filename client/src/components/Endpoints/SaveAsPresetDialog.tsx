@@ -28,7 +28,7 @@ const SaveAsPresetDialog = ({ open, onOpenChange, preset }: TEditPresetProps) =>
     createPresetMutation.mutate(_preset, {
       onSuccess: () => {
         showToast({
-          message: `${toastTitle} ${localize('com_endpoint_preset_saved')}`,
+          message: `${toastTitle} ${localize('com_ui_saved')}`,
         });
         onOpenChange(false); // Close the dialog on success
       },
@@ -76,7 +76,7 @@ const SaveAsPresetDialog = ({ open, onOpenChange, preset }: TEditPresetProps) =>
                 aria-label={localize('com_endpoint_preset_name')}
                 className={cn(
                   defaultTextProps,
-                  'flex h-10 max-h-10 w-full resize-none border-gray-100 px-3 py-2 dark:border-gray-600',
+                  'flex h-10 max-h-10 w-full resize-none border-border-medium px-3 py-2 ',
                   removeFocusOutlines,
                 )}
               />

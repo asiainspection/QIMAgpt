@@ -9,6 +9,8 @@ const prompts = require('./prompts');
 const balance = require('./balance');
 const plugins = require('./plugins');
 const bedrock = require('./bedrock');
+const actions = require('./actions');
+const banner = require('./banner');
 const search = require('./search');
 const models = require('./models');
 const convos = require('./convos');
@@ -36,14 +38,16 @@ module.exports = {
   oauth,
   files,
   share,
+  banner,
   agents,
-  bedrock,
   convos,
   search,
-  prompts,
   config,
   models,
+  bedrock,
+  prompts,
   plugins,
+  actions,
   presets,
   balance,
   messages,

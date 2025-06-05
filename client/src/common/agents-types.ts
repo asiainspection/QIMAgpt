@@ -1,17 +1,19 @@
-import { Capabilities } from 'librechat-data-provider';
+import { AgentCapabilities, ArtifactModes } from 'librechat-data-provider';
 import type { Agent, AgentProvider, AgentModelParameters } from 'librechat-data-provider';
 import type { OptionWithIcon, ExtendedFile } from './types';
 
 export type TAgentOption = OptionWithIcon &
   Agent & {
-    files?: Array<[string, ExtendedFile]>;
+    knowledge_files?: Array<[string, ExtendedFile]>;
+    context_files?: Array<[string, ExtendedFile]>;
     code_files?: Array<[string, ExtendedFile]>;
   };
 
-export type AgentCapabilities = {
-  [Capabilities.code_interpreter]: boolean;
-  [Capabilities.image_vision]: boolean;
-  [Capabilities.retrieval]: boolean;
+export type TAgentCapabilities = {
+  [AgentCapabilities.file_search]: boolean;
+  [AgentCapabilities.execute_code]: boolean;
+  [AgentCapabilities.end_after_tools]?: boolean;
+  [AgentCapabilities.hide_sequential_outputs]?: boolean;
 };
 
 export type AgentForm = {
@@ -24,4 +26,7 @@ export type AgentForm = {
   model_parameters: AgentModelParameters;
   tools?: string[];
   provider?: AgentProvider | OptionWithIcon;
-} & AgentCapabilities;
+  agent_ids?: string[];
+  [AgentCapabilities.artifacts]?: ArtifactModes | string;
+  recursion_limit?: number;
+} & TAgentCapabilities;

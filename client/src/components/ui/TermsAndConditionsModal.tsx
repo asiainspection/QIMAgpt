@@ -1,10 +1,11 @@
-import { useLocalize } from '~/hooks';
-import { OGDialog } from '~/components/ui';
+import { useMemo } from 'react';
+import type { TTermsOfService } from 'librechat-data-provider';
+import MarkdownLite from '~/components/Chat/Messages/Content/MarkdownLite';
 import DialogTemplate from '~/components/ui/DialogTemplate';
-import { useAuthContext } from '~/hooks';
-import Markdown from '~/components/Chat/Messages/Content/Markdown';
-import { useToastContext } from '~/Providers';
 import { useAcceptTermsMutation } from '~/data-provider';
+import { useToastContext } from '~/Providers';
+import { OGDialog } from '~/components/ui';
+import { useLocalize } from '~/hooks';
 
 const TermsAndConditionsModal = ({
   open,
@@ -20,7 +21,7 @@ const TermsAndConditionsModal = ({
   onDecline: () => void;
   title?: string;
   contentUrl?: string;
-  modalContent?: string;
+  modalContent?: TTermsOfService['modalContent'];
 }) => {
   const localize = useLocalize();
   const { showToast } = useToastContext();
@@ -50,6 +51,18 @@ const TermsAndConditionsModal = ({
     onOpenChange(isOpen);
   };
 
+  const content = useMemo(() => {
+    if (typeof modalContent === 'string') {
+      return modalContent;
+    }
+
+    if (Array.isArray(modalContent)) {
+      return modalContent.join('\n');
+    }
+
+    return '';
+  }, [modalContent]);
+
   return (
     <OGDialog open={open} onOpenChange={handleOpenChange}>
       <DialogTemplate
@@ -58,27 +71,33 @@ const TermsAndConditionsModal = ({
         showCloseButton={false}
         showCancelButton={false}
         main={
-          <div className="max-h-[60vh] overflow-y-auto p-4">
-            <div className="prose dark:prose-invert w-full max-w-none !text-black dark:!text-white">
-              {modalContent ? (
-                <Markdown content={modalContent} isLatestMessage={false} />
+          <section
+            // Motivation: This is a dialog, so its content should be focusable
+            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+            tabIndex={0}
+            className="max-h-[60vh] overflow-y-auto p-4"
+            aria-label={localize('com_ui_terms_and_conditions')}
+          >
+            <div className="prose dark:prose-invert w-full max-w-none !text-text-primary">
+              {content !== '' ? (
+                <MarkdownLite content={content} />
               ) : (
                 <p>{localize('com_ui_no_terms_content')}</p>
               )}
             </div>
-          </div>
+          </section>
         }
         buttons={
           <>
             <button
               onClick={handleDecline}
-              className="border-border-none bg-surface-500 dark:hover:bg-surface-600 inline-flex h-10 items-center justify-center rounded-lg px-4 py-2 text-sm text-white hover:bg-gray-600"
+              className="inline-flex h-10 items-center justify-center rounded-lg border border-border-heavy bg-surface-secondary px-4 py-2 text-sm text-text-primary hover:bg-surface-active"
             >
               {localize('com_ui_decline')}
             </button>
             <button
               onClick={handleAccept}
-              className="border-border-none bg-surface-500 inline-flex h-10 items-center justify-center rounded-lg px-4 py-2 text-sm text-white hover:bg-green-600 dark:hover:bg-green-600"
+              className="inline-flex h-10 items-center justify-center rounded-lg border border-border-heavy bg-surface-secondary px-4 py-2 text-sm text-text-primary hover:bg-green-500 hover:text-white focus:bg-green-500 focus:text-white dark:hover:bg-green-600 dark:focus:bg-green-600"
             >
               {localize('com_ui_accept')}
             </button>

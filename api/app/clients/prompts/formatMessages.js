@@ -1,6 +1,6 @@
 const { ToolMessage } = require('@langchain/core/messages');
 const { EModelEndpoint, ContentTypes } = require('librechat-data-provider');
-const { HumanMessage, AIMessage, SystemMessage } = require('langchain/schema');
+const { HumanMessage, AIMessage, SystemMessage } = require('@langchain/core/messages');
 
 /**
  * Formats a message to OpenAI Vision API payload format.
@@ -142,6 +142,9 @@ const formatAgentMessages = (payload) => {
   const messages = [];
 
   for (const message of payload) {
+    if (typeof message.content === 'string') {
+      message.content = [{ type: ContentTypes.TEXT, [ContentTypes.TEXT]: message.content }];
+    }
     if (message.role !== 'assistant') {
       messages.push(formatMessage({ message, langChain: true }));
       continue;
@@ -150,12 +153,25 @@ const formatAgentMessages = (payload) => {
     let currentContent = [];
     let lastAIMessage = null;
 
+    let hasReasoning = false;
     for (const part of message.content) {
       if (part.type === ContentTypes.TEXT && part.tool_call_ids) {
-        // If there's pending content, add it as an AIMessage
+        /*
+        If there's pending content, it needs to be aggregated as a single string to prepare for tool calls.
+        For Anthropic models, the "tool_calls" field on a message is only respected if content is a string.
+         */
         if (currentContent.length > 0) {
-          messages.push(new AIMessage({ content: currentContent }));
+          let content = currentContent.reduce((acc, curr) => {
+            if (curr.type === ContentTypes.TEXT) {
+              return `${acc}${curr[ContentTypes.TEXT]}\n`;
+            }
+            return acc;
+          }, '');
+          content = `${content}\n${part[ContentTypes.TEXT] ?? ''}`.trim();
+          lastAIMessage = new AIMessage({ content });
+          messages.push(lastAIMessage);
           currentContent = [];
+          continue;
         }
 
         // Create a new AIMessage with this text and prepare for tool calls
@@ -174,10 +190,13 @@ const formatAgentMessages = (payload) => {
         // TODO: investigate; args as dictionary may need to be provider-or-tool-specific
         let args = _args;
         try {
-          args = JSON.parse(args);
+          args = JSON.parse(_args);
         } catch (e) {
-          // failed to parse, leave as is
+          if (typeof _args === 'string') {
+            args = { input: _args };
+          }
         }
+
         tool_call.args = args;
         lastAIMessage.tool_calls.push(tool_call);
 
@@ -186,12 +205,28 @@ const formatAgentMessages = (payload) => {
           new ToolMessage({
             tool_call_id: tool_call.id,
             name: tool_call.name,
-            content: output,
+            content: output || '',
           }),
         );
+      } else if (part.type === ContentTypes.THINK) {
+        hasReasoning = true;
+        continue;
+      } else if (part.type === ContentTypes.ERROR || part.type === ContentTypes.AGENT_UPDATE) {
+        continue;
       } else {
         currentContent.push(part);
       }
+    }
+
+    if (hasReasoning) {
+      currentContent = currentContent
+        .reduce((acc, curr) => {
+          if (curr.type === ContentTypes.TEXT) {
+            return `${acc}${curr[ContentTypes.TEXT]}\n`;
+          }
+          return acc;
+        }, '')
+        .trim();
     }
 
     if (currentContent.length > 0) {
@@ -202,9 +237,41 @@ const formatAgentMessages = (payload) => {
   return messages;
 };
 
+/**
+ * Formats an array of messages for LangChain, making sure all content fields are strings
+ * @param {Array<(HumanMessage|AIMessage|SystemMessage|ToolMessage)>} payload - The array of messages to format.
+ * @returns {Array<(HumanMessage|AIMessage|SystemMessage|ToolMessage)>} - The array of formatted LangChain messages, including ToolMessages for tool calls.
+ */
+const formatContentStrings = (payload) => {
+  const messages = [];
+
+  for (const message of payload) {
+    if (typeof message.content === 'string') {
+      continue;
+    }
+
+    if (!Array.isArray(message.content)) {
+      continue;
+    }
+
+    // Reduce text types to a single string, ignore all other types
+    const content = message.content.reduce((acc, curr) => {
+      if (curr.type === ContentTypes.TEXT) {
+        return `${acc}${curr[ContentTypes.TEXT]}\n`;
+      }
+      return acc;
+    }, '');
+
+    message.content = content.trim();
+  }
+
+  return messages;
+};
+
 module.exports = {
   formatMessage,
   formatFromLangChain,
   formatAgentMessages,
+  formatContentStrings,
   formatLangChainMessages,
 };

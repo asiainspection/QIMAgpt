@@ -1,22 +1,34 @@
-import { v4 } from 'uuid';
-import { useSetRecoilState } from 'recoil';
 import { useEffect, useState } from 'react';
+import { v4 } from 'uuid';
+import { SSE } from 'sse.js';
+import { useSetRecoilState } from 'recoil';
 import {
+  request,
+  Constants,
   /* @ts-ignore */
-  SSE,
   createPayload,
   isAgentsEndpoint,
+  LocalStorageKeys,
   removeNullishValues,
   isAssistantsEndpoint,
 } from 'librechat-data-provider';
-import { useGetUserBalance, useGetStartupConfig } from 'librechat-data-provider/react-query';
-import type { TMessage, TSubmission, EventSubmission } from 'librechat-data-provider';
+import type { TMessage, TPayload, TSubmission, EventSubmission } from 'librechat-data-provider';
 import type { EventHandlerParams } from './useEventHandlers';
 import type { TResData } from '~/common';
-import { useGenTitleMutation } from '~/data-provider';
+import { useGenTitleMutation, useGetStartupConfig, useGetUserBalance } from '~/data-provider';
 import { useAuthContext } from '~/hooks/AuthContext';
 import useEventHandlers from './useEventHandlers';
 import store from '~/store';
+
+const clearDraft = (conversationId?: string | null) => {
+  if (conversationId) {
+    localStorage.removeItem(`${LocalStorageKeys.TEXT_DRAFT}${conversationId}`);
+    localStorage.removeItem(`${LocalStorageKeys.FILES_DRAFT}${conversationId}`);
+  } else {
+    localStorage.removeItem(`${LocalStorageKeys.TEXT_DRAFT}${Constants.NEW_CONVO}`);
+    localStorage.removeItem(`${LocalStorageKeys.FILES_DRAFT}${Constants.NEW_CONVO}`);
+  }
+};
 
 type ChatHelpers = Pick<
   EventHandlerParams,
@@ -59,6 +71,7 @@ export default function useSSE(
     messageHandler,
     contentHandler,
     createdHandler,
+    attachmentHandler,
     abortConversation,
   } = useEventHandlers({
     genTitle,
@@ -75,11 +88,11 @@ export default function useSSE(
 
   const { data: startupConfig } = useGetStartupConfig();
   const balanceQuery = useGetUserBalance({
-    enabled: !!isAuthenticated && startupConfig?.checkBalance,
+    enabled: !!isAuthenticated && startupConfig?.balance?.enabled,
   });
 
   useEffect(() => {
-    if (submission === null || Object.keys(submission).length === 0) {
+    if (submission == null || Object.keys(submission).length === 0) {
       return;
     }
 
@@ -88,23 +101,33 @@ export default function useSSE(
     const payloadData = createPayload(submission);
     let { payload } = payloadData;
     if (isAssistantsEndpoint(payload.endpoint) || isAgentsEndpoint(payload.endpoint)) {
-      payload = removeNullishValues(payload);
+      payload = removeNullishValues(payload) as TPayload;
     }
 
     let textIndex = null;
 
-    const events = new SSE(payloadData.server, {
+    const sse = new SSE(payloadData.server, {
       payload: JSON.stringify(payload),
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
     });
 
-    events.onmessage = (e: MessageEvent) => {
+    sse.addEventListener('attachment', (e: MessageEvent) => {
+      try {
+        const data = JSON.parse(e.data);
+        attachmentHandler({ data, submission: submission as EventSubmission });
+      } catch (error) {
+        console.error(error);
+      }
+    });
+
+    sse.addEventListener('message', (e: MessageEvent) => {
       const data = JSON.parse(e.data);
 
       if (data.final != null) {
+        clearDraft(submission.conversation?.conversationId);
         const { plugins } = data;
         finalHandler(data, { ...submission, plugins } as EventSubmission);
-        (startupConfig?.checkBalance ?? false) && balanceQuery.refetch();
+        (startupConfig?.balance?.enabled ?? false) && balanceQuery.refetch();
         console.log('final', data);
         return;
       } else if (data.created != null) {
@@ -145,14 +168,14 @@ export default function useSSE(
           messageHandler(text, { ...submission, plugin, plugins, userMessage, initialResponse });
         }
       }
-    };
+    });
 
-    events.onopen = () => {
+    sse.addEventListener('open', () => {
       setAbortScroll(false);
       console.log('connection is opened');
-    };
+    });
 
-    events.oncancel = async () => {
+    sse.addEventListener('cancel', async () => {
       const streamKey = (submission as TSubmission | null)?.['initialResponse']?.messageId;
       if (completed.has(streamKey)) {
         setIsSubmitting(false);
@@ -167,15 +190,41 @@ export default function useSSE(
       const latestMessages = getMessages();
       const conversationId = latestMessages?.[latestMessages.length - 1]?.conversationId;
       return await abortConversation(
-        conversationId ?? userMessage.conversationId ?? submission.conversationId,
+        conversationId ??
+          userMessage.conversationId ??
+          submission.conversation?.conversationId ??
+          '',
         submission as EventSubmission,
         latestMessages,
       );
-    };
+    });
 
-    events.onerror = function (e: MessageEvent) {
+    sse.addEventListener('error', async (e: MessageEvent) => {
+      /* @ts-ignore */
+      if (e.responseCode === 401) {
+        /* token expired, refresh and retry */
+        try {
+          const refreshResponse = await request.refreshToken();
+          const token = refreshResponse?.token ?? '';
+          if (!token) {
+            throw new Error('Token refresh failed.');
+          }
+          sse.headers = {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          };
+
+          request.dispatchTokenUpdatedEvent(token);
+          sse.stream();
+          return;
+        } catch (error) {
+          /* token refresh failed, continue handling the original 401 */
+          console.log(error);
+        }
+      }
+
       console.log('error in server stream.');
-      (startupConfig?.checkBalance ?? false) && balanceQuery.refetch();
+      (startupConfig?.balance?.enabled ?? false) && balanceQuery.refetch();
 
       let data: TResData | undefined = undefined;
       try {
@@ -187,18 +236,18 @@ export default function useSSE(
       }
 
       errorHandler({ data, submission: { ...submission, userMessage } as EventSubmission });
-    };
+    });
 
     setIsSubmitting(true);
-    events.stream();
+    sse.stream();
 
     return () => {
-      const isCancelled = events.readyState <= 1;
-      events.close();
-      // setSource(null);
+      const isCancelled = sse.readyState <= 1;
+      sse.close();
       if (isCancelled) {
         const e = new Event('cancel');
-        events.dispatchEvent(e);
+        /* @ts-ignore */
+        sse.dispatchEvent(e);
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

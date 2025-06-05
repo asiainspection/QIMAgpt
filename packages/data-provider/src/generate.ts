@@ -85,7 +85,7 @@ export type DynamicSettingProps = Partial<SettingDefinition> & {
   readonly?: boolean;
   settingKey: string;
   setOption: TSetOption;
-  conversation: TConversation | TPreset | null;
+  conversation: Partial<TConversation> | Partial<TPreset> | null;
   defaultValue?: number | boolean | string | string[];
   className?: string;
   inputClassName?: string;
@@ -414,7 +414,7 @@ export function validateSettingDefinitions(settings: SettingsConfiguration): voi
 
     // Default columnSpan
     if (!setting.columnSpan) {
-      setting.columnSpan = Math.floor(columns / 2);
+      setting.columnSpan = Math.floor((columns ?? 0) / 2);
     }
 
     // Default label to key

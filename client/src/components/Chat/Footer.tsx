@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import TagManager from 'react-gtm-module';
 import { Constants } from 'librechat-data-provider';
-import { useGetStartupConfig } from 'librechat-data-provider/react-query';
+import { useGetStartupConfig } from '~/data-provider';
 import { useLocalize } from '~/hooks';
 
 export default function Footer({ className }: { className?: string }) {
@@ -34,13 +34,6 @@ export default function Footer({ className }: { className?: string }) {
     </a>
   );
 
-  if (config?.analyticsGtmId != null) {
-    const tagManagerArgs = {
-      gtmId: config.analyticsGtmId,
-    };
-    TagManager.initialize(tagManagerArgs);
-  }
-
   const mainContentParts = (
     typeof config?.customFooter === 'string'
       ? config.customFooter
@@ -50,11 +43,19 @@ export default function Footer({ className }: { className?: string }) {
         localize('com_ui_latest_footer')
   ).split('|');
 
+  useEffect(() => {
+    if (config?.analyticsGtmId != null && typeof window.google_tag_manager === 'undefined') {
+      const tagManagerArgs = {
+        gtmId: config.analyticsGtmId,
+      };
+      TagManager.initialize(tagManagerArgs);
+    }
+  }, [config?.analyticsGtmId]);
+
   const mainContentRender = mainContentParts.map((text, index) => (
     <React.Fragment key={`main-content-part-${index}`}>
       <ReactMarkdown
         components={{
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           a: ({ node: _n, href, children, ...otherProps }) => {
             return (
               <a
@@ -68,7 +69,7 @@ export default function Footer({ className }: { className?: string }) {
               </a>
             );
           },
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
           p: ({ node: _n, ...props }) => <span {...props} />,
         }}
       >
@@ -82,24 +83,29 @@ export default function Footer({ className }: { className?: string }) {
   );
 
   return (
-    <div
-      className={
-        className ??
-        'relative flex items-center justify-center gap-2 px-2 py-2 text-center text-xs text-text-primary md:px-[60px]'
-      }
-      role="contentinfo"
-    >
-      {footerElements.map((contentRender, index) => {
-        const isLastElement = index === footerElements.length - 1;
-        return (
-          <React.Fragment key={`footer-element-${index}`}>
-            {contentRender}
-            {!isLastElement && (
-              <div key={`separator-${index}`} className="h-2 border-r-[1px] border-border-medium" />
-            )}
-          </React.Fragment>
-        );
-      })}
+    <div className="relative w-full">
+      <div
+        className={
+          className ??
+          'absolute bottom-0 left-0 right-0 hidden items-center justify-center gap-2 px-2 py-2 text-center text-xs text-text-primary sm:flex md:px-[60px]'
+        }
+        role="contentinfo"
+      >
+        {footerElements.map((contentRender, index) => {
+          const isLastElement = index === footerElements.length - 1;
+          return (
+            <React.Fragment key={`footer-element-${index}`}>
+              {contentRender}
+              {!isLastElement && (
+                <div
+                  key={`separator-${index}`}
+                  className="h-2 border-r-[1px] border-border-medium"
+                />
+              )}
+            </React.Fragment>
+          );
+        })}
+      </div>
     </div>
   );
 }

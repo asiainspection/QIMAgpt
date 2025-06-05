@@ -15,10 +15,10 @@ import type {
 } from 'librechat-data-provider';
 import type { ActionAuthForm, ActionWithNullableMetadata } from '~/common';
 import type { Spec } from './ActionsTable';
+import ActionCallback from '~/components/SidePanel/Builder/ActionCallback';
 import { useAssistantsMapContext, useToastContext } from '~/Providers';
 import { ActionsTable, columns } from './ActionsTable';
 import { useUpdateAction } from '~/data-provider';
-import { cn, removeFocusOutlines } from '~/utils';
 import useLocalize from '~/hooks/useLocalize';
 import { Spinner } from '~/components/svg';
 
@@ -219,7 +219,7 @@ export default function ActionsInput({
             htmlFor="example-schema"
             className="text-token-text-primary whitespace-nowrap font-medium"
           >
-            Schema
+            {localize('com_ui_schema')}
           </label>
           <div className="flex items-center gap-2">
             {/* <button className="btn btn-neutral border-token-border-light relative h-8 min-w-[100px] rounded-lg font-medium">
@@ -238,17 +238,15 @@ export default function ActionsInput({
             </select>
           </div>
         </div>
-        <div className="border-token-border-light mb-4 overflow-hidden rounded-lg border">
+        <div className="border-token-border-medium bg-token-surface-primary hover:border-token-border-hover mb-4 w-full overflow-hidden rounded-lg border ring-0">
           <div className="relative">
             <textarea
+              id="schemaInput"
               value={inputValue}
               onChange={handleInputChange}
               spellCheck="false"
-              placeholder="Enter your OpenAPI schema here"
-              className={cn(
-                'text-token-text-primary block h-96 w-full border-none bg-transparent p-2 font-mono text-xs',
-                removeFocusOutlines,
-              )}
+              placeholder={localize('com_ui_enter_openapi_schema')}
+              className="text-token-text-primary block h-96 w-full bg-transparent p-2 font-mono text-xs outline-none focus:ring-1 focus:ring-border-light"
             />
             {/* TODO: format input button */}
           </div>
@@ -262,8 +260,8 @@ export default function ActionsInput({
         </div>
       </div>
       {!!data && (
-        <div>
-          <div className="mb-1.5 flex items-center">
+        <div className="my-2">
+          <div className="flex items-center">
             <label className="text-token-text-primary block font-medium">
               {localize('com_assistants_available_actions')}
             </label>
@@ -271,20 +269,19 @@ export default function ActionsInput({
           <ActionsTable columns={columns} data={data} />
         </div>
       )}
-      <div className="mt-4">
-        <div className="rounded-md border border-gray-300 px-3 py-2 shadow-none focus-within:border-gray-800 focus-within:ring-1 focus-within:ring-gray-800 dark:border-gray-700 dark:bg-gray-700 dark:focus-within:border-gray-500 dark:focus-within:ring-gray-500">
-          <label htmlFor="privacyPolicyUrl" className="block text-xs text-text-secondary">
-            Privacy Policy URL
+      <div className="relative my-1">
+        <ActionCallback action_id={action?.action_id} />
+        <div className="mb-1.5 flex items-center">
+          <label className="text-token-text-primary block font-medium">
+            {localize('com_ui_privacy_policy_url')}
           </label>
-          <div className="relative">
-            <input
-              name="privacyPolicyUrl"
-              id="privacyPolicyUrl"
-              className="block w-full border-0 bg-transparent p-0 placeholder-text-secondary shadow-none outline-none focus-within:shadow-none focus-within:outline-none focus-within:ring-0 focus:border-none focus:ring-0 sm:text-sm"
-              placeholder="https://api.example-weather-app.com/privacy"
-              // value=""
-            />
-          </div>
+        </div>
+        <div className="border-token-border-medium bg-token-surface-primary hover:border-token-border-hover flex h-9 w-full rounded-lg border">
+          <input
+            type="text"
+            placeholder="https://api.example-weather-app.com/privacy"
+            className="flex-1 rounded-lg bg-transparent px-3 py-1.5 text-sm outline-none placeholder:text-text-secondary-alt focus:ring-1 focus:ring-border-light"
+          />
         </div>
       </div>
       <div className="flex items-center justify-end">

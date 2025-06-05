@@ -1,6 +1,8 @@
 const fs = require('fs');
 const LdapStrategy = require('passport-ldapauth');
+const { SystemRoles } = require('librechat-data-provider');
 const { findUser, createUser, updateUser } = require('~/models/userMethods');
+const { countUsers } = require('~/models/userMethods');
 const { isEnabled } = require('~/server/utils');
 const logger = require('~/utils/logger');
 
@@ -14,7 +16,9 @@ const {
   LDAP_FULL_NAME,
   LDAP_ID,
   LDAP_USERNAME,
+  LDAP_EMAIL,
   LDAP_TLS_REJECT_UNAUTHORIZED,
+  LDAP_STARTTLS,
 } = process.env;
 
 // Check required environment variables
@@ -43,7 +47,11 @@ if (LDAP_ID) {
 if (LDAP_USERNAME) {
   searchAttributes.push(LDAP_USERNAME);
 }
+if (LDAP_EMAIL) {
+  searchAttributes.push(LDAP_EMAIL);
+}
 const rejectUnauthorized = isEnabled(LDAP_TLS_REJECT_UNAUTHORIZED);
+const startTLS = isEnabled(LDAP_STARTTLS);
 
 const ldapOptions = {
   server: {
@@ -66,6 +74,7 @@ const ldapOptions = {
         })(),
       },
     }),
+    ...(startTLS && { starttls: true }),
   },
   usernameField: 'email',
   passwordField: 'password',
@@ -73,15 +82,6 @@ const ldapOptions = {
 
 const ldapLogin = new LdapStrategy(ldapOptions, async (userinfo, done) => {
   if (!userinfo) {
-    return done(null, false, { message: 'Invalid credentials' });
-  }
-
-  if (!userinfo.mail) {
-    logger.warn(
-      '[ldapStrategy]',
-      'No email attributes found in userinfo',
-      JSON.stringify(userinfo, null, 2),
-    );
     return done(null, false, { message: 'Invalid credentials' });
   }
 
@@ -100,14 +100,29 @@ const ldapLogin = new LdapStrategy(ldapOptions, async (userinfo, done) => {
     const username =
       (LDAP_USERNAME && userinfo[LDAP_USERNAME]) || userinfo.givenName || userinfo.mail;
 
+    const mail = (LDAP_EMAIL && userinfo[LDAP_EMAIL]) || userinfo.mail || username + '@ldap.local';
+
+    if (!userinfo.mail && !(LDAP_EMAIL && userinfo[LDAP_EMAIL])) {
+      logger.warn(
+        '[ldapStrategy]',
+        `No valid email attribute found in LDAP userinfo. Using fallback email: ${username}@ldap.local`,
+        `LDAP_EMAIL env var: ${LDAP_EMAIL || 'not set'}`,
+        `Available userinfo attributes: ${Object.keys(userinfo).join(', ')}`,
+        'Full userinfo:',
+        JSON.stringify(userinfo, null, 2),
+      );
+    }
+
     if (!user) {
+      const isFirstRegisteredUser = (await countUsers()) === 0;
       user = {
         provider: 'ldap',
         ldapId,
         username,
-        email: userinfo.mail,
+        email: mail,
         emailVerified: true, // The ldap server administrator should verify the email
         name: fullName,
+        role: isFirstRegisteredUser ? SystemRoles.ADMIN : SystemRoles.USER,
       };
       const userId = await createUser(user);
       user._id = userId;
@@ -116,7 +131,7 @@ const ldapLogin = new LdapStrategy(ldapOptions, async (userinfo, done) => {
       // so update the user information with the values registered in LDAP
       user.provider = 'ldap';
       user.ldapId = ldapId;
-      user.email = userinfo.mail;
+      user.email = mail;
       user.username = username;
       user.name = fullName;
     }

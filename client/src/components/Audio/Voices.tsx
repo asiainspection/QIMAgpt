@@ -1,39 +1,10 @@
 import React from 'react';
 import { useRecoilState } from 'recoil';
 import type { Option } from '~/common';
-import DropdownNoState from '~/components/ui/DropdownNoState';
-import { useLocalize, useTTSBrowser, useTTSEdge, useTTSExternal } from '~/hooks';
+import { useLocalize, useTTSBrowser, useTTSExternal } from '~/hooks';
+import { Dropdown } from '~/components/ui';
 import { logger } from '~/utils';
 import store from '~/store';
-
-export function EdgeVoiceDropdown() {
-  const localize = useLocalize();
-  const { voices = [] } = useTTSEdge();
-  const [voice, setVoice] = useRecoilState(store.voice);
-
-  const handleVoiceChange = (newValue?: string | Option) => {
-    logger.log('Edge Voice changed:', newValue);
-    const newVoice = typeof newValue === 'string' ? newValue : newValue?.value;
-    if (newVoice != null) {
-      return setVoice(newVoice.toString());
-    }
-  };
-
-  return (
-    <div className="flex items-center justify-between">
-      <div>{localize('com_nav_voice_select')}</div>
-      <DropdownNoState
-        key={`edge-voice-dropdown-${voices.length}`}
-        value={voice}
-        options={voices}
-        onChange={handleVoiceChange}
-        sizeClasses="min-w-[200px] !max-w-[400px] [--anchor-max-width:400px]"
-        anchor="bottom start"
-        testId="EdgeVoiceDropdown"
-      />
-    </div>
-  );
-}
 
 export function BrowserVoiceDropdown() {
   const localize = useLocalize();
@@ -51,14 +22,14 @@ export function BrowserVoiceDropdown() {
   return (
     <div className="flex items-center justify-between">
       <div>{localize('com_nav_voice_select')}</div>
-      <DropdownNoState
+      <Dropdown
         key={`browser-voice-dropdown-${voices.length}`}
-        value={voice}
+        value={voice ?? ''}
         options={voices}
         onChange={handleVoiceChange}
         sizeClasses="min-w-[200px] !max-w-[400px] [--anchor-max-width:400px]"
-        anchor="bottom start"
         testId="BrowserVoiceDropdown"
+        className="z-50"
       />
     </div>
   );
@@ -80,14 +51,14 @@ export function ExternalVoiceDropdown() {
   return (
     <div className="flex items-center justify-between">
       <div>{localize('com_nav_voice_select')}</div>
-      <DropdownNoState
+      <Dropdown
         key={`external-voice-dropdown-${voices.length}`}
-        value={voice}
+        value={voice ?? ''}
         options={voices}
         onChange={handleVoiceChange}
         sizeClasses="min-w-[200px] !max-w-[400px] [--anchor-max-width:400px]"
-        anchor="bottom start"
         testId="ExternalVoiceDropdown"
+        className="z-50"
       />
     </div>
   );

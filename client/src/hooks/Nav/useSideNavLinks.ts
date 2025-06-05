@@ -4,15 +4,15 @@ import {
   isAssistantsEndpoint,
   isAgentsEndpoint,
   PermissionTypes,
-  paramEndpoints,
+  isParamEndpoint,
   EModelEndpoint,
   Permissions,
 } from 'librechat-data-provider';
-import type { TConfig, TInterfaceConfig } from 'librechat-data-provider';
+import type { TInterfaceConfig, TEndpointsConfig } from 'librechat-data-provider';
 import type { NavLink } from '~/common';
+import AgentPanelSwitch from '~/components/SidePanel/Agents/AgentPanelSwitch';
 import BookmarkPanel from '~/components/SidePanel/Bookmarks/BookmarkPanel';
 import PanelSwitch from '~/components/SidePanel/Builder/PanelSwitch';
-import AgentPanelSwitch from '~/components/SidePanel/Agents/AgentPanelSwitch';
 import PromptsAccordion from '~/components/Prompts/PromptsAccordion';
 import Parameters from '~/components/SidePanel/Parameters/Panel';
 import FilesPanel from '~/components/SidePanel/Files/Panel';
@@ -21,18 +21,18 @@ import { useHasAccess } from '~/hooks';
 
 export default function useSideNavLinks({
   hidePanel,
-  assistants,
-  agents,
   keyProvided,
   endpoint,
+  endpointType,
   interfaceConfig,
+  endpointsConfig,
 }: {
   hidePanel: () => void;
-  assistants?: TConfig | null;
-  agents?: TConfig | null;
   keyProvided: boolean;
   endpoint?: EModelEndpoint | null;
+  endpointType?: EModelEndpoint | null;
   interfaceConfig: Partial<TInterfaceConfig>;
+  endpointsConfig: TEndpointsConfig;
 }) {
   const hasAccessToPrompts = useHasAccess({
     permissionType: PermissionTypes.PROMPTS,
@@ -42,15 +42,26 @@ export default function useSideNavLinks({
     permissionType: PermissionTypes.BOOKMARKS,
     permission: Permissions.USE,
   });
+  const hasAccessToAgents = useHasAccess({
+    permissionType: PermissionTypes.AGENTS,
+    permission: Permissions.USE,
+  });
+  const hasAccessToCreateAgents = useHasAccess({
+    permissionType: PermissionTypes.AGENTS,
+    permission: Permissions.CREATE,
+  });
 
   const Links = useMemo(() => {
     const links: NavLink[] = [];
     if (
       isAssistantsEndpoint(endpoint) &&
-      assistants &&
-      assistants.disableBuilder !== true &&
-      keyProvided &&
-      interfaceConfig.parameters === true
+      ((endpoint === EModelEndpoint.assistants &&
+        endpointsConfig?.[EModelEndpoint.assistants] &&
+        endpointsConfig[EModelEndpoint.assistants].disableBuilder !== true) ||
+        (endpoint === EModelEndpoint.azureAssistants &&
+          endpointsConfig?.[EModelEndpoint.azureAssistants] &&
+          endpointsConfig[EModelEndpoint.azureAssistants].disableBuilder !== true)) &&
+      keyProvided
     ) {
       links.push({
         title: 'com_sidepanel_assistant_builder',
@@ -62,11 +73,10 @@ export default function useSideNavLinks({
     }
 
     if (
-      isAgentsEndpoint(endpoint) &&
-      agents &&
-      // agents.disableBuilder !== true &&
-      keyProvided &&
-      interfaceConfig.parameters === true
+      endpointsConfig?.[EModelEndpoint.agents] &&
+      hasAccessToAgents &&
+      hasAccessToCreateAgents &&
+      endpointsConfig[EModelEndpoint.agents].disableBuilder !== true
     ) {
       links.push({
         title: 'com_sidepanel_agent_builder',
@@ -87,7 +97,12 @@ export default function useSideNavLinks({
       });
     }
 
-    if (interfaceConfig.parameters === true && paramEndpoints.has(endpoint ?? '') && keyProvided) {
+    if (
+      interfaceConfig.parameters === true &&
+      isParamEndpoint(endpoint ?? '', endpointType ?? '') === true &&
+      !isAgentsEndpoint(endpoint) &&
+      keyProvided
+    ) {
       links.push({
         title: 'com_sidepanel_parameters',
         label: '',
@@ -125,13 +140,15 @@ export default function useSideNavLinks({
 
     return links;
   }, [
+    endpointsConfig,
     interfaceConfig.parameters,
     keyProvided,
-    assistants,
+    endpointType,
     endpoint,
-    agents,
+    hasAccessToAgents,
     hasAccessToPrompts,
     hasAccessToBookmarks,
+    hasAccessToCreateAgents,
     hidePanel,
   ]);
 

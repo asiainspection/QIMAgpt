@@ -46,7 +46,7 @@ export default function usePresets() {
       return;
     }
 
-    if (presets && presets.length > 0 && user && presets[0].user !== user?.id) {
+    if (presets && presets.length > 0 && user && presets[0].user !== user.id) {
       presetsQuery.refetch();
       return;
     }
@@ -62,7 +62,6 @@ export default function usePresets() {
     }
     hasLoaded.current = true;
     // dependencies are stable and only needed once
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [presetsQuery.data, user, modelsData]);
 
   const setPresets = useCallback(
@@ -80,7 +79,7 @@ export default function usePresets() {
       }
       const previousPresets = presetsQuery.data ?? [];
       if (previousPresets) {
-        setPresets(previousPresets.filter((p) => p.presetId !== preset?.presetId));
+        setPresets(previousPresets.filter((p) => p.presetId !== preset.presetId));
       }
     },
     onSuccess: () => {
@@ -99,12 +98,12 @@ export default function usePresets() {
   const updatePreset = useUpdatePresetMutation({
     onSuccess: (data, preset) => {
       const toastTitle = data.title ? `"${data.title}"` : localize('com_endpoint_preset_title');
-      let message = `${toastTitle} ${localize('com_endpoint_preset_saved')}`;
+      let message = `${toastTitle} ${localize('com_ui_saved')}`;
       if (data.defaultPreset && data.presetId !== _defaultPreset?.presetId) {
         message = `${toastTitle} ${localize('com_endpoint_preset_default')}`;
         setDefaultPreset(data);
         newConversation({ preset: data });
-      } else if (preset?.defaultPreset === false) {
+      } else if (preset.defaultPreset === false) {
         setDefaultPreset(null);
         message = `${toastTitle} ${localize('com_endpoint_preset_default_removed')}`;
       }
@@ -182,12 +181,22 @@ export default function usePresets() {
       endpointsConfig,
     });
 
+    newPreset.spec = null;
+    newPreset.iconURL = newPreset.iconURL ?? null;
+    newPreset.modelLabel = newPreset.modelLabel ?? null;
     const isModular = isCurrentModular && isNewModular && shouldSwitch;
     if (isExistingConversation && isModular) {
       const currentConvo = getDefaultConversation({
         /* target endpointType is necessary to avoid endpoint mixing */
-        conversation: { ...(conversation ?? {}), endpointType: newEndpointType },
+        conversation: {
+          ...(conversation ?? {}),
+          spec: null,
+          iconURL: null,
+          modelLabel: null,
+          endpointType: newEndpointType,
+        },
         preset: { ...newPreset, endpointType: newEndpointType },
+        cleanInput: true,
       });
 
       /* We don't reset the latest message, only when changing settings mid-converstion */
@@ -233,7 +242,7 @@ export default function usePresets() {
     if (!preset) {
       return;
     }
-    const fileName = filenamify(preset?.title || 'preset');
+    const fileName = filenamify(preset.title || 'preset');
     exportFromJSON({
       data: cleanupPreset({ preset }),
       fileName,

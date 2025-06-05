@@ -1,9 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Capabilities } from 'librechat-data-provider';
-import { useGetEndpointsQuery } from 'librechat-data-provider/react-query';
+import { EModelEndpoint } from 'librechat-data-provider';
 import type { ActionsEndpoint } from '~/common';
 import type { Action, TConfig, TEndpointsConfig } from 'librechat-data-provider';
-import { useGetActionsQuery } from '~/data-provider';
+import { useGetActionsQuery, useGetEndpointsQuery } from '~/data-provider';
 import { useChatContext } from '~/Providers';
 import ActionsPanel from './ActionsPanel';
 import AgentPanel from './AgentPanel';
@@ -18,19 +17,14 @@ export default function AgentPanelSwitch() {
   const { data: endpointsConfig = {} as TEndpointsConfig } = useGetEndpointsQuery();
 
   const agentsConfig = useMemo(
-    () =>
-      // endpointsConfig?.[EModelEndpoint.agents] ??
-      ({
-        // for testing purposes
-        capabilities: [Capabilities.tools, Capabilities.actions],
-      } as TConfig),
-    // [endpointsConfig]);
-    [],
+    () => endpointsConfig?.[EModelEndpoint.agents] ?? ({} as TConfig | null),
+    [endpointsConfig],
   );
 
   useEffect(() => {
-    if (conversation?.agent_id) {
-      setCurrentAgentId(conversation?.agent_id);
+    const agent_id = conversation?.agent_id ?? '';
+    if (agent_id) {
+      setCurrentAgentId(agent_id);
     }
   }, [conversation?.agent_id]);
 
