@@ -1,14 +1,17 @@
+import { useOutletContext, useSearchParams } from 'react-router-dom';
 import React, { useEffect } from 'react';
 import { useAuthContext } from '~/hooks/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useLocalize } from '~/hooks';
-import { useGetStartupConfig } from 'librechat-data-provider/react-query';
+//import { useGetStartupConfig } from 'librechat-data-provider/react-query';
 import { OpenIDIcon } from '~/components';
 import { getLoginError } from '~/utils';
+import type { TLoginLayoutContext } from '~/common';
 
 function Login() {
   const { error, isAuthenticated } = useAuthContext();
-  const { data: startupConfig } = useGetStartupConfig();
+  // const { data: startupConfig } = useGetStartupConfig();
+  const { startupConfig } = useOutletContext<TLoginLayoutContext>();
   const localize = useLocalize();
 
   const navigate = useNavigate();
