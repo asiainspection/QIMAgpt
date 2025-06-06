@@ -1,4 +1,4 @@
-import { useOutletContext, useSearchParams } from 'react-router-dom';
+import { useOutletContext } from 'react-router-dom';
 import React, { useEffect } from 'react';
 import { useAuthContext } from '~/hooks/AuthContext';
 import { useNavigate } from 'react-router-dom';
