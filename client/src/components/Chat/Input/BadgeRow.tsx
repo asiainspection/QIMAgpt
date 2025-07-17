@@ -371,6 +371,8 @@ function BadgeRow({
             <MCPSelect />
           </>
         )}
+        {/* Always show MCP tools regardless of endpoint type */}
+        {showEphemeralBadges !== true && <MCPSelect />}
         {ghostBadge && (
           <div
             className="ghost-badge h-full"

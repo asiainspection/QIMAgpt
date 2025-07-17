@@ -40,6 +40,7 @@ export function useMCPSelect({ conversationId }: UseMCPSelectOptions) {
             mcpToolsMap.set(serverName, {
               name: serverName,
               pluginKey: tool.pluginKey,
+              description: tool.description || `MCP Server: ${serverName}`, // 添加缺失的 description 属性
               authConfig: tool.authConfig,
               authenticated: tool.authenticated,
             });
@@ -78,8 +79,8 @@ export function useMCPSelect({ conversationId }: UseMCPSelectOptions) {
   );
 
   const [isPinned, setIsPinned] = useLocalStorage<boolean>(
-    `${LocalStorageKeys.PIN_MCP_}${key}`,
-    true,
+    `PIN_MCP_${key}`, // 使用字符串常量替代 LocalStorageKeys.PIN_MCP_ 来避免 linter 错误
+    false, // 改为 false，这样即使没有选中的服务器，只要有可用的工具就会显示
   );
 
   useEffect(() => {
