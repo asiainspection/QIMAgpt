@@ -78,7 +78,7 @@ const tokenValues = Object.assign(
     'gpt-3.5-turbo-1106': { prompt: 1, completion: 2 },
     'o4-mini': { prompt: 1.1, completion: 4.4 },
     'o3-mini': { prompt: 1.1, completion: 4.4 },
-    o3: { prompt: 10, completion: 40 },
+    o3: { prompt: 2, completion: 8 },
     'o1-mini': { prompt: 1.1, completion: 4.4 },
     'o1-preview': { prompt: 15, completion: 60 },
     o1: { prompt: 15, completion: 60 },
@@ -100,6 +100,8 @@ const tokenValues = Object.assign(
     'claude-3-5-haiku': { prompt: 0.8, completion: 4 },
     'claude-3.5-haiku': { prompt: 0.8, completion: 4 },
     'claude-3-haiku': { prompt: 0.25, completion: 1.25 },
+    'claude-sonnet-4': { prompt: 3, completion: 15 },
+    'claude-opus-4': { prompt: 15, completion: 75 },
     'claude-2.1': { prompt: 8, completion: 24 },
     'claude-2': { prompt: 8, completion: 24 },
     'claude-instant': { prompt: 0.8, completion: 2.4 },
@@ -162,6 +164,8 @@ const cacheTokenValues = {
   'claude-3.5-haiku': { write: 1, read: 0.08 },
   'claude-3-5-haiku': { write: 1, read: 0.08 },
   'claude-3-haiku': { write: 0.3, read: 0.03 },
+  'claude-sonnet-4': { write: 3.75, read: 0.3 },
+  'claude-opus-4': { write: 18.75, read: 1.5 },
 };
 
 /**
