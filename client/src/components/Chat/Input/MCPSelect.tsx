@@ -11,7 +11,7 @@ import { useLocalize } from '~/hooks';
 
 const getBaseMCPPluginKey = (fullPluginKey: string): string => {
   const parts = fullPluginKey.split(Constants.mcp_delimiter);
-  return Constants.mcp_prefix + parts[parts.length - 1];
+  return `mcp_${parts[parts.length - 1]}`;
 };
 
 function MCPSelect() {
@@ -22,6 +22,15 @@ function MCPSelect() {
 
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [selectedToolForConfig, setSelectedToolForConfig] = useState<TPlugin | null>(null);
+
+  console.log('MCPSelect: Debug info', {
+    mcpValues,
+    mcpServerNames,
+    isPinned,
+    mcpToolDetails,
+    hasToolDetails: !!mcpToolDetails,
+    toolDetailsLength: mcpToolDetails?.length,
+  });
 
   const updateUserPluginsMutation = useUpdateUserPluginsMutation({
     onSuccess: () => {
@@ -87,8 +96,6 @@ function MCPSelect() {
       const tool = mcpToolDetails?.find((t) => t.name === serverName);
       const hasAuthConfig = tool?.authConfig && tool.authConfig.length > 0;
 
-      // Common wrapper for the main content (check mark + text)
-      // Ensures Check & Text are adjacent and the group takes available space.
       const mainContentWrapper = (
         <div className="flex flex-grow items-center">{defaultContent}</div>
       );
@@ -113,7 +120,6 @@ function MCPSelect() {
           </div>
         );
       }
-      // For items without a settings icon, return the consistently wrapped main content.
       return mainContentWrapper;
     },
     [mcpToolDetails, setSelectedToolForConfig, setIsConfigModalOpen],
@@ -121,15 +127,22 @@ function MCPSelect() {
 
   // Don't render if no servers are selected and not pinned
   if ((!mcpValues || mcpValues.length === 0) && !isPinned) {
+    console.log('MCPSelect: Not rendering - no servers selected and not pinned', {
+      mcpValues,
+      isPinned,
+    });
     return null;
   }
 
   if (!mcpToolDetails || mcpToolDetails.length === 0) {
+    console.log('MCPSelect: Not rendering - no tool details', { mcpToolDetails });
     return null;
   }
 
+  console.log('MCPSelect: Rendering component');
+
   const placeholderText =
-    startupConfig?.interface?.mcpServers?.placeholder || localize('com_ui_mcp_servers');
+    (startupConfig as any)?.interface?.mcpServers?.placeholder || localize('com_ui_mcp_servers');
   return (
     <>
       <MultiSelect
@@ -165,10 +178,9 @@ function MCPSelect() {
           })()}
           initialValues={(() => {
             const initial: Record<string, string> = {};
-            // Note: Actual initial values might need to be fetched if they are stored user-specifically
             if (selectedToolForConfig?.authConfig) {
               selectedToolForConfig.authConfig.forEach((field) => {
-                initial[field.authField] = ''; // Or fetched value
+                initial[field.authField] = '';
               });
             }
             return initial;
