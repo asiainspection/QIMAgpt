@@ -127,11 +127,13 @@ function MCPSelect() {
 
   // Don't render if no servers are selected and not pinned
   if ((!mcpValues || mcpValues.length === 0) && !isPinned) {
-    console.log('MCPSelect: Not rendering - no servers selected and not pinned', {
-      mcpValues,
-      isPinned,
-    });
-    return null;
+    if (!mcpToolDetails || mcpToolDetails.length === 0) {
+      console.log('MCPSelect: Not rendering - no servers selected and not pinned', {
+        mcpValues,
+        isPinned,
+      });
+      return null;
+    }
   }
 
   if (!mcpToolDetails || mcpToolDetails.length === 0) {
