@@ -132,6 +132,18 @@ export const resendVerificationEmail = () => '/api/user/verify/resend';
 
 export const plugins = () => '/api/plugins';
 
+export const mcpReinitialize = (serverName: string) => `/api/mcp/${serverName}/reinitialize`;
+export const mcpConnectionStatus = () => '/api/mcp/connection/status';
+export const mcpServerConnectionStatus = (serverName: string) =>
+  `/api/mcp/connection/status/${serverName}`;
+export const mcpAuthValues = (serverName: string) => {
+  return `/api/mcp/${serverName}/auth-values`;
+};
+
+export const cancelMCPOAuth = (serverName: string) => {
+  return `/api/mcp/oauth/cancel/${serverName}`;
+};
+
 export const config = () => '/api/config';
 
 export const prompts = () => '/api/prompts';

@@ -1,4 +1,3 @@
-import type OpenAI from 'openai';
 import type { InfiniteData } from '@tanstack/react-query';
 import type {
   TBanner,
@@ -13,8 +12,6 @@ import type {
 import type { SettingDefinition } from './generate';
 import type { TMinimalFeedback } from './feedback';
 import type { Agent } from './types/assistants';
-
-export type TOpenAIMessage = OpenAI.Chat.ChatCompletionMessageParam;
 
 export * from './schemas';
 
@@ -43,6 +40,7 @@ export type TEndpointOption = Pick<
   | 'resendFiles'
   | 'imageDetail'
   | 'reasoning_effort'
+  | 'verbosity'
   | 'instructions'
   | 'additional_instructions'
   | 'append_current_datetime'
@@ -413,6 +411,14 @@ export type TVerify2FATempResponse = {
   token?: string;
   user?: TUser;
   message?: string;
+};
+
+/**
+ * Request for disabling 2FA.
+ */
+export type TDisable2FARequest = {
+  token?: string;
+  backupCode?: string;
 };
 
 /**
