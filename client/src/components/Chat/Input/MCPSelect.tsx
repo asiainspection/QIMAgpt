@@ -69,13 +69,7 @@ function MCPSelect() {
   );
 
   if ((!mcpValues || mcpValues.length === 0) && !isPinned) {
-    if (!mcpToolDetails || mcpToolDetails.length === 0) {
-      console.log('MCPSelect: Not rendering - no servers selected and not pinned', {
-        mcpValues,
-        isPinned,
-      });
-      return null;
-    }
+    return null;
   }
 
   if (!configuredServers || configuredServers.length === 0) {

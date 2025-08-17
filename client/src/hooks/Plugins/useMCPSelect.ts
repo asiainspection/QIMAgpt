@@ -98,8 +98,8 @@ export function useMCPSelect({ conversationId }: UseMCPSelectOptions) {
   }, []);
 
   const [isPinned, setIsPinned] = useLocalStorage<boolean>(
-    `PIN_MCP_${key}`, // 使用字符串常量替代 LocalStorageKeys.PIN_MCP_ 来避免 linter 错误
-    false, // 改为 false，这样即使没有选中的服务器，只要有可用的工具就会显示
+    `${LocalStorageKeys.PIN_MCP_}${key}`,
+    true,
   );
 
   useEffect(() => {
