@@ -1,6 +1,6 @@
 import TextareaAutosize from 'react-textarea-autosize';
 import type { TModelSelectProps } from '~/common';
-import { SelectDropDown, Input, Label } from '~/components/ui';
+import { SelectDropDown, Input, Label } from '@librechat/client';
 import { cn, defaultTextProps, removeFocusOutlines } from '~/utils/';
 import { useLocalize } from '~/hooks';
 
