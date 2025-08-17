@@ -4,7 +4,7 @@ import { useAuthContext } from '~/hooks/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useLocalize } from '~/hooks';
 //import { useGetStartupConfig } from 'librechat-data-provider/react-query';
-import { OpenIDIcon } from '~/components';
+import { OpenIDIcon } from '@librechat/client';
 import { getLoginError } from '~/utils';
 import type { TLoginLayoutContext } from '~/common';
 
