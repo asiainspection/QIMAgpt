@@ -41,7 +41,6 @@ export function useMCPSelect({ conversationId }: UseMCPSelectOptions) {
             mcpToolsMap.set(serverName, {
               name: serverName,
               pluginKey: tool.pluginKey,
-              description: tool.description || `MCP Server: ${serverName}`, // 添加缺失的 description 属性
               authConfig: tool.authConfig,
               authenticated: tool.authenticated,
             });
