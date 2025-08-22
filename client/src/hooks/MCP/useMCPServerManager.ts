@@ -101,6 +101,29 @@ export function useMCPServerManager() {
     }
   }, [connectionStatus, mcpValues, setMCPValues]);
 
+  useEffect(() => {
+    const defaultEnabledTools = startupConfig?.interface?.defaultEnabledMcpTools;
+    if (!defaultEnabledTools || defaultEnabledTools.length === 0) return;
+
+    if (mcpValues && mcpValues.length > 0) return;
+
+    const connectedDefaultTools = defaultEnabledTools.filter(
+      (serverName) =>
+        configuredServers.includes(serverName) &&
+        connectionStatus[serverName]?.connectionState === 'connected'
+    );
+
+    if (connectedDefaultTools.length > 0) {
+      setMCPValues(connectedDefaultTools);
+    }
+  }, [
+    startupConfig?.interface?.defaultEnabledMcpTools,
+    configuredServers,
+    connectionStatus,
+    mcpValues,
+    setMCPValues
+  ]);
+
   const updateServerState = useCallback((serverName: string, updates: Partial<ServerState>) => {
     setServerStates((prev) => {
       const newStates = { ...prev };

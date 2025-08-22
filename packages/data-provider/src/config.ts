@@ -518,6 +518,7 @@ export const intefaceSchema = z
     runCode: z.boolean().optional(),
     webSearch: z.boolean().optional(),
     fileSearch: z.boolean().optional(),
+    defaultEnabledMcpTools: z.array(z.string()).optional(),
   })
   .default({
     endpointsMenu: true,
@@ -534,6 +535,7 @@ export const intefaceSchema = z
     runCode: true,
     webSearch: true,
     fileSearch: true,
+    defaultEnabledMcpTools: [],
   });
 
 export type TInterfaceConfig = z.infer<typeof intefaceSchema>;
