@@ -79,6 +79,8 @@ interface:
   agents: true
   # Temporary chat retention period in hours (default: 720, min: 1, max: 8760)
   # temporaryChatRetention: 1
+  defaultEnabledMcpTools:
+    # - "filesystem" 
 
 # Example Cloudflare turnstile (optional)
 #turnstile:
