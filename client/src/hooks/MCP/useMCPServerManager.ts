@@ -113,6 +113,7 @@ export function useMCPServerManager() {
     }
 
     const defaultEnabledTools = startupConfig.interface.defaultEnabledMcpTools;
+    console.log('MCP Manager: Read defaultEnabledMcpTools from config:', defaultEnabledTools);
     if (!defaultEnabledTools || defaultEnabledTools.length === 0) {
       console.log('MCP Manager: No default enabled tools configured');
       return;
