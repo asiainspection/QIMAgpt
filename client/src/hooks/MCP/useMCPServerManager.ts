@@ -102,18 +102,48 @@ export function useMCPServerManager() {
   }, [connectionStatus, mcpValues, setMCPValues]);
 
   useEffect(() => {
-    const defaultEnabledTools = startupConfig?.interface?.defaultEnabledMcpTools;
-    if (!defaultEnabledTools || defaultEnabledTools.length === 0) return;
+    // 确保所有必要的数据都已加载
+    if (!startupConfig?.interface || !configuredServers || !connectionStatus) {
+      console.log('MCP Manager: Waiting for data to load', {
+        hasStartupConfig: !!startupConfig?.interface,
+        configuredServersCount: configuredServers?.length || 0,
+        connectionStatusCount: Object.keys(connectionStatus || {}).length
+      });
+      return;
+    }
 
-    if (mcpValues && mcpValues.length > 0) return;
+    const defaultEnabledTools = startupConfig.interface.defaultEnabledMcpTools;
+    if (!defaultEnabledTools || defaultEnabledTools.length === 0) {
+      console.log('MCP Manager: No default enabled tools configured');
+      return;
+    }
 
+    // 只有当用户当前没有选择任何MCP工具时才应用默认配置
+    if (!mcpValues || mcpValues.length > 0) {
+      console.log('MCP Manager: Skipping - user has selected tools or no mcpValues', { mcpValues });
+      return;
+    }
+
+    console.log('MCP Manager: Applying default enabled tools', {
+      defaultEnabledTools,
+      configuredServers,
+      connectionStatusKeys: Object.keys(connectionStatus)
+    });
+
+    // 过滤出已连接且在默认配置列表中的服务器
     const connectedDefaultTools = defaultEnabledTools.filter(
-      (serverName) =>
-        configuredServers.includes(serverName) &&
-        connectionStatus[serverName]?.connectionState === 'connected'
+      (serverName) => {
+        const isConfigured = configuredServers.includes(serverName);
+        const isConnected = connectionStatus[serverName]?.connectionState === 'connected';
+        console.log(`MCP Manager: Checking server ${serverName} - configured: ${isConfigured}, connected: ${isConnected}`);
+        return isConfigured && isConnected;
+      }
     );
 
+    console.log('MCP Manager: Connected default tools', connectedDefaultTools);
+
     if (connectedDefaultTools.length > 0) {
+      console.log('MCP Manager: Setting default MCP tools', connectedDefaultTools);
       setMCPValues(connectedDefaultTools);
     }
   }, [
@@ -121,7 +151,8 @@ export function useMCPServerManager() {
     configuredServers,
     connectionStatus,
     mcpValues,
-    setMCPValues
+    setMCPValues,
+    startupConfig?.interface
   ]);
 
   const updateServerState = useCallback((serverName: string, updates: Partial<ServerState>) => {
