@@ -42,6 +42,7 @@ async function loadDefaultInterface(config, configDefaults, roleName = SystemRol
     privacyPolicy: interfaceConfig?.privacyPolicy ?? defaults.privacyPolicy,
     termsOfService: interfaceConfig?.termsOfService ?? defaults.termsOfService,
     mcpServers: interfaceConfig?.mcpServers ?? defaults.mcpServers,
+    defaultEnabledMcpTools: interfaceConfig?.defaultEnabledMcpTools ?? defaults.defaultEnabledMcpTools,
     bookmarks: interfaceConfig?.bookmarks ?? defaults.bookmarks,
     memories: shouldDisableMemories ? false : (interfaceConfig?.memories ?? defaults.memories),
     prompts: interfaceConfig?.prompts ?? defaults.prompts,
@@ -127,6 +128,11 @@ async function loadDefaultInterface(config, configDefaults, roleName = SystemRol
 
   if (i > 0) {
     logSettings();
+  }
+
+  // Log defaultEnabledMcpTools for debugging
+  if (loadedInterface.defaultEnabledMcpTools && loadedInterface.defaultEnabledMcpTools.length > 0) {
+    logger.info(`Default MCP tools configured: ${JSON.stringify(loadedInterface.defaultEnabledMcpTools)}`);
   }
 
   return loadedInterface;
