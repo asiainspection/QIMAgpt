@@ -13,6 +13,11 @@ jest.mock('~/server/services/Files/strategies', () => ({
   })),
 }));
 jest.mock('~/server/services/Config', () => ({
+  getAppConfig: jest.fn().mockResolvedValue({}),
+}));
+jest.mock('@librechat/api', () => ({
+  ...jest.requireActual('@librechat/api'),
+  isEnabled: jest.fn(() => false),
   getBalanceConfig: jest.fn(() => ({
     enabled: false,
   })),
@@ -22,14 +27,11 @@ jest.mock('~/models', () => ({
   createUser: jest.fn(),
   updateUser: jest.fn(),
 }));
-jest.mock('@librechat/api', () => ({
-  ...jest.requireActual('@librechat/api'),
-  isEnabled: jest.fn(() => false),
-}));
 jest.mock('@librechat/data-schemas', () => ({
   ...jest.requireActual('@librechat/api'),
   logger: {
     info: jest.fn(),
+    warn: jest.fn(),
     debug: jest.fn(),
     error: jest.fn(),
   },
@@ -272,10 +274,7 @@ describe('setupOpenId', () => {
       name: '',
     };
     findUser.mockImplementation(async (query) => {
-      if (
-        query.openidId === tokenset.claims().sub ||
-        (query.email === tokenset.claims().email && query.provider === 'openid')
-      ) {
+      if (query.openidId === tokenset.claims().sub || query.email === tokenset.claims().email) {
         return existingUser;
       }
       return null;
@@ -336,7 +335,25 @@ describe('setupOpenId', () => {
 
     // Assert – verify that the strategy rejects login
     expect(user).toBe(false);
-    expect(details.message).toBe('You must have the "requiredRole" role to log in.');
+    expect(details.message).toBe('You must have "requiredRole" role to log in.');
+  });
+
+  it('should allow login when single required role is present (backward compatibility)', async () => {
+    // Arrange – ensure single role configuration (as set in beforeEach)
+    // OPENID_REQUIRED_ROLE = 'requiredRole'
+    // Default jwtDecode mock in beforeEach already returns this role
+    jwtDecode.mockReturnValue({
+      roles: ['requiredRole', 'anotherRole'],
+    });
+
+    // Act
+    const { user } = await validate(tokenset);
+
+    // Assert – verify that login succeeds with single role configuration
+    expect(user).toBeTruthy();
+    expect(user.email).toBe(tokenset.claims().email);
+    expect(user.username).toBe(tokenset.claims().preferred_username);
+    expect(createUser).toHaveBeenCalled();
   });
 
   it('should attempt to download and save the avatar if picture is provided', async () => {
@@ -360,6 +377,58 @@ describe('setupOpenId', () => {
     // Assert – fetch should not be called and avatar should remain undefined or empty
     expect(fetch).not.toHaveBeenCalled();
     // Depending on your implementation, user.avatar may be undefined or an empty string.
+  });
+
+  it('should support comma-separated multiple roles', async () => {
+    // Arrange
+    process.env.OPENID_REQUIRED_ROLE = 'someRole,anotherRole,admin';
+    await setupOpenId(); // Re-initialize the strategy
+    verifyCallback = require('openid-client/passport').__getVerifyCallback();
+    jwtDecode.mockReturnValue({
+      roles: ['anotherRole', 'aThirdRole'],
+    });
+
+    // Act
+    const { user } = await validate(tokenset);
+
+    // Assert
+    expect(user).toBeTruthy();
+    expect(user.email).toBe(tokenset.claims().email);
+  });
+
+  it('should reject login when user has none of the required multiple roles', async () => {
+    // Arrange
+    process.env.OPENID_REQUIRED_ROLE = 'someRole,anotherRole,admin';
+    await setupOpenId(); // Re-initialize the strategy
+    verifyCallback = require('openid-client/passport').__getVerifyCallback();
+    jwtDecode.mockReturnValue({
+      roles: ['aThirdRole', 'aFourthRole'],
+    });
+
+    // Act
+    const { user, details } = await validate(tokenset);
+
+    // Assert
+    expect(user).toBe(false);
+    expect(details.message).toBe(
+      'You must have one of: "someRole", "anotherRole", "admin" role to log in.',
+    );
+  });
+
+  it('should handle spaces in comma-separated roles', async () => {
+    // Arrange
+    process.env.OPENID_REQUIRED_ROLE = ' someRole , anotherRole , admin ';
+    await setupOpenId(); // Re-initialize the strategy
+    verifyCallback = require('openid-client/passport').__getVerifyCallback();
+    jwtDecode.mockReturnValue({
+      roles: ['someRole'],
+    });
+
+    // Act
+    const { user } = await validate(tokenset);
+
+    // Assert
+    expect(user).toBeTruthy();
   });
 
   it('should default to usePKCE false when OPENID_USE_PKCE is not defined', async () => {

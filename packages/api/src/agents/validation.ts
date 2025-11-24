@@ -26,7 +26,17 @@ export const agentToolResourcesSchema = z
     image_edit: agentBaseResourceSchema.optional(),
     execute_code: agentBaseResourceSchema.optional(),
     file_search: agentFileResourceSchema.optional(),
+    context: agentBaseResourceSchema.optional(),
+    /** @deprecated Use context instead */
     ocr: agentBaseResourceSchema.optional(),
+  })
+  .optional();
+
+/** Support contact schema for agent */
+export const agentSupportContactSchema = z
+  .object({
+    name: z.string().optional(),
+    email: z.union([z.literal(''), z.string().email()]).optional(),
   })
   .optional();
 
@@ -45,6 +55,8 @@ export const agentBaseSchema = z.object({
   recursion_limit: z.number().optional(),
   conversation_starters: z.array(z.string()).optional(),
   tool_resources: agentToolResourcesSchema,
+  support_contact: agentSupportContactSchema,
+  category: z.string().optional(),
 });
 
 /** Create schema extends base with required fields for creation */
