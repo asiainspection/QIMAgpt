@@ -1,10 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import { useWatch } from 'react-hook-form';
 import type { Control } from 'react-hook-form';
-import { Search, OGDialog, OGDialogContent, OGDialogTitle, OGDialogClose, Spinner, useToastContext } from '@librechat/client';
+import { Search } from 'lucide-react';
+import { OGDialog, OGDialogContent, OGDialogTitle, OGDialogClose, Spinner, useToastContext, TooltipAnchor } from '@librechat/client';
 import { isAgentsEndpoint } from 'librechat-data-provider';
 import { dataService } from 'librechat-data-provider';
-import { TooltipAnchor } from '@librechat/client';
 import Markdown from '~/components/Chat/Messages/Content/Markdown';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';
