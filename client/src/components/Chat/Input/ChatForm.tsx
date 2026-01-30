@@ -1,8 +1,10 @@
 import { memo, useRef, useMemo, useEffect, useState, useCallback } from 'react';
 import { useWatch } from 'react-hook-form';
-import { TextareaAutosize } from '@librechat/client';
+import { v4 } from 'uuid';
+import { TextareaAutosize, useToastContext } from '@librechat/client';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { Constants, isAssistantsEndpoint, isAgentsEndpoint } from 'librechat-data-provider';
+import { dataService } from 'librechat-data-provider';
 import {
   useChatContext,
   useChatFormContext,
@@ -17,6 +19,7 @@ import {
   useQueryParams,
   useSubmitMessage,
   useFocusChatEffect,
+  useLocalize,
 } from '~/hooks';
 import { mainTextareaId, BadgeItem } from '~/common';
 import AttachFileChat from './Files/AttachFileChat';
@@ -54,8 +57,10 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   const centerFormOnLanding = useRecoilValue(store.centerFormOnLanding);
   const isTemporary = useRecoilValue(store.isTemporary);
 
+  const [enableDeepResearch, setEnableDeepResearch] = useState(false);
   const [badges, setBadges] = useRecoilState(store.chatBadges);
   const [isEditingBadges, setIsEditingBadges] = useRecoilState(store.isEditingBadges);
+  const localize = useLocalize();
   const [showStopButton, setShowStopButton] = useRecoilState(store.showStopButtonByIndex(index));
   const [showPlusPopover, setShowPlusPopover] = useRecoilState(store.showPlusPopoverFamily(index));
   const [showMentionPopover, setShowMentionPopover] = useRecoilState(
@@ -69,6 +74,11 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
     setFiles,
     conversation,
     isSubmitting,
+    setIsSubmitting,
+    getMessages,
+    setMessages,
+    setLatestMessage,
+    latestMessage,
     filesLoading,
     newConversation,
     handleStopGenerating,
@@ -131,6 +141,106 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   });
 
   const { submitMessage, submitPrompt } = useSubmitMessage();
+  const { showToast } = useToastContext();
+
+  const submitResearchFlow = useCallback(
+    async (text: string) => {
+      if (!conversationId || conversationId === Constants.NEW_CONVO) {
+        showToast({
+          message: localize('com_ui_deep_research_start_convo') || 'Start a conversation first',
+          status: 'warning',
+        });
+        return;
+      }
+      const currentMessages = getMessages() ?? [];
+      const optimisticUserMessageId = v4();
+      const parentMessageId = latestMessage?.messageId ?? Constants.NO_PARENT;
+      const optimisticUser = {
+        messageId: optimisticUserMessageId,
+        conversationId,
+        sender: 'User',
+        text: text.trim(),
+        isCreatedByUser: true,
+        parentMessageId,
+        endpoint: conversation?.endpoint ?? 'openAI',
+        createdAt: new Date().toISOString(),
+      };
+      const placeholderAssistant = {
+        messageId: 'temp-research-placeholder',
+        conversationId,
+        sender: 'Deep Research',
+        text: '',
+        isCreatedByUser: false,
+        parentMessageId: optimisticUserMessageId,
+        endpoint: conversation?.endpoint ?? 'openAI',
+        createdAt: new Date().toISOString(),
+      };
+      setMessages([...currentMessages, optimisticUser, placeholderAssistant]);
+      setIsSubmitting(true);
+      try {
+        const res = await (
+          dataService as unknown as {
+            submitResearchInConversation: (
+              cid: string,
+              t: string,
+            ) => Promise<{
+              userMessage: import('librechat-data-provider').TMessage;
+              assistantMessage: import('librechat-data-provider').TMessage;
+            }>;
+          }
+        ).submitResearchInConversation(conversationId, text.trim());
+        const next = (getMessages() ?? []).filter(
+          (m) =>
+            m.messageId !== optimisticUserMessageId && m.messageId !== 'temp-research-placeholder',
+        );
+        setMessages([...next, res.userMessage, res.assistantMessage]);
+        setLatestMessage(res.assistantMessage);
+        setEnableDeepResearch(false);
+        methods.reset();
+      } catch (err: unknown) {
+        const next = (getMessages() ?? []).filter(
+          (m) =>
+            m.messageId !== optimisticUserMessageId && m.messageId !== 'temp-research-placeholder',
+        );
+        setMessages(next);
+        const msg =
+          err && typeof err === 'object' && 'response' in err
+            ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+            : null;
+        showToast({
+          message: msg ?? (err instanceof Error ? err.message : 'Deep Research failed'),
+          status: 'error',
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [
+      conversationId,
+      conversation?.endpoint,
+      latestMessage?.messageId,
+      getMessages,
+      setMessages,
+      setIsSubmitting,
+      setLatestMessage,
+      setEnableDeepResearch,
+      methods,
+      showToast,
+      localize,
+    ],
+  );
+
+  const handleFormSubmit = useCallback(
+    (data?: { text: string }) => {
+      if (!data?.text?.trim()) return;
+      if (enableDeepResearch && conversationId && conversationId !== Constants.NEW_CONVO) {
+        submitResearchFlow(data.text);
+      } else {
+        submitMessage(data);
+      }
+    },
+    [enableDeepResearch, conversationId, submitResearchFlow, submitMessage],
+  );
 
   const handleKeyUp = useHandleKeyUp({
     index,
@@ -205,7 +315,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
 
   return (
     <form
-      onSubmit={methods.handleSubmit(submitMessage)}
+      onSubmit={methods.handleSubmit(handleFormSubmit)}
       className={cn(
         'mx-auto flex w-full flex-row gap-3 transition-[max-width] duration-300 sm:px-2',
         maximizeChatSpace ? 'max-w-full' : 'md:max-w-3xl xl:max-w-4xl',
@@ -323,11 +433,21 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                   isSubmitting={isSubmitting}
                 />
               )}
-              <div className={cn('flex items-center gap-1', isRTL ? 'ml-2' : 'mr-2')}>
+              <div className={cn('flex items-center gap-2', isRTL ? 'ml-2' : 'mr-2')}>
+                <label className="flex cursor-pointer select-none items-center gap-1.5 text-sm text-text-secondary">
+                  <input
+                    type="checkbox"
+                    checked={enableDeepResearch}
+                    onChange={(e) => setEnableDeepResearch(e.target.checked)}
+                    disabled={disableInputs || isSubmitting}
+                    className="h-4 w-4 rounded border-border-medium"
+                  />
+                  <span>{localize('com_ui_deep_research') || 'Deep Research'}</span>
+                </label>
                 <DeepResearchButton
                   control={methods.control}
                   disabled={filesLoading || isSubmitting || disableInputs || isNotAppendable}
-                  endpoint={endpoint}
+                  endpoint={endpoint ?? undefined}
                 />
                 {(isSubmitting || isSubmittingAdded) && (showStopButton || showStopAdded) ? (
                   <StopButton stop={handleStopGenerating} setShowStopButton={setShowStopButton} />

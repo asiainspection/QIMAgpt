@@ -673,6 +673,13 @@ export function runExaResearch(instructions: string): Promise<TExaResearchRespon
   return request.post(endpoints.exaResearch(), { instructions });
 }
 
+export function submitResearchInConversation(
+  conversationId: string,
+  text: string,
+): Promise<TResearchSubmitResponse> {
+  return request.post(endpoints.exaResearchInConversation(), { conversationId, text });
+}
+
 export type TResearchConversation = {
   conversationId: string;
   title: string;

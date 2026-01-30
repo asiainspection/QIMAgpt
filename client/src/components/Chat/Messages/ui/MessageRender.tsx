@@ -1,9 +1,11 @@
 import React, { useCallback, useMemo, memo } from 'react';
 import { useRecoilValue } from 'recoil';
+import { Spinner } from '@librechat/client';
 import { type TMessage } from 'librechat-data-provider';
 import type { TMessageProps, TMessageIcon } from '~/common';
 import MessageContent from '~/components/Chat/Messages/Content/MessageContent';
 import PlaceholderRow from '~/components/Chat/Messages/ui/PlaceholderRow';
+import { useLocalize } from '~/hooks';
 import SiblingSwitch from '~/components/Chat/Messages/SiblingSwitch';
 import HoverButtons from '~/components/Chat/Messages/HoverButtons';
 import MessageIcon from '~/components/Chat/Messages/MessageIcon';
@@ -36,6 +38,7 @@ const MessageRender = memo(
     setCurrentEditId,
     isSubmittingFamily = false,
   }: MessageRenderProps) => {
+    const localize = useLocalize();
     const {
       ask,
       edit,
@@ -122,6 +125,32 @@ const MessageRender = memo(
       cardRender: showCardRender ? 'cursor-pointer transition-colors duration-300' : '',
       focus: 'focus:outline-none focus:ring-2 focus:ring-border-xheavy',
     };
+
+    if (msg.messageId === 'temp-research-placeholder') {
+      return (
+        <div
+          id={msg.messageId}
+          className={cn(
+            baseClasses.common,
+            isCard ? baseClasses.card : baseClasses.chat,
+            'message-render',
+          )}
+        >
+          <div className="relative flex flex-shrink-0 flex-col items-center">
+            <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full">
+              <Spinner className="icon-sm text-text-secondary" />
+            </div>
+          </div>
+          <div className="relative flex w-11/12 flex-col">
+            <h2 className={cn('select-none font-semibold', fontSize)}>Deep Research</h2>
+            <div className="flex items-center gap-2 text-sm text-text-secondary">
+              <Spinner className="icon-sm" />
+              <span>{localize('com_ui_deep_research_running') || 'Researching…'}</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div

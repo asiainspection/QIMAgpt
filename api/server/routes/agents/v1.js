@@ -3,7 +3,7 @@ const { generateCheckAccess } = require('@librechat/api');
 const { PermissionTypes, Permissions, PermissionBits } = require('librechat-data-provider');
 const { requireJwtAuth, configMiddleware, canAccessAgentResource } = require('~/server/middleware');
 const v1 = require('~/server/controllers/agents/v1');
-const { exaResearch } = require('~/server/controllers/exaResearch');
+const { exaResearch, exaResearchInConversation } = require('~/server/controllers/exaResearch');
 const { getRoleByName } = require('~/models/Role');
 const actions = require('./actions');
 const tools = require('./tools');
@@ -58,6 +58,15 @@ router.get('/categories', v1.getAgentCategories);
  * @returns {{ report: string, status: string }}
  */
 router.post('/exa-research', configMiddleware, exaResearch);
+
+/**
+ * Run Exa Deep Research in an existing conversation (append user + assistant messages).
+ * @route POST /agents/exa-research-in-conversation
+ * @param {string} req.body.conversationId - Conversation ID
+ * @param {string} req.body.text - Research question
+ * @returns {{ userMessage, assistantMessage, status }}
+ */
+router.post('/exa-research-in-conversation', configMiddleware, exaResearchInConversation);
 
 /**
  * Creates an agent.

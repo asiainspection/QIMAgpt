@@ -229,6 +229,7 @@ export const mcp = {
 export const revertAgentVersion = (agent_id: string) => `${agents({ path: `${agent_id}/revert` })}`;
 
 export const exaResearch = () => agents({ path: 'exa-research' });
+export const exaResearchInConversation = () => agents({ path: 'exa-research-in-conversation' });
 
 const researchRoot = `${BASE_URL}/api/research`;
 export const researchConversations = () => `${researchRoot}/conversations`;
