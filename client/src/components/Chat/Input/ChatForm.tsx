@@ -328,7 +328,6 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                   control={methods.control}
                   disabled={filesLoading || isSubmitting || disableInputs || isNotAppendable}
                   endpoint={endpoint}
-                  isRTL={isRTL}
                 />
                 {(isSubmitting || isSubmittingAdded) && (showStopButton || showStopAdded) ? (
                   <StopButton stop={handleStopGenerating} setShowStopButton={setShowStopButton} />

@@ -1252,6 +1252,7 @@
   "com_ui_deep_research": "Deep Research",
   "com_ui_deep_research_enter_question": "Please enter a research question",
   "com_ui_deep_research_running": "Researching…",
+  "com_ui_deep_research_start_convo": "Start a conversation first",
   "com_ui_web_search_cohere_key": "Enter Cohere API Key",
   "com_ui_web_search_firecrawl_url": "Firecrawl API URL (optional)",
   "com_ui_web_search_jina_key": "Enter Jina API Key",

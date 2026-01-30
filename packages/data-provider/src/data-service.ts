@@ -677,6 +677,16 @@ export const listMessages = (params?: q.MessagesListParams): Promise<q.MessagesL
   return request.get(endpoints.messages(params ?? {}));
 };
 
+export function createMessage(
+  conversationId: string,
+  message: Partial<s.TMessage>,
+): Promise<s.TMessage> {
+  if (!conversationId) {
+    throw new Error('conversationId is required');
+  }
+  return request.post(endpoints.messages({ conversationId }), message);
+}
+
 export function updateMessage(payload: t.TUpdateMessageRequest): Promise<unknown> {
   const { conversationId, messageId, text } = payload;
   if (!conversationId) {

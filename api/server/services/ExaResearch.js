@@ -49,10 +49,20 @@ async function runExaResearch(apiKey, instructions, options = {}) {
     const status = data?.status;
 
     if (status === 'completed') {
-      const report =
-        data.answer ??
-        data.result ??
-        (typeof data.output === 'string' ? data.output : JSON.stringify(data.output ?? data));
+      const candidate = data.answer ?? data.result ?? data.output ?? data.report ?? data;
+      let report = candidate;
+      if (report && typeof report === 'object') {
+        report = report.content ?? report.report ?? report.answer ?? JSON.stringify(report);
+      } else if (typeof report === 'string') {
+        try {
+          const parsed = JSON.parse(report);
+          if (parsed && typeof parsed === 'object') {
+            report = parsed.content ?? parsed.report ?? parsed.answer ?? report;
+          }
+        } catch (_err) {
+          /* keep original string */
+        }
+      }
       return { report: report || '(No content)', status: 'completed' };
     }
     if (status === 'failed' || status === 'canceled') {
