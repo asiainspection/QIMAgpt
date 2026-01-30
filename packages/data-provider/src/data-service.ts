@@ -664,6 +664,15 @@ export function genTitle(payload: m.TGenTitleRequest): Promise<m.TGenTitleRespon
   return request.post(endpoints.genTitle(), payload);
 }
 
+export interface TExaResearchResponse {
+  report: string;
+  status: string;
+}
+
+export function runExaResearch(instructions: string): Promise<TExaResearchResponse> {
+  return request.post(endpoints.exaResearch(), { instructions });
+}
+
 export const listMessages = (params?: q.MessagesListParams): Promise<q.MessagesListResponse> => {
   return request.get(endpoints.messages(params ?? {}));
 };

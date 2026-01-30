@@ -29,6 +29,7 @@ import CollapseChat from './CollapseChat';
 import StreamAudio from './StreamAudio';
 import StopButton from './StopButton';
 import SendButton from './SendButton';
+import DeepResearchButton from './DeepResearchButton';
 import EditBadges from './EditBadges';
 import BadgeRow from './BadgeRow';
 import Mention from './Mention';
@@ -322,7 +323,13 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                   isSubmitting={isSubmitting}
                 />
               )}
-              <div className={`${isRTL ? 'ml-2' : 'mr-2'}`}>
+              <div className={cn('flex items-center gap-1', isRTL ? 'ml-2' : 'mr-2')}>
+                <DeepResearchButton
+                  control={methods.control}
+                  disabled={filesLoading || isSubmitting || disableInputs || isNotAppendable}
+                  endpoint={endpoint}
+                  isRTL={isRTL}
+                />
                 {(isSubmitting || isSubmittingAdded) && (showStopButton || showStopAdded) ? (
                   <StopButton stop={handleStopGenerating} setShowStopButton={setShowStopButton} />
                 ) : (

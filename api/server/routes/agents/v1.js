@@ -3,6 +3,7 @@ const { generateCheckAccess } = require('@librechat/api');
 const { PermissionTypes, Permissions, PermissionBits } = require('librechat-data-provider');
 const { requireJwtAuth, configMiddleware, canAccessAgentResource } = require('~/server/middleware');
 const v1 = require('~/server/controllers/agents/v1');
+const { exaResearch } = require('~/server/controllers/exaResearch');
 const { getRoleByName } = require('~/models/Role');
 const actions = require('./actions');
 const tools = require('./tools');
@@ -49,6 +50,15 @@ router.use('/tools', configMiddleware, tools);
  * @route GET /agents/categories
  */
 router.get('/categories', v1.getAgentCategories);
+
+/**
+ * Run Exa Deep Research (user-triggered).
+ * @route POST /agents/exa-research
+ * @param {string} req.body.instructions - Research instructions
+ * @returns {{ report: string, status: string }}
+ */
+router.post('/exa-research', configMiddleware, exaResearch);
+
 /**
  * Creates an agent.
  * @route POST /agents
