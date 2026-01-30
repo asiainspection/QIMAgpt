@@ -230,6 +230,12 @@ export const revertAgentVersion = (agent_id: string) => `${agents({ path: `${age
 
 export const exaResearch = () => agents({ path: 'exa-research' });
 
+const researchRoot = `${BASE_URL}/api/research`;
+export const researchConversations = () => `${researchRoot}/conversations`;
+export const researchConversationById = (id: string) => `${researchRoot}/conversations/${id}`;
+export const researchConversationMessages = (id: string) =>
+  `${researchRoot}/conversations/${id}/messages`;
+
 export const files = () => `${BASE_URL}/api/files`;
 export const fileUpload = () => `${BASE_URL}/api/files`;
 export const fileDelete = () => `${BASE_URL}/api/files`;

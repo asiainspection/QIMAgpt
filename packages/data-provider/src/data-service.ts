@@ -673,6 +673,39 @@ export function runExaResearch(instructions: string): Promise<TExaResearchRespon
   return request.post(endpoints.exaResearch(), { instructions });
 }
 
+export type TResearchConversation = {
+  conversationId: string;
+  title: string;
+  endpoint: string;
+};
+
+export type TResearchSubmitResponse = {
+  userMessage: s.TMessage;
+  assistantMessage: s.TMessage;
+  status: string;
+};
+
+export function createResearchConversation(
+  params?: { title?: string },
+): Promise<TResearchConversation> {
+  return request.post(endpoints.researchConversations(), params ?? {});
+}
+
+export function getResearchConversation(id: string): Promise<s.TConversation> {
+  return request.get(endpoints.researchConversationById(id));
+}
+
+export function getResearchMessages(conversationId: string): Promise<s.TMessage[]> {
+  return request.get(endpoints.researchConversationMessages(conversationId));
+}
+
+export function submitResearchMessage(
+  conversationId: string,
+  text: string,
+): Promise<TResearchSubmitResponse> {
+  return request.post(endpoints.researchConversationMessages(conversationId), { text });
+}
+
 export const listMessages = (params?: q.MessagesListParams): Promise<q.MessagesListResponse> => {
   return request.get(endpoints.messages(params ?? {}));
 };

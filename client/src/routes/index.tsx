@@ -19,7 +19,7 @@ import dashboardRoutes from './Dashboard';
 import ShareRoute from './ShareRoute';
 import ChatRoute from './ChatRoute';
 import Search from './Search';
-import ResearchRoute from './ResearchRoute';
+import ResearchChatView from '~/components/Research/ResearchChatView';
 import Root from './Root';
 
 const AuthLayout = () => (
@@ -114,7 +114,11 @@ export const router = createBrowserRouter(
             },
             {
               path: 'research',
-              element: <ResearchRoute />,
+              element: <ResearchChatView />,
+            },
+            {
+              path: 'research/c/:conversationId',
+              element: <ResearchChatView />,
             },
             {
               path: 'agents',
