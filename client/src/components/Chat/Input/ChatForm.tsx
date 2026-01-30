@@ -163,29 +163,27 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
       const parentMessageId = latestMessage?.messageId ?? Constants.NO_PARENT;
       const endpoint = conversation?.endpoint ?? 'openAI';
 
-      if (!isNewConvo) {
-        const optimisticUser = {
-          messageId: optimisticUserMessageId,
-          conversationId: effectiveConvoId,
-          sender: 'User',
-          text: text.trim(),
-          isCreatedByUser: true,
-          parentMessageId,
-          endpoint,
-          createdAt: new Date().toISOString(),
-        };
-        const placeholderAssistant = {
-          messageId: 'temp-research-placeholder',
-          conversationId: effectiveConvoId,
-          sender: 'Deep Research',
-          text: '',
-          isCreatedByUser: false,
-          parentMessageId: optimisticUserMessageId,
-          endpoint,
-          createdAt: new Date().toISOString(),
-        };
-        setMessages([...currentMessages, optimisticUser, placeholderAssistant]);
-      }
+      const optimisticUser = {
+        messageId: optimisticUserMessageId,
+        conversationId: effectiveConvoId,
+        sender: 'User',
+        text: text.trim(),
+        isCreatedByUser: true,
+        parentMessageId,
+        endpoint,
+        createdAt: new Date().toISOString(),
+      };
+      const placeholderAssistant = {
+        messageId: 'temp-research-placeholder',
+        conversationId: effectiveConvoId,
+        sender: 'Deep Research',
+        text: '',
+        isCreatedByUser: false,
+        parentMessageId: optimisticUserMessageId,
+        endpoint,
+        createdAt: new Date().toISOString(),
+      };
+      setMessages([...currentMessages, optimisticUser, placeholderAssistant]);
       setIsSubmitting(true);
       try {
         const res = await (
@@ -237,14 +235,12 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
         setEnableDeepResearch(false);
         methods.reset();
       } catch (err: unknown) {
-        if (!isNewConvo) {
-          const next = (getMessages() ?? []).filter(
-            (m) =>
-              m.messageId !== optimisticUserMessageId &&
-              m.messageId !== 'temp-research-placeholder',
-          );
-          setMessages(next);
-        }
+        const next = (getMessages() ?? []).filter(
+          (m) =>
+            m.messageId !== optimisticUserMessageId &&
+            m.messageId !== 'temp-research-placeholder',
+        );
+        setMessages(next);
         const msg =
           err && typeof err === 'object' && 'response' in err
             ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
