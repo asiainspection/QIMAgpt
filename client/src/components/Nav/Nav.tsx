@@ -21,6 +21,7 @@ import store from '~/store';
 const BookmarkNav = lazy(() => import('./Bookmarks/BookmarkNav'));
 const AccountSettings = lazy(() => import('./AccountSettings'));
 const AgentMarketplaceButton = lazy(() => import('./AgentMarketplaceButton'));
+const DeepResearchNavButton = lazy(() => import('./DeepResearchNavButton'));
 
 const NAV_WIDTH_DESKTOP = '260px';
 const NAV_WIDTH_MOBILE = '320px';
@@ -158,6 +159,9 @@ const Nav = memo(
     const headerButtons = useMemo(
       () => (
         <>
+          <Suspense fallback={null}>
+            <DeepResearchNavButton isSmallScreen={isSmallScreen} toggleNav={toggleNavVisible} />
+          </Suspense>
           <Suspense fallback={null}>
             <AgentMarketplaceButton isSmallScreen={isSmallScreen} toggleNav={toggleNavVisible} />
           </Suspense>
