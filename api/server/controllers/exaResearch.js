@@ -46,20 +46,34 @@ async function exaResearch(req, res) {
 
 /**
  * POST /api/agents/exa-research-in-conversation
- * Body: { conversationId: string, text: string }
- * Runs Exa Research and appends user + assistant messages to the given (any) conversation.
- * Returns: { userMessage, assistantMessage, status }
+ * Body: { conversationId?: string, text: string, endpoint?: string }
+ * When conversationId is missing or 'new', creates a new conversation first.
+ * Runs Exa Research and appends user + assistant messages.
+ * Returns: { conversationId, userMessage, assistantMessage, status }
  */
 async function exaResearchInConversation(req, res) {
   try {
-    const conversationId = req.body?.conversationId;
+    let conversationId = req.body?.conversationId;
     const text = typeof req.body?.text === 'string' ? req.body.text.trim() : '';
-    if (!conversationId || !text) {
-      return res.status(400).json({ message: 'conversationId and text are required' });
+    if (!text) {
+      return res.status(400).json({ message: 'text is required' });
     }
     const instructions = text.slice(0, MAX_INSTRUCTIONS_LENGTH);
+    const wantNewConvo = !conversationId || conversationId === 'new';
 
-    const convo = await getConvo(req.user.id, conversationId);
+    let convo;
+    if (wantNewConvo) {
+      conversationId = crypto.randomUUID();
+      const endpoint = req.body?.endpoint ?? 'openAI';
+      await saveConvo(req, {
+        conversationId,
+        endpoint,
+        title: 'New Chat',
+      }, { context: 'POST /api/agents/exa-research-in-conversation (create convo)' });
+      convo = await getConvo(req.user.id, conversationId);
+    } else {
+      convo = await getConvo(req.user.id, conversationId);
+    }
     if (!convo) {
       return res.status(404).json({ error: 'Conversation not found' });
     }
@@ -138,6 +152,7 @@ async function exaResearchInConversation(req, res) {
     });
 
     return res.status(201).json({
+      conversationId,
       userMessage: savedUserMessage,
       assistantMessage: savedAssistantMessage,
       status,

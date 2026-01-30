@@ -673,11 +673,20 @@ export function runExaResearch(instructions: string): Promise<TExaResearchRespon
   return request.post(endpoints.exaResearch(), { instructions });
 }
 
+export type TResearchInConversationResponse = TResearchSubmitResponse & {
+  conversationId?: string;
+};
+
 export function submitResearchInConversation(
   conversationId: string,
   text: string,
-): Promise<TResearchSubmitResponse> {
-  return request.post(endpoints.exaResearchInConversation(), { conversationId, text });
+  options?: { endpoint?: string },
+): Promise<TResearchInConversationResponse> {
+  return request.post(endpoints.exaResearchInConversation(), {
+    conversationId: conversationId === config.Constants.NEW_CONVO ? undefined : conversationId,
+    text,
+    endpoint: options?.endpoint,
+  });
 }
 
 export type TResearchConversation = {

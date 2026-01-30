@@ -1,9 +1,16 @@
 import { memo, useRef, useMemo, useEffect, useState, useCallback } from 'react';
 import { useWatch } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { v4 } from 'uuid';
 import { TextareaAutosize, useToastContext } from '@librechat/client';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { Constants, isAssistantsEndpoint, isAgentsEndpoint } from 'librechat-data-provider';
+import {
+  Constants,
+  isAssistantsEndpoint,
+  isAgentsEndpoint,
+  QueryKeys,
+} from 'librechat-data-provider';
 import { dataService } from 'librechat-data-provider';
 import {
   useChatContext,
@@ -37,6 +44,7 @@ import EditBadges from './EditBadges';
 import BadgeRow from './BadgeRow';
 import Mention from './Mention';
 import store from '~/store';
+import { addConvoToAllQueries } from '~/utils';
 
 const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   const submitButtonRef = useRef<HTMLButtonElement>(null);
@@ -69,10 +77,13 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
 
   const { requiresKey } = useRequiresKey();
   const methods = useChatFormContext();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const {
     files,
     setFiles,
     conversation,
+    setConversation,
     isSubmitting,
     setIsSubmitting,
     getMessages,
@@ -145,37 +156,36 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
 
   const submitResearchFlow = useCallback(
     async (text: string) => {
-      if (!conversationId || conversationId === Constants.NEW_CONVO) {
-        showToast({
-          message: localize('com_ui_deep_research_start_convo') || 'Start a conversation first',
-          status: 'warning',
-        });
-        return;
-      }
-      const currentMessages = getMessages() ?? [];
+      const isNewConvo = !conversationId || conversationId === Constants.NEW_CONVO;
+      const effectiveConvoId = isNewConvo ? Constants.NEW_CONVO : conversationId;
+      const currentMessages = isNewConvo ? [] : (getMessages() ?? []);
       const optimisticUserMessageId = v4();
       const parentMessageId = latestMessage?.messageId ?? Constants.NO_PARENT;
-      const optimisticUser = {
-        messageId: optimisticUserMessageId,
-        conversationId,
-        sender: 'User',
-        text: text.trim(),
-        isCreatedByUser: true,
-        parentMessageId,
-        endpoint: conversation?.endpoint ?? 'openAI',
-        createdAt: new Date().toISOString(),
-      };
-      const placeholderAssistant = {
-        messageId: 'temp-research-placeholder',
-        conversationId,
-        sender: 'Deep Research',
-        text: '',
-        isCreatedByUser: false,
-        parentMessageId: optimisticUserMessageId,
-        endpoint: conversation?.endpoint ?? 'openAI',
-        createdAt: new Date().toISOString(),
-      };
-      setMessages([...currentMessages, optimisticUser, placeholderAssistant]);
+      const endpoint = conversation?.endpoint ?? 'openAI';
+
+      if (!isNewConvo) {
+        const optimisticUser = {
+          messageId: optimisticUserMessageId,
+          conversationId: effectiveConvoId,
+          sender: 'User',
+          text: text.trim(),
+          isCreatedByUser: true,
+          parentMessageId,
+          endpoint,
+          createdAt: new Date().toISOString(),
+        };
+        const placeholderAssistant = {
+          messageId: 'temp-research-placeholder',
+          conversationId: effectiveConvoId,
+          sender: 'Deep Research',
+          text: '',
+          isCreatedByUser: false,
+          parentMessageId: optimisticUserMessageId,
+          endpoint,
+          createdAt: new Date().toISOString(),
+        };
+        setMessages([...currentMessages, optimisticUser, placeholderAssistant]);
+      }
       setIsSubmitting(true);
       try {
         const res = await (
@@ -183,26 +193,58 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
             submitResearchInConversation: (
               cid: string,
               t: string,
+              opts?: { endpoint?: string },
             ) => Promise<{
+              conversationId?: string;
               userMessage: import('librechat-data-provider').TMessage;
               assistantMessage: import('librechat-data-provider').TMessage;
             }>;
           }
-        ).submitResearchInConversation(conversationId, text.trim());
-        const next = (getMessages() ?? []).filter(
-          (m) =>
-            m.messageId !== optimisticUserMessageId && m.messageId !== 'temp-research-placeholder',
-        );
-        setMessages([...next, res.userMessage, res.assistantMessage]);
-        setLatestMessage(res.assistantMessage);
+        ).submitResearchInConversation(effectiveConvoId, text.trim(), {
+          endpoint: isNewConvo ? endpoint : undefined,
+        });
+        const newConvoId = res.conversationId ?? conversationId;
+
+        if (isNewConvo && newConvoId) {
+          const now = new Date().toISOString();
+          const convoUpdate: import('librechat-data-provider').TConversation = {
+            ...conversation,
+            conversationId: newConvoId,
+            endpoint: (conversation?.endpoint ??
+              endpoint) as import('librechat-data-provider').EModelEndpoint,
+            title: 'New Chat',
+            createdAt: now,
+            updatedAt: now,
+          } as import('librechat-data-provider').TConversation;
+          setConversation(convoUpdate);
+          queryClient.setQueryData(
+            [QueryKeys.messages, newConvoId],
+            [res.userMessage, res.assistantMessage],
+          );
+          queryClient.setQueryData([QueryKeys.conversation, newConvoId], convoUpdate);
+          addConvoToAllQueries(queryClient, convoUpdate);
+          setLatestMessage(res.assistantMessage);
+          navigate(`/c/${newConvoId}`, { replace: true });
+        } else {
+          const next = (getMessages() ?? []).filter(
+            (m) =>
+              m.messageId !== optimisticUserMessageId &&
+              m.messageId !== 'temp-research-placeholder',
+          );
+          setMessages([...next, res.userMessage, res.assistantMessage]);
+          setLatestMessage(res.assistantMessage);
+        }
         setEnableDeepResearch(false);
         methods.reset();
       } catch (err: unknown) {
-        const next = (getMessages() ?? []).filter(
-          (m) =>
-            m.messageId !== optimisticUserMessageId && m.messageId !== 'temp-research-placeholder',
-        );
-        setMessages(next);
+        if (!isNewConvo) {
+          const next = (getMessages() ?? []).filter(
+            (m) =>
+              m.messageId !== optimisticUserMessageId &&
+              m.messageId !== 'temp-research-placeholder',
+          );
+          setMessages(next);
+        }
         const msg =
           err && typeof err === 'object' && 'response' in err
             ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
@@ -217,29 +259,31 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
     },
     [
       conversationId,
-      conversation?.endpoint,
+      conversation,
       latestMessage?.messageId,
       getMessages,
       setMessages,
       setIsSubmitting,
       setLatestMessage,
+      setConversation,
       setEnableDeepResearch,
       methods,
       showToast,
-      localize,
+      navigate,
+      queryClient,
     ],
   );
 
   const handleFormSubmit = useCallback(
     (data?: { text: string }) => {
       if (!data?.text?.trim()) return;
-      if (enableDeepResearch && conversationId && conversationId !== Constants.NEW_CONVO) {
+      if (enableDeepResearch) {
         submitResearchFlow(data.text);
       } else {
         submitMessage(data);
       }
     },
-    [enableDeepResearch, conversationId, submitResearchFlow, submitMessage],
+    [enableDeepResearch, submitResearchFlow, submitMessage],
   );
 
   const handleKeyUp = useHandleKeyUp({
