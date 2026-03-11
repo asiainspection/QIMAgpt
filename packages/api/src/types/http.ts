@@ -1,6 +1,6 @@
+import type { IUser, AppConfig } from '@librechat/data-schemas';
+import type { TEndpointOption } from 'librechat-data-provider';
 import type { Request } from 'express';
-import type { IUser } from '@librechat/data-schemas';
-import type { AppConfig } from './config';
 
 /**
  * LibreChat-specific request body type that extends Express Request body
@@ -8,11 +8,17 @@ import type { AppConfig } from './config';
  */
 export type RequestBody = {
   messageId?: string;
+  fileTokenLimit?: number;
   conversationId?: string;
   parentMessageId?: string;
+  endpoint?: string;
+  endpointType?: string;
+  model?: string;
+  key?: string;
+  endpointOption?: Partial<TEndpointOption>;
 };
 
-export type ServerRequest = Request & {
+export type ServerRequest = Request<unknown, unknown, RequestBody> & {
   user?: IUser;
   config?: AppConfig;
 };

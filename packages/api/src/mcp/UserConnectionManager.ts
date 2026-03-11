@@ -1,10 +1,11 @@
 import { logger } from '@librechat/data-schemas';
 import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
-import { MCPConnectionFactory } from '~/mcp/MCPConnectionFactory';
-import { MCPServersRegistry } from '~/mcp/MCPServersRegistry';
-import { MCPConnection } from './connection';
 import type * as t from './types';
+import { MCPServersRegistry } from '~/mcp/registry/MCPServersRegistry';
 import { ConnectionsRepository } from '~/mcp/ConnectionsRepository';
+import { MCPConnectionFactory } from '~/mcp/MCPConnectionFactory';
+import { MCPConnection } from './connection';
+import { mcpConfig } from './mcpConfig';
 
 /**
  * Abstract base class for managing user-specific MCP connections with lifecycle management.
@@ -14,23 +15,14 @@ import { ConnectionsRepository } from '~/mcp/ConnectionsRepository';
  * https://github.com/danny-avila/LibreChat/discussions/8790
  */
 export abstract class UserConnectionManager {
-  protected readonly serversRegistry: MCPServersRegistry;
   // Connections shared by all users.
   public appConnections: ConnectionsRepository | null = null;
   // Connections per userId -> serverName -> connection
   protected userConnections: Map<string, Map<string, MCPConnection>> = new Map();
   /** Last activity timestamp for users (not per server) */
   protected userLastActivity: Map<string, number> = new Map();
-  protected readonly USER_CONNECTION_IDLE_TIMEOUT = 15 * 60 * 1000; // 15 minutes (TODO: make configurable)
-
-  constructor(serverConfigs: t.MCPServers) {
-    this.serversRegistry = new MCPServersRegistry(serverConfigs);
-  }
-
-  /** fetches am MCP Server config from the registry */
-  public getRawConfig(serverName: string): t.MCPOptions | undefined {
-    return this.serversRegistry.rawConfigs[serverName];
-  }
+  /** In-flight connection promises keyed by `userId:serverName` — coalesces concurrent attempts */
+  protected pendingConnections: Map<string, Promise<MCPConnection>> = new Map();
 
   /** Updates the last activity timestamp for a user */
   protected updateUserLastActivity(userId: string): void {
@@ -41,43 +33,83 @@ export abstract class UserConnectionManager {
     );
   }
 
-  /** Gets or creates a connection for a specific user */
-  public async getUserConnection({
-    serverName,
-    forceNew,
-    user,
-    flowManager,
-    customUserVars,
-    requestBody,
-    tokenMethods,
-    oauthStart,
-    oauthEnd,
-    signal,
-    returnOnOAuth = false,
-    connectionTimeout,
-  }: {
-    serverName: string;
-    forceNew?: boolean;
-  } & Omit<t.OAuthConnectionOptions, 'useOAuth'>): Promise<MCPConnection> {
-    const userId = user.id;
+  /** Gets or creates a connection for a specific user, coalescing concurrent attempts */
+  public async getUserConnection(
+    opts: {
+      serverName: string;
+      forceNew?: boolean;
+    } & Omit<t.OAuthConnectionOptions, 'useOAuth'>,
+  ): Promise<MCPConnection> {
+    const { serverName, forceNew, user } = opts;
+    const userId = user?.id;
     if (!userId) {
       throw new McpError(ErrorCode.InvalidRequest, `[MCP] User object missing id property`);
     }
 
-    if (this.appConnections!.has(serverName)) {
+    const lockKey = `${userId}:${serverName}`;
+
+    if (!forceNew) {
+      const pending = this.pendingConnections.get(lockKey);
+      if (pending) {
+        logger.debug(`[MCP][User: ${userId}][${serverName}] Joining in-flight connection attempt`);
+        return pending;
+      }
+    }
+
+    const connectionPromise = this.createUserConnectionInternal(opts, userId);
+
+    if (!forceNew) {
+      this.pendingConnections.set(lockKey, connectionPromise);
+    }
+
+    try {
+      return await connectionPromise;
+    } finally {
+      if (!forceNew && this.pendingConnections.get(lockKey) === connectionPromise) {
+        this.pendingConnections.delete(lockKey);
+      }
+    }
+  }
+
+  private async createUserConnectionInternal(
+    {
+      serverName,
+      forceNew,
+      user,
+      flowManager,
+      customUserVars,
+      requestBody,
+      tokenMethods,
+      oauthStart,
+      oauthEnd,
+      signal,
+      returnOnOAuth = false,
+      connectionTimeout,
+    }: {
+      serverName: string;
+      forceNew?: boolean;
+    } & Omit<t.OAuthConnectionOptions, 'useOAuth'>,
+    userId: string,
+  ): Promise<MCPConnection> {
+    if (await this.appConnections!.has(serverName)) {
       throw new McpError(
         ErrorCode.InvalidRequest,
         `[MCP][User: ${userId}] Trying to create user-specific connection for app-level server "${serverName}"`,
       );
     }
 
+    const config = await MCPServersRegistry.getInstance().getServerConfig(serverName, userId);
+
     const userServerMap = this.userConnections.get(userId);
     let connection = forceNew ? undefined : userServerMap?.get(serverName);
+    if (forceNew) {
+      MCPConnection.clearCooldown(serverName);
+    }
     const now = Date.now();
 
     // Check if user is idle
     const lastActivity = this.userLastActivity.get(userId);
-    if (lastActivity && now - lastActivity > this.USER_CONNECTION_IDLE_TIMEOUT) {
+    if (lastActivity && now - lastActivity > mcpConfig.USER_CONNECTION_IDLE_TIMEOUT) {
       logger.info(`[MCP][User: ${userId}] User idle for too long. Disconnecting all connections.`);
       // Disconnect all user connections
       try {
@@ -87,7 +119,15 @@ export abstract class UserConnectionManager {
       }
       connection = undefined; // Force creation of a new connection
     } else if (connection) {
-      if (await connection.isConnected()) {
+      if (!config || (config.updatedAt && connection.isStale(config.updatedAt))) {
+        if (config) {
+          logger.info(
+            `[MCP][User: ${userId}][${serverName}] Config was updated, disconnecting stale connection`,
+          );
+        }
+        await this.disconnectUserConnection(userId, serverName);
+        connection = undefined;
+      } else if (await connection.isConnected()) {
         logger.debug(`[MCP][User: ${userId}][${serverName}] Reusing active connection`);
         this.updateUserLastActivity(userId);
         return connection;
@@ -101,12 +141,7 @@ export abstract class UserConnectionManager {
       }
     }
 
-    // If no valid connection exists, create a new one
-    if (!connection) {
-      logger.info(`[MCP][User: ${userId}][${serverName}] Establishing new connection`);
-    }
-
-    const config = this.serversRegistry.parsedConfigs[serverName];
+    // Now check if config exists for new connection creation
     if (!config) {
       throw new McpError(
         ErrorCode.InvalidRequest,
@@ -114,11 +149,16 @@ export abstract class UserConnectionManager {
       );
     }
 
+    // If no valid connection exists, create a new one
+    logger.info(`[MCP][User: ${userId}][${serverName}] Establishing new connection`);
+
     try {
       connection = await MCPConnectionFactory.create(
         {
-          serverName: serverName,
           serverConfig: config,
+          serverName: serverName,
+          dbSourced: !!config.dbId,
+          useSSRFProtection: MCPServersRegistry.getInstance().shouldEnableSSRFProtection(),
         },
         {
           useOAuth: true,
@@ -185,6 +225,7 @@ export abstract class UserConnectionManager {
 
   /** Disconnects and removes a specific user connection */
   public async disconnectUserConnection(userId: string, serverName: string): Promise<void> {
+    this.pendingConnections.delete(`${userId}:${serverName}`);
     const userMap = this.userConnections.get(userId);
     const connection = userMap?.get(serverName);
     if (connection) {
@@ -212,6 +253,12 @@ export abstract class UserConnectionManager {
         );
       }
       await Promise.allSettled(disconnectPromises);
+      // Clean up any pending connection promises for this user
+      for (const key of this.pendingConnections.keys()) {
+        if (key.startsWith(`${userId}:`)) {
+          this.pendingConnections.delete(key);
+        }
+      }
       // Ensure user activity timestamp is removed
       this.userLastActivity.delete(userId);
       logger.info(`[MCP][User: ${userId}] All connections processed for disconnection.`);
@@ -227,7 +274,7 @@ export abstract class UserConnectionManager {
       if (currentUserId && currentUserId === userId) {
         continue;
       }
-      if (now - lastActivity > this.USER_CONNECTION_IDLE_TIMEOUT) {
+      if (now - lastActivity > mcpConfig.USER_CONNECTION_IDLE_TIMEOUT) {
         logger.info(
           `[MCP][User: ${userId}] User idle for too long. Disconnecting all connections...`,
         );
@@ -237,5 +284,24 @@ export abstract class UserConnectionManager {
         );
       }
     }
+  }
+
+  /** Returns counts of tracked users and connections for diagnostics */
+  public getConnectionStats(): {
+    trackedUsers: number;
+    totalConnections: number;
+    activityEntries: number;
+    appConnectionCount: number;
+  } {
+    let totalConnections = 0;
+    for (const serverMap of this.userConnections.values()) {
+      totalConnections += serverMap.size;
+    }
+    return {
+      trackedUsers: this.userConnections.size,
+      totalConnections,
+      activityEntries: this.userLastActivity.size,
+      appConnectionCount: this.appConnections?.getConnectionCount() ?? 0,
+    };
   }
 }

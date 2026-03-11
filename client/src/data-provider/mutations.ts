@@ -18,31 +18,6 @@ import useUpdateTagsInConvo from '~/hooks/Conversations/useUpdateTagsInConvo';
 import { updateConversationTag } from '~/utils/conversationTags';
 import { useConversationTagsQuery } from './queries';
 
-export type TGenTitleMutation = UseMutationResult<
-  t.TGenTitleResponse,
-  unknown,
-  t.TGenTitleRequest,
-  unknown
->;
-
-export const useGenTitleMutation = (): TGenTitleMutation => {
-  const queryClient = useQueryClient();
-  return useMutation((payload: t.TGenTitleRequest) => dataService.genTitle(payload), {
-    onSuccess: (response, vars) => {
-      queryClient.setQueryData(
-        [QueryKeys.conversation, vars.conversationId],
-        (convo: t.TConversation | undefined) =>
-          convo ? { ...convo, title: response.title } : convo,
-      );
-      updateConvoInAllQueries(queryClient, vars.conversationId, (c) => ({
-        ...c,
-        title: response.title,
-      }));
-      document.title = response.title;
-    },
-  });
-};
-
 export const useUpdateConversationMutation = (
   id: string,
 ): UseMutationResult<
@@ -168,18 +143,26 @@ export const useArchiveConvoMutation = (
 };
 
 export const useCreateSharedLinkMutation = (
-  options?: t.MutationOptions<t.TCreateShareLinkRequest, { conversationId: string }>,
-): UseMutationResult<t.TSharedLinkResponse, unknown, { conversationId: string }, unknown> => {
+  options?: t.MutationOptions<
+    t.TCreateShareLinkRequest,
+    { conversationId: string; targetMessageId?: string }
+  >,
+): UseMutationResult<
+  t.TSharedLinkResponse,
+  unknown,
+  { conversationId: string; targetMessageId?: string },
+  unknown
+> => {
   const queryClient = useQueryClient();
 
   const { onSuccess, ..._options } = options || {};
   return useMutation(
-    ({ conversationId }: { conversationId: string }) => {
+    ({ conversationId, targetMessageId }: { conversationId: string; targetMessageId?: string }) => {
       if (!conversationId) {
         throw new Error('Conversation ID is required');
       }
 
-      return dataService.createSharedLink(conversationId);
+      return dataService.createSharedLink(conversationId, targetMessageId);
     },
     {
       onSuccess: (_data: t.TSharedLinkResponse, vars, context) => {

@@ -1,6 +1,6 @@
 import { memo } from 'react';
-import { CustomMinimalIcon, XAIcon } from '@librechat/client';
 import { EModelEndpoint, KnownEndpoints } from 'librechat-data-provider';
+import { CustomMinimalIcon, XAIcon, MoonshotIcon } from '@librechat/client';
 import { IconContext } from '~/common';
 import { cn } from '~/utils';
 
@@ -12,6 +12,7 @@ const knownEndpointAssets = {
   [KnownEndpoints.fireworks]: 'assets/fireworks.png',
   [KnownEndpoints.google]: 'assets/google.svg',
   [KnownEndpoints.groq]: 'assets/groq.png',
+  [KnownEndpoints.helicone]: 'assets/helicone.png',
   [KnownEndpoints.huggingface]: 'assets/huggingface.svg',
   [KnownEndpoints.mistral]: 'assets/mistral.png',
   [KnownEndpoints.mlx]: 'assets/mlx.png',
@@ -27,9 +28,6 @@ const knownEndpointAssets = {
 
 const knownEndpointClasses = {
   [KnownEndpoints.cohere]: {
-    [IconContext.landing]: 'p-2',
-  },
-  [KnownEndpoints.xai]: {
     [IconContext.landing]: 'p-2',
   },
 };
@@ -72,15 +70,11 @@ function UnknownIcon({
   const currentEndpoint = endpoint.toLowerCase();
 
   if (currentEndpoint === KnownEndpoints.xai) {
-    return (
-      <XAIcon
-        className={getKnownClass({
-          currentEndpoint,
-          context: context,
-          className,
-        })}
-      />
-    );
+    return <XAIcon className={cn(className, 'text-black dark:text-white')} />;
+  }
+
+  if (currentEndpoint === KnownEndpoints.moonshot) {
+    return <MoonshotIcon className={cn(className, 'text-black dark:text-white')} />;
   }
 
   if (iconURL) {

@@ -5,11 +5,11 @@ const FormData = require('form-data');
 const { ProxyAgent } = require('undici');
 const { tool } = require('@langchain/core/tools');
 const { logger } = require('@librechat/data-schemas');
-const { logAxiosError, oaiToolkit } = require('@librechat/api');
+const { HttpsProxyAgent } = require('https-proxy-agent');
 const { ContentTypes, EImageOutputType } = require('librechat-data-provider');
+const { logAxiosError, oaiToolkit, extractBaseURL } = require('@librechat/api');
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
-const extractBaseURL = require('~/utils/extractBaseURL');
-const { getFiles } = require('~/models/File');
+const { getFiles } = require('~/models');
 
 const displayMessage =
   "The tool displayed an image. All generated images are already plainly visible, so don't repeat the descriptions in detail. Do not list download links as they are available in the UI already. The user may download the images by clicking on them, but do not mention anything about downloading to the user.";
@@ -77,6 +77,8 @@ function createOpenAIImageTools(fields = {}) {
 
   let apiKey = fields.IMAGE_GEN_OAI_API_KEY ?? getApiKey();
   const closureConfig = { apiKey };
+
+  const imageModel = process.env.IMAGE_GEN_OAI_MODEL || 'gpt-image-1';
 
   let baseURL = 'https://api.openai.com/v1/';
   if (!override && process.env.IMAGE_GEN_OAI_BASEURL) {
@@ -157,7 +159,7 @@ function createOpenAIImageTools(fields = {}) {
 
         resp = await openai.images.generate(
           {
-            model: 'gpt-image-1',
+            model: imageModel,
             prompt: replaceUnwantedChars(prompt),
             n: Math.min(Math.max(1, n), 10),
             background,
@@ -239,7 +241,7 @@ Error Message: ${error.message}`);
       }
 
       const formData = new FormData();
-      formData.append('model', 'gpt-image-1');
+      formData.append('model', imageModel);
       formData.append('prompt', replaceUnwantedChars(prompt));
       // TODO: `mask` support
       // TODO: more than 1 image support
@@ -348,16 +350,7 @@ Error Message: ${error.message}`);
         };
 
         if (process.env.PROXY) {
-          try {
-            const url = new URL(process.env.PROXY);
-            axiosConfig.proxy = {
-              host: url.hostname.replace(/^\[|\]$/g, ''),
-              port: url.port ? parseInt(url.port, 10) : undefined,
-              protocol: url.protocol.replace(':', ''),
-            };
-          } catch (error) {
-            logger.error('Error parsing proxy URL:', error);
-          }
+          axiosConfig.httpsAgent = new HttpsProxyAgent(process.env.PROXY);
         }
 
         if (process.env.IMAGE_GEN_OAI_AZURE_API_VERSION && process.env.IMAGE_GEN_OAI_BASEURL) {

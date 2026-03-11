@@ -1,8 +1,22 @@
 import React, { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import { OGDialog, OGDialogTemplate } from '@librechat/client';
-import { EToolResources, defaultAgentCapabilities } from 'librechat-data-provider';
-import { ImageUpIcon, FileSearch, TerminalSquareIcon, FileType2Icon } from 'lucide-react';
+import {
+  ImageUpIcon,
+  FileSearch,
+  FileType2Icon,
+  FileImageIcon,
+  TerminalSquareIcon,
+} from 'lucide-react';
+import {
+  Providers,
+  inferMimeType,
+  EToolResources,
+  EModelEndpoint,
+  isBedrockDocumentType,
+  defaultAgentCapabilities,
+  isDocumentSupportedProvider,
+} from 'librechat-data-provider';
 import {
   useAgentToolPermissions,
   useAgentCapabilities,
@@ -34,22 +48,72 @@ const DragDropModal = ({ onOptionSelect, setShowModal, files, isVisible }: DragD
    * Use definition for agents endpoint for ephemeral agents
    * */
   const capabilities = useAgentCapabilities(agentsConfig?.capabilities ?? defaultAgentCapabilities);
-  const { conversationId, agentId } = useDragDropContext();
+  const { conversationId, agentId, endpoint, endpointType, useResponsesApi } = useDragDropContext();
   const ephemeralAgent = useRecoilValue(ephemeralAgentByConvoId(conversationId ?? ''));
-  const { fileSearchAllowedByAgent, codeAllowedByAgent } = useAgentToolPermissions(
+  const { fileSearchAllowedByAgent, codeAllowedByAgent, provider } = useAgentToolPermissions(
     agentId,
     ephemeralAgent,
   );
 
   const options = useMemo(() => {
-    const _options: FileOption[] = [
-      {
+    const _options: FileOption[] = [];
+    let currentProvider = provider || endpoint;
+
+    // This will be removed in a future PR to formally normalize Providers comparisons to be case insensitive
+    if (currentProvider?.toLowerCase() === Providers.OPENROUTER) {
+      currentProvider = Providers.OPENROUTER;
+    }
+
+    /** Helper to get inferred MIME type for a file */
+    const getFileType = (file: File) => inferMimeType(file.name, file.type);
+
+    const isAzureWithResponsesApi =
+      currentProvider === EModelEndpoint.azureOpenAI && useResponsesApi;
+
+    // Check if provider supports document upload
+    if (
+      isDocumentSupportedProvider(endpointType) ||
+      isDocumentSupportedProvider(currentProvider) ||
+      isAzureWithResponsesApi
+    ) {
+      const supportsImageDocVideoAudio =
+        currentProvider === EModelEndpoint.google || currentProvider === Providers.OPENROUTER;
+      const isBedrock =
+        currentProvider === Providers.BEDROCK || endpointType === EModelEndpoint.bedrock;
+
+      const isValidProviderFile = (file: File): boolean => {
+        const type = getFileType(file);
+        if (supportsImageDocVideoAudio) {
+          return (
+            type?.startsWith('image/') ||
+            type?.startsWith('video/') ||
+            type?.startsWith('audio/') ||
+            type === 'application/pdf'
+          );
+        }
+        if (isBedrock) {
+          return type?.startsWith('image/') || isBedrockDocumentType(type);
+        }
+        return type?.startsWith('image/') || type === 'application/pdf';
+      };
+
+      const validFileTypes = files.every(isValidProviderFile);
+
+      _options.push({
+        label: localize('com_ui_upload_provider'),
+        value: undefined,
+        icon: <FileImageIcon className="icon-md" />,
+        condition: validFileTypes,
+      });
+    } else {
+      // Only show image upload option if all files are images and provider doesn't support documents
+      _options.push({
         label: localize('com_ui_upload_image_input'),
         value: undefined,
         icon: <ImageUpIcon className="icon-md" />,
-        condition: files.every((file) => file.type?.startsWith('image/')),
-      },
-    ];
+        condition: files.every((file) => getFileType(file)?.startsWith('image/')),
+      });
+    }
     if (capabilities.fileSearchEnabled && fileSearchAllowedByAgent) {
       _options.push({
         label: localize('com_ui_upload_file_search'),
@@ -73,7 +137,17 @@ const DragDropModal = ({ onOptionSelect, setShowModal, files, isVisible }: DragD
     }
 
     return _options;
-  }, [capabilities, files, localize, fileSearchAllowedByAgent, codeAllowedByAgent]);
+  }, [
+    files,
+    localize,
+    provider,
+    endpoint,
+    endpointType,
+    capabilities,
+    useResponsesApi,
+    codeAllowedByAgent,
+    fileSearchAllowedByAgent,
+  ]);
 
   if (!isVisible) {
     return null;

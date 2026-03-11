@@ -1,4 +1,4 @@
-/** v0.8.0 */
+/** v0.8.3 */
 module.exports = {
   roots: ['<rootDir>/src'],
   testEnvironment: 'jsdom',
@@ -32,6 +32,7 @@ module.exports = {
     '^librechat-data-provider/react-query$':
       '<rootDir>/../node_modules/librechat-data-provider/src/react-query',
   },
+  maxWorkers: '50%',
   restoreMocks: true,
   testResultsProcessor: 'jest-junit',
   coverageReporters: ['text', 'cobertura', 'lcov'],
@@ -41,7 +42,6 @@ module.exports = {
       'jest-file-loader',
   },
   transformIgnorePatterns: ['node_modules/?!@zattoo/use-double-click'],
-  preset: 'ts-jest',
   setupFilesAfterEnv: ['@testing-library/jest-dom/extend-expect', '<rootDir>/test/setupTests.js'],
   clearMocks: true,
 };

@@ -1,20 +1,26 @@
 const { logger } = require('@librechat/data-schemas');
-const { SerpAPI } = require('@langchain/community/tools/serpapi');
-const { Calculator } = require('@langchain/community/tools/calculator');
-const { EnvVar, createCodeExecutionTool, createSearchTool } = require('@librechat/agents');
+const {
+  EnvVar,
+  Calculator,
+  createSearchTool,
+  createCodeExecutionTool,
+} = require('@librechat/agents');
 const {
   checkAccess,
+  toolkitParent,
   createSafeUser,
   mcpToolPattern,
   loadWebSearchAuth,
+  buildImageToolContext,
+  buildWebSearchContext,
 } = require('@librechat/api');
+const { getMCPServersRegistry } = require('~/config');
 const {
   Tools,
   Constants,
   Permissions,
   EToolResources,
   PermissionTypes,
-  replaceSpecialVars,
 } = require('librechat-data-provider');
 const {
   availableTools,
@@ -29,8 +35,8 @@ const {
   StructuredACS,
   TraversaalSearch,
   StructuredWolfram,
-  createYouTubeTools,
   TavilySearchResults,
+  createGeminiImageTool,
   createOpenAIImageTools,
 } = require('../');
 const { primeFiles: primeCodeFiles } = require('~/server/services/Files/Code/process');
@@ -179,43 +185,15 @@ const loadTools = async ({
   };
 
   const customConstructors = {
-    serpapi: async (_toolContextMap) => {
-      const authFields = getAuthFields('serpapi');
-      let envVar = authFields[0] ?? '';
-      let apiKey = process.env[envVar];
-      if (!apiKey) {
-        apiKey = await getUserPluginAuthValue(user, envVar);
-      }
-      return new SerpAPI(apiKey, {
-        location: 'Austin,Texas,United States',
-        hl: 'en',
-        gl: 'us',
-      });
-    },
-    youtube: async (_toolContextMap) => {
-      const authFields = getAuthFields('youtube');
-      const authValues = await loadAuthValues({ userId: user, authFields });
-      return createYouTubeTools(authValues);
-    },
     image_gen_oai: async (toolContextMap) => {
       const authFields = getAuthFields('image_gen_oai');
       const authValues = await loadAuthValues({ userId: user, authFields });
       const imageFiles = options.tool_resources?.[EToolResources.image_edit]?.files ?? [];
-      let toolContext = '';
-      for (let i = 0; i < imageFiles.length; i++) {
-        const file = imageFiles[i];
-        if (!file) {
-          continue;
-        }
-        if (i === 0) {
-          toolContext =
-            'Image files provided in this request (their image IDs listed in order of appearance) available for image editing:';
-        }
-        toolContext += `\n\t- ${file.file_id}`;
-        if (i === imageFiles.length - 1) {
-          toolContext += `\n\nInclude any you need in the \`image_ids\` array when calling \`${EToolResources.image_edit}_oai\`. You may also include previously referenced or generated image IDs.`;
-        }
-      }
+      const toolContext = buildImageToolContext({
+        imageFiles,
+        toolName: `${EToolResources.image_edit}_oai`,
+        contextDescription: 'image editing',
+      });
       if (toolContext) {
         toolContextMap.image_edit_oai = toolContext;
       }
@@ -226,6 +204,27 @@ const loadTools = async ({
         imageOutputType,
         fileStrategy,
         imageFiles,
+      });
+    },
+    gemini_image_gen: async (toolContextMap) => {
+      const authFields = getAuthFields('gemini_image_gen');
+      const authValues = await loadAuthValues({ userId: user, authFields, throwError: false });
+      const imageFiles = options.tool_resources?.[EToolResources.image_edit]?.files ?? [];
+      const toolContext = buildImageToolContext({
+        imageFiles,
+        toolName: 'gemini_image_gen',
+        contextDescription: 'image context',
+      });
+      if (toolContext) {
+        toolContextMap.gemini_image_gen = toolContext;
+      }
+      return createGeminiImageTool({
+        ...authValues,
+        isAgent: !!agent,
+        req: options.req,
+        imageFiles,
+        userId: user,
+        fileStrategy,
       });
     },
   };
@@ -250,7 +249,7 @@ const loadTools = async ({
     flux: imageGenOptions,
     dalle: imageGenOptions,
     'stable-diffusion': imageGenOptions,
-    serpapi: { location: 'Austin,Texas,United States', hl: 'en', gl: 'us' },
+    gemini_image_gen: imageGenOptions,
   };
 
   /** @type {Record<string, string>} */
@@ -326,16 +325,7 @@ const loadTools = async ({
       });
       const { onSearchResults, onGetHighlights } = options?.[Tools.web_search] ?? {};
       requestedTools[tool] = async () => {
-        toolContextMap[tool] = `# \`${tool}\`:
-Current Date & Time: ${replaceSpecialVars({ text: '{{iso_datetime}}' })}
-1. **Execute immediately without preface** when using \`${tool}\`.
-2. **After the search, begin with a brief summary** that directly addresses the query without headers or explaining your process.
-3. **Structure your response clearly** using Markdown formatting (Level 2 headers for sections, lists for multiple points, tables for comparisons).
-4. **Cite sources properly** according to the citation anchor format, utilizing group anchors when appropriate.
-5. **Tailor your approach to the query type** (academic, news, coding, etc.) while maintaining an expert, journalistic, unbiased tone.
-6. **Provide comprehensive information** with specific details, examples, and as much relevant context as possible from search results.
-7. **Avoid moralizing language.**
-`.trim();
+        toolContextMap[tool] = buildWebSearchContext();
         return createSearchTool({
           ...result.authResult,
           onSearchResults,
@@ -350,7 +340,10 @@ Current Date & Time: ${replaceSpecialVars({ text: '{{iso_datetime}}' })}
         /** Placeholder used for UI purposes */
         continue;
       }
-      if (serverName && options.req?.config?.mcpConfig?.[serverName] == null) {
+      const serverConfig = serverName
+        ? await getMCPServersRegistry().getServerConfig(serverName, user)
+        : null;
+      if (!serverConfig) {
         logger.warn(
           `MCP server "${serverName}" for "${toolName}" tool is not configured${agent?.id != null && agent.id ? ` but attached to "${agent.id}"` : ''}`,
         );
@@ -361,6 +354,7 @@ Current Date & Time: ${replaceSpecialVars({ text: '{{iso_datetime}}' })}
           {
             type: 'all',
             serverName,
+            config: serverConfig,
           },
         ];
         continue;
@@ -371,12 +365,21 @@ Current Date & Time: ${replaceSpecialVars({ text: '{{iso_datetime}}' })}
         type: 'single',
         toolKey: tool,
         serverName,
+        config: serverConfig,
       });
       continue;
     }
 
-    if (customConstructors[tool]) {
-      requestedTools[tool] = async () => customConstructors[tool](toolContextMap);
+    const toolKey = customConstructors[tool] ? tool : toolkitParent[tool];
+    if (toolKey && customConstructors[toolKey]) {
+      if (!requestedTools[toolKey]) {
+        let cached;
+        requestedTools[toolKey] = async () => {
+          cached ??= customConstructors[toolKey](toolContextMap);
+          return cached;
+        };
+      }
+      requestedTools[tool] = requestedTools[toolKey];
       continue;
     }
 
@@ -431,9 +434,11 @@ Current Date & Time: ${replaceSpecialVars({ text: '{{iso_datetime}}' })}
           user: safeUser,
           userMCPAuthMap,
           res: options.res,
+          streamId: options.req?._resumableStreamId || null,
           model: agent?.model ?? model,
           serverName: config.serverName,
           provider: agent?.provider ?? endpoint,
+          config: config.config,
         };
 
         if (config.type === 'all' && toolConfigs.length === 1) {
@@ -448,7 +453,7 @@ Current Date & Time: ${replaceSpecialVars({ text: '{{iso_datetime}}' })}
         }
         if (!availableTools) {
           try {
-            availableTools = await getMCPServerTools(serverName);
+            availableTools = await getMCPServerTools(safeUser.id, serverName);
           } catch (error) {
             logger.error(`Error fetching available tools for MCP server ${serverName}:`, error);
           }
