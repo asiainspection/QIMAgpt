@@ -20,23 +20,21 @@ function Login() {
   }, [isAuthenticated, navigate]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-white pt-6 sm:pt-0">
-      <div className="mt-6 flex w-96 flex-col items-center overflow-hidden bg-white px-6 py-4 sm:max-w-md sm:rounded-lg">
-        <img
-          src={QIMA_LOGIN_LOGO}
-          alt="QIMA GPT"
-          className="mb-6 h-[90px] w-[90px] rounded-[8px] bg-[#00AB76] p-2 text-center"
-        />
-        {error && (
-          <div
-            className="relative mt-4 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700"
-            role="alert"
-          >
-            {localize(getLoginError(error))}
-          </div>
-        )}
-      </div>
-    </div>
+    <>
+      <img
+        src={QIMA_LOGIN_LOGO}
+        alt="QIMA GPT"
+        className="mx-auto mb-2 h-14 w-14 shrink-0 rounded-lg bg-[#00AB76] p-1.5 sm:h-16 sm:w-16"
+      />
+      {error && (
+        <div
+          className="relative mb-2 rounded border border-red-400 bg-red-100 px-3 py-2 text-sm text-red-700"
+          role="alert"
+        >
+          {localize(getLoginError(error))}
+        </div>
+      )}
+    </>
   );
 }
 
