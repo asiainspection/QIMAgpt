@@ -20,7 +20,8 @@ function Login() {
   }, [isAuthenticated, navigate]);
 
   return (
-    <>
+    <div className="login-qima-no-or">
+      <style>{`.login-qima-no-or + div[class*="border-t"]{display:none}.login-qima-no-or + div[class*="border-t"] + div{display:none}`}</style>
       <img
         src={QIMA_LOGIN_LOGO}
         alt="QIMA GPT"
@@ -34,7 +35,7 @@ function Login() {
           {localize(getLoginError(error))}
         </div>
       )}
-    </>
+    </div>
   );
 }
 
