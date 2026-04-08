@@ -31,6 +31,7 @@ import StreamAudio from './StreamAudio';
 import StopButton from './StopButton';
 import SendButton from './SendButton';
 import EditBadges from './EditBadges';
+import QuickLinkRow from './QuickLinkRow';
 import BadgeRow from './BadgeRow';
 import Mention from './Mention';
 import store from '~/store';
@@ -356,6 +357,10 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
             {TextToSpeech && automaticPlayback && <StreamAudio index={index} />}
           </div>
         </div>
+        {conversationId === Constants.NEW_CONVO &&
+          (!Array.isArray(conversation?.messages) || conversation.messages.length === 0) && (
+          <QuickLinkRow />
+        )}
       </div>
     </form>
   );
