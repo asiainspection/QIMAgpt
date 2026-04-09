@@ -6,8 +6,7 @@ import { useAgentsMapContext } from '~/Providers';
 import useSelectAgent from '~/hooks/Agents/useSelectAgent';
 import { cn } from '~/utils';
 
-const ACADEMY_URL =
-  'https://launcher.myapps.microsoft.com/api/signin/c801be0b-333d-4aab-a512-f07c2562f219?tenantId=ed4961a7-e434-4dab-bd13-eeb8ac6ce35c';
+const ACADEMY_URL = 'https://academy.qima.com/catalog/keyword/gpt';
 
 const FAQ_AGENT_NAME = 'QIMAgpt FAQ';
 
