@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GraduationCap, Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
+import { TooltipAnchor } from '@librechat/client';
 import { useLocalize } from '~/hooks';
 import { useAgentsMapContext } from '~/Providers';
 import useSelectAgent from '~/hooks/Agents/useSelectAgent';
@@ -85,46 +86,65 @@ export default function QuickLinkRow() {
           collapsed ? 'max-h-0 opacity-0' : 'max-h-24 opacity-100',
         )}
       >
-        <a
-          href={ACADEMY_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          tabIndex={collapsed ? -1 : 0}
-          className={linkClassName}
-          aria-label={localize('com_ui_quick_link_academy')}
-        >
-          <GraduationCap className="size-4" aria-hidden="true" />
-          <span>{localize('com_ui_quick_link_academy')}</span>
-        </a>
+        <TooltipAnchor
+          description={localize('com_ui_quick_link_academy_tooltip')}
+          render={
+            <a
+              href={ACADEMY_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              tabIndex={collapsed ? -1 : 0}
+              className={linkClassName}
+              aria-label={localize('com_ui_quick_link_academy')}
+            >
+              <GraduationCap className="size-4" aria-hidden="true" />
+              <span>{localize('com_ui_quick_link_academy')}</span>
+            </a>
+          }
+        />
         {faqAgentId && (
-          <button
-            type="button"
-            onClick={handleFaqClick}
-            tabIndex={collapsed ? -1 : 0}
-            className={linkClassName}
-            aria-label={localize('com_ui_quick_link_faq')}
-          >
-            <Lightbulb className="size-4" aria-hidden="true" />
-            <span>{localize('com_ui_quick_link_faq')}</span>
-          </button>
+          <TooltipAnchor
+            description={localize('com_ui_quick_link_faq_tooltip')}
+            render={
+              <button
+                type="button"
+                onClick={handleFaqClick}
+                tabIndex={collapsed ? -1 : 0}
+                className={linkClassName}
+                aria-label={localize('com_ui_quick_link_faq')}
+              >
+                <Lightbulb className="size-4" aria-hidden="true" />
+                <span>{localize('com_ui_quick_link_faq')}</span>
+              </button>
+            }
+          />
         )}
       </div>
-      <button
-        type="button"
-        onClick={toggle}
-        className="flex size-5 items-center justify-center rounded-full text-text-tertiary transition-colors duration-150 hover:bg-surface-tertiary hover:text-text-secondary"
-        aria-label={
+      <TooltipAnchor
+        description={
           collapsed
             ? localize('com_ui_quick_links_expand')
             : localize('com_ui_quick_links_collapse')
         }
-      >
-        {collapsed ? (
-          <ChevronDown className="size-3.5" aria-hidden="true" />
-        ) : (
-          <ChevronUp className="size-3.5" aria-hidden="true" />
-        )}
-      </button>
+        render={
+          <button
+            type="button"
+            onClick={toggle}
+            className="flex size-5 items-center justify-center rounded-full text-text-tertiary transition-colors duration-150 hover:bg-surface-tertiary hover:text-text-secondary"
+            aria-label={
+              collapsed
+                ? localize('com_ui_quick_links_expand')
+                : localize('com_ui_quick_links_collapse')
+            }
+          >
+            {collapsed ? (
+              <ChevronDown className="size-3.5" aria-hidden="true" />
+            ) : (
+              <ChevronUp className="size-3.5" aria-hidden="true" />
+            )}
+          </button>
+        }
+      />
     </div>
   );
 }

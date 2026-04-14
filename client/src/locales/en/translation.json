@@ -1521,7 +1521,9 @@
   "com_ui_zoom_level": "Zoom level",
   "com_ui_zoom_out": "Zoom out",
   "com_ui_quick_link_academy": "Learn",
+  "com_ui_quick_link_academy_tooltip": "Take our GPT courses on QIMA Academy",
   "com_ui_quick_link_faq": "FAQ",
+  "com_ui_quick_link_faq_tooltip": "Use QIMAgpt FAQ agent to get the tech support",
   "com_ui_quick_links_expand": "Expand quick links",
   "com_ui_quick_links_collapse": "Collapse quick links",
   "com_user_message": "You"
