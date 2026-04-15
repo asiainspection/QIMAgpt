@@ -11,6 +11,7 @@ const {
 } = require('~/server/middleware');
 const { saveMessage } = require('~/models');
 const openai = require('./openai');
+const azureOpenAIPassthrough = require('./azureOpenAIPassthrough');
 const responses = require('./responses');
 const { v1 } = require('./v1');
 const chat = require('./chat');
@@ -26,6 +27,12 @@ const router = express.Router();
  * @see https://openresponses.org/specification
  */
 router.use('/v1/responses', responses);
+
+/**
+ * Azure OpenAI passthrough (API key auth in route file)
+ * Mounted at /agents/v1/azure/chat/completions (full path: /api/agents/v1/azure/chat/completions)
+ */
+router.use('/v1', azureOpenAIPassthrough);
 
 /**
  * OpenAI-compatible API routes (API key authentication handled in route file)
