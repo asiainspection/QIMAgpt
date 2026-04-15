@@ -58,8 +58,17 @@ describe('effectivePassthroughApiVersion', () => {
 });
 
 describe('resolveAzureOpenAIResponsesForModel', () => {
-  it('Foundry serverless: baseURL …/openai/v1 resolves to …/openai/v1/responses (no duplicate path)', () => {
-    const cfg = {
+  const foundryEnvKeys = [
+    'AZURE_OPENAI_PASSTHROUGH_API_VERSION',
+    'AZURE_OPENAI_RESPONSES_API_VERSION',
+    'AZURE_OPENAI_V1_API_VERSION',
+    'AZURE_OPENAI_CHAT_API_VERSION',
+  ] as const;
+  const foundryEnvSnapshot: Partial<Record<(typeof foundryEnvKeys)[number], string | undefined>> =
+    {};
+
+  describe('Foundry serverless base …/openai/v1', () => {
+    const foundryCfg = {
       modelGroupMap: { 'gpt-5.4': { group: 'foundry' } },
       groupMap: {
         foundry: {
@@ -72,11 +81,68 @@ describe('resolveAzureOpenAIResponsesForModel', () => {
       },
     } as unknown as TAzureConfig;
 
-    const { url } = resolveAzureOpenAIResponsesForModel('gpt-5.4', cfg);
-    expect(url).toBe(
-      'https://qimagpt-eastus2.openai.azure.com/openai/v1/responses?api-version=2025-01-01-preview',
-    );
-    expect(url.includes('/openai/v1/openai/')).toBe(false);
+    beforeEach(() => {
+      for (const k of foundryEnvKeys) {
+        foundryEnvSnapshot[k] = process.env[k];
+      }
+    });
+
+    afterEach(() => {
+      for (const k of foundryEnvKeys) {
+        const v = foundryEnvSnapshot[k];
+        if (v === undefined) {
+          delete process.env[k];
+        } else {
+          process.env[k] = v;
+        }
+      }
+    });
+
+    it('resolves to …/openai/v1/responses without duplicate path; omits api-version by default', () => {
+      for (const k of foundryEnvKeys) {
+        delete process.env[k];
+      }
+      const { url } = resolveAzureOpenAIResponsesForModel('gpt-5.4', foundryCfg);
+      expect(url).toBe('https://qimagpt-eastus2.openai.azure.com/openai/v1/responses');
+      expect(url.includes('/openai/v1/openai/')).toBe(false);
+    });
+
+    it('appends api-version when AZURE_OPENAI_RESPONSES_API_VERSION is set', () => {
+      delete process.env.AZURE_OPENAI_PASSTHROUGH_API_VERSION;
+      process.env.AZURE_OPENAI_RESPONSES_API_VERSION = '2025-03-01-preview';
+      delete process.env.AZURE_OPENAI_V1_API_VERSION;
+      delete process.env.AZURE_OPENAI_CHAT_API_VERSION;
+      const { url } = resolveAzureOpenAIResponsesForModel('gpt-5.4', foundryCfg);
+      expect(url).toBe(
+        'https://qimagpt-eastus2.openai.azure.com/openai/v1/responses?api-version=2025-03-01-preview',
+      );
+    });
+
+    it('prefers AZURE_OPENAI_PASSTHROUGH_API_VERSION over AZURE_OPENAI_RESPONSES_API_VERSION', () => {
+      process.env.AZURE_OPENAI_PASSTHROUGH_API_VERSION = '2025-04-01-preview';
+      process.env.AZURE_OPENAI_RESPONSES_API_VERSION = '2025-03-01-preview';
+      delete process.env.AZURE_OPENAI_V1_API_VERSION;
+      delete process.env.AZURE_OPENAI_CHAT_API_VERSION;
+      const { url } = resolveAzureOpenAIResponsesForModel('gpt-5.4', foundryCfg);
+      expect(url).toContain('api-version=2025-04-01-preview');
+    });
+
+    it('uses AZURE_OPENAI_V1_API_VERSION when other overrides are unset', () => {
+      delete process.env.AZURE_OPENAI_PASSTHROUGH_API_VERSION;
+      delete process.env.AZURE_OPENAI_RESPONSES_API_VERSION;
+      process.env.AZURE_OPENAI_V1_API_VERSION = 'preview';
+      delete process.env.AZURE_OPENAI_CHAT_API_VERSION;
+      const { url } = resolveAzureOpenAIResponsesForModel('gpt-5.4', foundryCfg);
+      expect(url).toBe('https://qimagpt-eastus2.openai.azure.com/openai/v1/responses?api-version=preview');
+    });
+
+    it('GET response omits api-version by default on Foundry v1 base', () => {
+      for (const k of foundryEnvKeys) {
+        delete process.env[k];
+      }
+      const { url } = resolveAzureOpenAIGetResponseForModel('gpt-5.4', 'resp_abc', foundryCfg);
+      expect(url).toBe('https://qimagpt-eastus2.openai.azure.com/openai/v1/responses/resp_abc');
+    });
   });
 
   it('builds openai/v1/responses URL for a configured model', () => {

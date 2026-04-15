@@ -22,6 +22,10 @@ type PassthroughApiKind = 'responses' | 'chatOrEmbeddings';
  *
  * Precedence: `AZURE_OPENAI_PASSTHROUGH_API_VERSION` → kind-specific env → YAML `version`.
  *
+ * **Foundry serverless** `baseURL` ending in `/openai/v1`: **Responses** only omits `api-version`
+ * unless `AZURE_OPENAI_PASSTHROUGH_API_VERSION`, `AZURE_OPENAI_RESPONSES_API_VERSION`, or
+ * `AZURE_OPENAI_V1_API_VERSION` is set (YAML `version` is not applied on that URL shape).
+ *
  * - `AZURE_OPENAI_PASSTHROUGH_API_VERSION` — all passthrough routes
  * - `AZURE_OPENAI_RESPONSES_API_VERSION` — POST/GET `/openai/v1/responses` only
  * - `AZURE_OPENAI_CHAT_API_VERSION` — chat completions + embeddings only
@@ -83,6 +87,26 @@ function appendApiVersionQuery(u: URL, version: string): void {
 }
 
 /**
+ * Serverless base ending in `/openai/v1` (Foundry): Azure often rejects `api-version` from YAML
+ * on `/responses`. Omit the query unless an env var supplies an explicit value.
+ */
+function serverlessOpenAiV1ResponsesApiVersionQuery(): string {
+  const global = process.env.AZURE_OPENAI_PASSTHROUGH_API_VERSION?.trim();
+  if (global) {
+    return global;
+  }
+  const responses = process.env.AZURE_OPENAI_RESPONSES_API_VERSION?.trim();
+  if (responses) {
+    return responses;
+  }
+  const v1 = process.env.AZURE_OPENAI_V1_API_VERSION?.trim();
+  if (v1) {
+    return v1;
+  }
+  return '';
+}
+
+/**
  * Azure OpenAI Responses API (`POST /openai/v1/responses`), per Microsoft Foundry docs.
  * Differs from chat completions URL shape (no `deployments/{id}/chat/completions` segment).
  */
@@ -107,17 +131,22 @@ export function resolveAzureOpenAIResponsesForModel(
 
   const apiKey = azureOptions.azureOpenAIApiKey;
   const mappedVersion = azureOptions.azureOpenAIApiVersion ?? '';
-  const version = effectivePassthroughApiVersion(mappedVersion, 'responses');
-
   const headers = azurePassthroughHeaders(apiKey, extraHeaders, true);
 
   if (serverless === true && baseURL) {
     const root = `${stripTrailingSlash(baseURL)}/`;
-    const relativePath = serverlessBaseEndsWithOpenAiV1(baseURL) ? 'responses' : 'openai/v1/responses';
+    const relativePath = serverlessBaseEndsWithOpenAiV1(baseURL)
+      ? 'responses'
+      : 'openai/v1/responses';
     const u = new URL(relativePath, root);
+    const version = serverlessBaseEndsWithOpenAiV1(baseURL)
+      ? serverlessOpenAiV1ResponsesApiVersionQuery()
+      : effectivePassthroughApiVersion(mappedVersion, 'responses');
     appendApiVersionQuery(u, version);
     return { url: u.toString(), headers };
   }
+
+  const version = effectivePassthroughApiVersion(mappedVersion, 'responses');
 
   const instanceName = azureOptions.azureOpenAIApiInstanceName;
   if (!instanceName || version.trim().length === 0) {
@@ -156,7 +185,6 @@ export function resolveAzureOpenAIGetResponseForModel(
 
   const apiKey = azureOptions.azureOpenAIApiKey;
   const mappedVersion = azureOptions.azureOpenAIApiVersion ?? '';
-  const version = effectivePassthroughApiVersion(mappedVersion, 'responses');
   const headers = azurePassthroughHeaders(apiKey, extraHeaders, false);
 
   const safeId = encodeURIComponent(responseId);
@@ -167,10 +195,14 @@ export function resolveAzureOpenAIGetResponseForModel(
       ? `responses/${safeId}`
       : `openai/v1/responses/${safeId}`;
     const u = new URL(relativePath, root);
+    const version = serverlessBaseEndsWithOpenAiV1(baseURL)
+      ? serverlessOpenAiV1ResponsesApiVersionQuery()
+      : effectivePassthroughApiVersion(mappedVersion, 'responses');
     appendApiVersionQuery(u, version);
     return { url: u.toString(), headers };
   }
 
+  const version = effectivePassthroughApiVersion(mappedVersion, 'responses');
   const instanceName = azureOptions.azureOpenAIApiInstanceName;
   if (!instanceName || version.trim().length === 0) {
     throw new Error(
