@@ -1,2 +1,8 @@
 export * from './handleAzureOpenAIPassthroughChatCompletions';
-export * from './resolveAzureChatCompletions';
+export type { AzurePassthroughTarget, AzureChatCompletionsTarget } from './resolveAzureChatCompletions';
+export {
+  resolveAzureChatCompletionsForModel,
+  resolveAzureEmbeddingsForModel,
+  resolveAzureOpenAIGetResponseForModel,
+  resolveAzureOpenAIResponsesForModel,
+} from './resolveAzureChatCompletions';

@@ -30,7 +30,7 @@ router.use('/v1/responses', responses);
 
 /**
  * Azure OpenAI passthrough (API key auth in route file)
- * Mounted at /agents/v1/azure/chat/completions (full path: /api/agents/v1/azure/chat/completions)
+ * Mounted at /agents/v1/azure/* (e.g. /api/agents/v1/azure/chat/completions, /api/agents/v1/azure/responses)
  */
 router.use('/v1', azureOpenAIPassthrough);
 
