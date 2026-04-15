@@ -17,6 +17,26 @@ function stripTrailingSlash(s: string): string {
 type PassthroughApiKind = 'responses' | 'chatOrEmbeddings';
 
 /**
+ * Chat-oriented `api-version` values in `librechat.yaml` (e.g. `2025-01-01-preview`) are often valid
+ * for `deployments/.../chat/completions` but **not** for `/openai/v1/responses`. Microsoft documents
+ * Responses on dated previews starting around `2025-02-01-preview`. Below the threshold we use a
+ * conservative fallback; operators can still set `AZURE_OPENAI_RESPONSES_API_VERSION`.
+ */
+const AZURE_RESPONSES_ROUTE_MIN_TRUSTED_MAPPED_VERSION = '2025-02-01-preview';
+const AZURE_RESPONSES_ROUTE_FALLBACK_API_VERSION = '2025-04-01-preview';
+
+function defaultApiVersionForAzureResponsesRoute(mappedVersion: string): string {
+  const t = mappedVersion.trim();
+  if (t.length === 0) {
+    return AZURE_RESPONSES_ROUTE_FALLBACK_API_VERSION;
+  }
+  if (t >= AZURE_RESPONSES_ROUTE_MIN_TRUSTED_MAPPED_VERSION) {
+    return t;
+  }
+  return AZURE_RESPONSES_ROUTE_FALLBACK_API_VERSION;
+}
+
+/**
  * Resolves `api-version` for passthrough URLs. Azure rejects versions that do not support the
  * route (e.g. `/openai/v1/responses` often needs a newer preview than legacy chat).
  *
@@ -43,11 +63,12 @@ export function effectivePassthroughApiVersion(
     if (r) {
       return r;
     }
-  } else {
-    const c = process.env.AZURE_OPENAI_CHAT_API_VERSION?.trim();
-    if (c) {
-      return c;
-    }
+    return defaultApiVersionForAzureResponsesRoute(mappedVersion);
+  }
+
+  const c = process.env.AZURE_OPENAI_CHAT_API_VERSION?.trim();
+  if (c) {
+    return c;
   }
   return mappedVersion;
 }

@@ -55,6 +55,24 @@ describe('effectivePassthroughApiVersion', () => {
       '2024-02-15-preview',
     );
   });
+
+  it('for responses without env uses fallback when mapped version predates Responses route support', () => {
+    delete process.env.AZURE_OPENAI_PASSTHROUGH_API_VERSION;
+    delete process.env.AZURE_OPENAI_RESPONSES_API_VERSION;
+    delete process.env.AZURE_OPENAI_CHAT_API_VERSION;
+    expect(effectivePassthroughApiVersion('2025-01-01-preview', 'responses')).toBe(
+      '2025-04-01-preview',
+    );
+  });
+
+  it('for responses without env keeps mapped version when already new enough', () => {
+    delete process.env.AZURE_OPENAI_PASSTHROUGH_API_VERSION;
+    delete process.env.AZURE_OPENAI_RESPONSES_API_VERSION;
+    delete process.env.AZURE_OPENAI_CHAT_API_VERSION;
+    expect(effectivePassthroughApiVersion('2025-03-01-preview', 'responses')).toBe(
+      '2025-03-01-preview',
+    );
+  });
 });
 
 describe('resolveAzureOpenAIResponsesForModel', () => {
@@ -168,7 +186,7 @@ describe('resolveAzureOpenAIResponsesForModel', () => {
     const { url, headers } = resolveAzureOpenAIResponsesForModel('gpt-5.4', cfg);
     expect(url).toContain('my-instance.openai.azure.com');
     expect(url).toContain('/openai/v1/responses');
-    expect(url).toContain('api-version=2025-01-01-preview');
+    expect(url).toContain('api-version=2025-04-01-preview');
     expect(headers['api-key']).toBe('test-key');
   });
 
@@ -189,7 +207,7 @@ describe('resolveAzureOpenAIResponsesForModel', () => {
 
     const { url, headers } = resolveAzureOpenAIGetResponseForModel('gpt-5.4', 'resp_abc', cfg);
     expect(url).toContain('/openai/v1/responses/resp_abc');
-    expect(url).toContain('api-version=');
+    expect(url).toContain('api-version=2025-04-01-preview');
     expect(headers['Content-Type']).toBeUndefined();
     expect(headers['api-key']).toBe('k');
   });
