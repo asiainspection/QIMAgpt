@@ -1,12 +1,84 @@
 import type { TAzureConfig } from 'librechat-data-provider';
 import {
+  effectivePassthroughApiVersion,
   resolveAzureChatCompletionsForModel,
   resolveAzureEmbeddingsForModel,
   resolveAzureOpenAIGetResponseForModel,
   resolveAzureOpenAIResponsesForModel,
 } from './resolveAzureChatCompletions';
 
+describe('effectivePassthroughApiVersion', () => {
+  const keys = [
+    'AZURE_OPENAI_PASSTHROUGH_API_VERSION',
+    'AZURE_OPENAI_RESPONSES_API_VERSION',
+    'AZURE_OPENAI_CHAT_API_VERSION',
+  ] as const;
+  const snapshot: Partial<Record<(typeof keys)[number], string | undefined>> = {};
+
+  beforeEach(() => {
+    for (const k of keys) {
+      snapshot[k] = process.env[k];
+    }
+  });
+
+  afterEach(() => {
+    for (const k of keys) {
+      const v = snapshot[k];
+      if (v === undefined) {
+        delete process.env[k];
+      } else {
+        process.env[k] = v;
+      }
+    }
+  });
+
+  it('prefers AZURE_OPENAI_PASSTHROUGH_API_VERSION over mapped value', () => {
+    process.env.AZURE_OPENAI_PASSTHROUGH_API_VERSION = '2025-03-01-preview';
+    delete process.env.AZURE_OPENAI_RESPONSES_API_VERSION;
+    delete process.env.AZURE_OPENAI_CHAT_API_VERSION;
+    expect(effectivePassthroughApiVersion('2024-02-15-preview', 'responses')).toBe(
+      '2025-03-01-preview',
+    );
+    expect(effectivePassthroughApiVersion('2024-02-15-preview', 'chatOrEmbeddings')).toBe(
+      '2025-03-01-preview',
+    );
+  });
+
+  it('uses AZURE_OPENAI_RESPONSES_API_VERSION for responses kind', () => {
+    delete process.env.AZURE_OPENAI_PASSTHROUGH_API_VERSION;
+    process.env.AZURE_OPENAI_RESPONSES_API_VERSION = '2025-01-01-preview';
+    delete process.env.AZURE_OPENAI_CHAT_API_VERSION;
+    expect(effectivePassthroughApiVersion('2024-02-15-preview', 'responses')).toBe(
+      '2025-01-01-preview',
+    );
+    expect(effectivePassthroughApiVersion('2024-02-15-preview', 'chatOrEmbeddings')).toBe(
+      '2024-02-15-preview',
+    );
+  });
+});
+
 describe('resolveAzureOpenAIResponsesForModel', () => {
+  it('Foundry serverless: baseURL …/openai/v1 resolves to …/openai/v1/responses (no duplicate path)', () => {
+    const cfg = {
+      modelGroupMap: { 'gpt-5.4': { group: 'foundry' } },
+      groupMap: {
+        foundry: {
+          apiKey: 'k',
+          baseURL: 'https://qimagpt-eastus2.openai.azure.com/openai/v1',
+          serverless: true,
+          version: '2025-01-01-preview',
+          models: { 'gpt-5.4': true },
+        },
+      },
+    } as unknown as TAzureConfig;
+
+    const { url } = resolveAzureOpenAIResponsesForModel('gpt-5.4', cfg);
+    expect(url).toBe(
+      'https://qimagpt-eastus2.openai.azure.com/openai/v1/responses?api-version=2025-01-01-preview',
+    );
+    expect(url.includes('/openai/v1/openai/')).toBe(false);
+  });
+
   it('builds openai/v1/responses URL for a configured model', () => {
     const cfg = {
       modelGroupMap: {

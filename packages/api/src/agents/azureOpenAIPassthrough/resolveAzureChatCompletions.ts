@@ -14,6 +14,40 @@ function stripTrailingSlash(s: string): string {
   return s.replace(/\/$/, '');
 }
 
+type PassthroughApiKind = 'responses' | 'chatOrEmbeddings';
+
+/**
+ * Resolves `api-version` for passthrough URLs. Azure rejects versions that do not support the
+ * route (e.g. `/openai/v1/responses` often needs a newer preview than legacy chat).
+ *
+ * Precedence: `AZURE_OPENAI_PASSTHROUGH_API_VERSION` → kind-specific env → YAML `version`.
+ *
+ * - `AZURE_OPENAI_PASSTHROUGH_API_VERSION` — all passthrough routes
+ * - `AZURE_OPENAI_RESPONSES_API_VERSION` — POST/GET `/openai/v1/responses` only
+ * - `AZURE_OPENAI_CHAT_API_VERSION` — chat completions + embeddings only
+ */
+export function effectivePassthroughApiVersion(
+  mappedVersion: string,
+  kind: PassthroughApiKind,
+): string {
+  const global = process.env.AZURE_OPENAI_PASSTHROUGH_API_VERSION?.trim();
+  if (global) {
+    return global;
+  }
+  if (kind === 'responses') {
+    const r = process.env.AZURE_OPENAI_RESPONSES_API_VERSION?.trim();
+    if (r) {
+      return r;
+    }
+  } else {
+    const c = process.env.AZURE_OPENAI_CHAT_API_VERSION?.trim();
+    if (c) {
+      return c;
+    }
+  }
+  return mappedVersion;
+}
+
 function azurePassthroughHeaders(
   apiKey: string,
   extraHeaders: Record<string, string> | undefined,
@@ -35,6 +69,17 @@ function azureOpenAiResourceOrigin(instanceName: string): string {
     return `https://${trimmed.replace(/^https?:\/\//i, '')}`;
   }
   return `https://${trimmed}.openai.azure.com`;
+}
+
+/** True when `baseURL` is already the Foundry / v1 root (…/openai/v1), so paths are relative segments only. */
+function serverlessBaseEndsWithOpenAiV1(baseURL: string): boolean {
+  return /\/openai\/v1$/i.test(stripTrailingSlash(baseURL));
+}
+
+function appendApiVersionQuery(u: URL, version: string): void {
+  if (version.trim().length > 0) {
+    u.searchParams.set('api-version', version);
+  }
 }
 
 /**
@@ -61,22 +106,23 @@ export function resolveAzureOpenAIResponsesForModel(
   });
 
   const apiKey = azureOptions.azureOpenAIApiKey;
-  const version = azureOptions.azureOpenAIApiVersion ?? '';
+  const mappedVersion = azureOptions.azureOpenAIApiVersion ?? '';
+  const version = effectivePassthroughApiVersion(mappedVersion, 'responses');
 
   const headers = azurePassthroughHeaders(apiKey, extraHeaders, true);
 
   if (serverless === true && baseURL) {
-    const u = new URL('openai/v1/responses', `${stripTrailingSlash(baseURL)}/`);
-    if (version) {
-      u.searchParams.set('api-version', version);
-    }
+    const root = `${stripTrailingSlash(baseURL)}/`;
+    const relativePath = serverlessBaseEndsWithOpenAiV1(baseURL) ? 'responses' : 'openai/v1/responses';
+    const u = new URL(relativePath, root);
+    appendApiVersionQuery(u, version);
     return { url: u.toString(), headers };
   }
 
   const instanceName = azureOptions.azureOpenAIApiInstanceName;
-  if (!instanceName || !version) {
+  if (!instanceName || version.trim().length === 0) {
     throw new Error(
-      'Azure OpenAI Responses API requires instanceName and api version for non-serverless config.',
+      'Azure OpenAI Responses API requires instanceName and api version (set `version` in librechat.yaml for this model group, or set AZURE_OPENAI_RESPONSES_API_VERSION / AZURE_OPENAI_PASSTHROUGH_API_VERSION).',
     );
   }
 
@@ -109,23 +155,26 @@ export function resolveAzureOpenAIGetResponseForModel(
   });
 
   const apiKey = azureOptions.azureOpenAIApiKey;
-  const version = azureOptions.azureOpenAIApiVersion ?? '';
+  const mappedVersion = azureOptions.azureOpenAIApiVersion ?? '';
+  const version = effectivePassthroughApiVersion(mappedVersion, 'responses');
   const headers = azurePassthroughHeaders(apiKey, extraHeaders, false);
 
   const safeId = encodeURIComponent(responseId);
 
   if (serverless === true && baseURL) {
-    const u = new URL(`openai/v1/responses/${safeId}`, `${stripTrailingSlash(baseURL)}/`);
-    if (version) {
-      u.searchParams.set('api-version', version);
-    }
+    const root = `${stripTrailingSlash(baseURL)}/`;
+    const relativePath = serverlessBaseEndsWithOpenAiV1(baseURL)
+      ? `responses/${safeId}`
+      : `openai/v1/responses/${safeId}`;
+    const u = new URL(relativePath, root);
+    appendApiVersionQuery(u, version);
     return { url: u.toString(), headers };
   }
 
   const instanceName = azureOptions.azureOpenAIApiInstanceName;
-  if (!instanceName || !version) {
+  if (!instanceName || version.trim().length === 0) {
     throw new Error(
-      'Azure OpenAI Responses GET requires instanceName and api version for non-serverless config.',
+      'Azure OpenAI Responses GET requires instanceName and api version (set `version` in librechat.yaml, or AZURE_OPENAI_RESPONSES_API_VERSION / AZURE_OPENAI_PASSTHROUGH_API_VERSION).',
     );
   }
 
@@ -157,20 +206,20 @@ export function resolveAzureEmbeddingsForModel(
   });
 
   const apiKey = azureOptions.azureOpenAIApiKey;
-  const version = azureOptions.azureOpenAIApiVersion ?? '';
+  const mappedVersion = azureOptions.azureOpenAIApiVersion ?? '';
+  const version = effectivePassthroughApiVersion(mappedVersion, 'chatOrEmbeddings');
   const headers = azurePassthroughHeaders(apiKey, extraHeaders, true);
 
   if (serverless === true && baseURL) {
-    const u = new URL('embeddings', `${stripTrailingSlash(baseURL)}/`);
-    if (version) {
-      u.searchParams.set('api-version', version);
-    }
+    const root = `${stripTrailingSlash(baseURL)}/`;
+    const u = new URL('embeddings', root);
+    appendApiVersionQuery(u, version);
     return { url: u.toString(), headers };
   }
 
   const instanceName = azureOptions.azureOpenAIApiInstanceName;
   const deploymentName = azureOptions.azureOpenAIApiDeploymentName;
-  if (!instanceName || !deploymentName || !version) {
+  if (!instanceName || !deploymentName || version.trim().length === 0) {
     throw new Error(
       'Azure OpenAI embeddings require instanceName, deploymentName, and api version for non-serverless config.',
     );
@@ -204,21 +253,21 @@ export function resolveAzureChatCompletionsForModel(
   });
 
   const apiKey = azureOptions.azureOpenAIApiKey;
-  const version = azureOptions.azureOpenAIApiVersion ?? '';
+  const mappedVersion = azureOptions.azureOpenAIApiVersion ?? '';
+  const version = effectivePassthroughApiVersion(mappedVersion, 'chatOrEmbeddings');
 
   const headers = azurePassthroughHeaders(apiKey, extraHeaders, true);
 
   if (serverless === true && baseURL) {
-    const u = new URL('chat/completions', `${stripTrailingSlash(baseURL)}/`);
-    if (version) {
-      u.searchParams.set('api-version', version);
-    }
+    const root = `${stripTrailingSlash(baseURL)}/`;
+    const u = new URL('chat/completions', root);
+    appendApiVersionQuery(u, version);
     return { url: u.toString(), headers };
   }
 
   const instanceName = azureOptions.azureOpenAIApiInstanceName;
   const deploymentName = azureOptions.azureOpenAIApiDeploymentName;
-  if (!instanceName || !deploymentName || !version) {
+  if (!instanceName || !deploymentName || version.trim().length === 0) {
     throw new Error(
       'Azure OpenAI requires instanceName, deploymentName, and api version for non-serverless config.',
     );
