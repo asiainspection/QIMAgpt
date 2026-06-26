@@ -35,9 +35,19 @@ export const SystemCapabilities = {
   MANAGE_MCP_SERVERS: 'manage:mcpservers',
   READ_PROMPTS: 'read:prompts',
   MANAGE_PROMPTS: 'manage:prompts',
+  READ_SKILLS: 'read:skills',
+  MANAGE_SKILLS: 'manage:skills',
+  READ_SHARED_LINKS: 'read:sharedlinks',
+  MANAGE_SHARED_LINKS: 'manage:sharedlinks',
   /** Reserved — not yet enforced by any middleware. */
   READ_ASSISTANTS: 'read:assistants',
   MANAGE_ASSISTANTS: 'manage:assistants',
+  /**
+   * Required to list, view, and CSV-export the SystemGrant audit log. Append-only
+   * by design, so there is no MANAGE counterpart — modifying historical entries
+   * would defeat the forensic guarantee.
+   */
+  READ_AUDIT_LOG: 'read:audit_log',
 } as const;
 
 /**
@@ -52,6 +62,8 @@ export const CapabilityImplications: Partial<Record<BaseSystemCapability, BaseSy
     [SystemCapabilities.MANAGE_CONFIGS]: [SystemCapabilities.READ_CONFIGS],
     [SystemCapabilities.MANAGE_AGENTS]: [SystemCapabilities.READ_AGENTS],
     [SystemCapabilities.MANAGE_PROMPTS]: [SystemCapabilities.READ_PROMPTS],
+    [SystemCapabilities.MANAGE_SKILLS]: [SystemCapabilities.READ_SKILLS],
+    [SystemCapabilities.MANAGE_SHARED_LINKS]: [SystemCapabilities.READ_SHARED_LINKS],
     [SystemCapabilities.MANAGE_ASSISTANTS]: [SystemCapabilities.READ_ASSISTANTS],
   };
 
@@ -139,6 +151,8 @@ export const ResourceCapabilityMap: Record<ResourceType, SystemCapability> = {
   [ResourceType.PROMPTGROUP]: SystemCapabilities.MANAGE_PROMPTS,
   [ResourceType.MCPSERVER]: SystemCapabilities.MANAGE_MCP_SERVERS,
   [ResourceType.REMOTE_AGENT]: SystemCapabilities.MANAGE_AGENTS,
+  [ResourceType.SKILL]: SystemCapabilities.MANAGE_SKILLS,
+  [ResourceType.SHARED_LINK]: SystemCapabilities.MANAGE_SHARED_LINKS,
 };
 
 /**
@@ -204,14 +218,22 @@ export const CAPABILITY_CATEGORIES: CapabilityCategory[] = [
       SystemCapabilities.READ_AGENTS,
       SystemCapabilities.MANAGE_PROMPTS,
       SystemCapabilities.READ_PROMPTS,
+      SystemCapabilities.MANAGE_SKILLS,
+      SystemCapabilities.READ_SKILLS,
       SystemCapabilities.MANAGE_ASSISTANTS,
       SystemCapabilities.READ_ASSISTANTS,
       SystemCapabilities.MANAGE_MCP_SERVERS,
+      SystemCapabilities.MANAGE_SHARED_LINKS,
+      SystemCapabilities.READ_SHARED_LINKS,
     ],
   },
   {
     key: 'system',
     labelKey: 'com_cap_cat_system',
-    capabilities: [SystemCapabilities.ACCESS_ADMIN, SystemCapabilities.READ_USAGE],
+    capabilities: [
+      SystemCapabilities.ACCESS_ADMIN,
+      SystemCapabilities.READ_USAGE,
+      SystemCapabilities.READ_AUDIT_LOG,
+    ],
   },
 ];

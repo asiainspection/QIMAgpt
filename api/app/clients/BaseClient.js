@@ -6,7 +6,9 @@ const {
   checkBalance,
   getBalanceConfig,
   buildMessageFiles,
+  sanitizeFileForTransmit,
   extractFileContext,
+  getReferencedQuotes,
   encodeAndFormatAudios,
   encodeAndFormatVideos,
   encodeAndFormatDocuments,
@@ -14,6 +16,7 @@ const {
 const {
   Constants,
   FileSources,
+  Tools,
   ContentTypes,
   excludedKeys,
   EModelEndpoint,
@@ -29,6 +32,115 @@ const { getStrategyFunctions } = require('~/server/services/Files/strategies');
 const { logViolation } = require('~/cache');
 const TextStream = require('./TextStream');
 const db = require('~/models');
+
+const collectHistoricalFileRefs = (message) => {
+  const refs = [];
+  if (Array.isArray(message.files)) {
+    refs.push(...message.files);
+  }
+  if (Array.isArray(message.attachments)) {
+    refs.push(...message.attachments);
+  }
+  return refs;
+};
+
+const collectHistoricalFileIds = (messages) => {
+  const fileIds = new Set();
+  for (const message of messages) {
+    for (const ref of collectHistoricalFileRefs(message)) {
+      if (ref?.file_id) {
+        fileIds.add(ref.file_id);
+      }
+    }
+  }
+  return Array.from(fileIds);
+};
+
+const buildOwnerFileFilter = (fileIds, user) => {
+  if (!user?.id || fileIds.length === 0) {
+    return null;
+  }
+
+  const filter = {
+    file_id: { $in: fileIds },
+    user: user.id,
+  };
+  if (user.tenantId) {
+    filter.tenantId = user.tenantId;
+  }
+  return filter;
+};
+
+const TOOL_ATTACHMENT_KEYS = [
+  Tools.file_search,
+  Tools.web_search,
+  Tools.ui_resources,
+  Tools.memory,
+];
+const DISPLAY_ATTACHMENT_FIELDS = [
+  'filename',
+  'filepath',
+  'expiresAt',
+  'conversationId',
+  'messageId',
+  'toolCallId',
+  'name',
+];
+const PER_MESSAGE_FILE_ATTACHMENT_FIELDS = ['messageId', 'toolCallId'];
+
+const pickFields = (source, fields) => {
+  const picked = {};
+  for (const field of fields) {
+    if (source?.[field] !== undefined) {
+      picked[field] = source[field];
+    }
+  }
+  return picked;
+};
+
+const sanitizeDisplayOnlyAttachment = (ref) => {
+  if (!ref || ref.file_id) {
+    return undefined;
+  }
+
+  const attachment = pickFields(ref, DISPLAY_ATTACHMENT_FIELDS);
+  if (TOOL_ATTACHMENT_KEYS.includes(ref.type)) {
+    attachment.type = ref.type;
+  }
+  for (const key of TOOL_ATTACHMENT_KEYS) {
+    if (ref[key] !== undefined) {
+      attachment[key] = ref[key];
+    }
+  }
+
+  return Object.keys(attachment).length > 0 ? attachment : undefined;
+};
+
+const rehydrateMessageFileRefs = (refs, filesById, { preserveDisplayOnly = false } = {}) => {
+  if (!Array.isArray(refs)) {
+    return undefined;
+  }
+
+  const files = [];
+  for (const ref of refs) {
+    const file = filesById.get(ref?.file_id);
+    if (file) {
+      files.push({
+        ...sanitizeFileForTransmit(file),
+        ...pickFields(ref, PER_MESSAGE_FILE_ATTACHMENT_FIELDS),
+      });
+      continue;
+    }
+
+    if (preserveDisplayOnly) {
+      const displayOnlyAttachment = sanitizeDisplayOnlyAttachment(ref);
+      if (displayOnlyAttachment) {
+        files.push(displayOnlyAttachment);
+      }
+    }
+  }
+  return files.length > 0 ? files : undefined;
+};
 
 class BaseClient {
   constructor(apiKey, options = {}) {
@@ -277,6 +389,21 @@ class BaseClient {
           text: message,
         });
 
+    /**
+     * Attach quoted excerpts (the "Add to chat" selections from `req.body.quotes`)
+     * before `getReqData`/`onStart` fire, so the optimistic bubble, resumable job
+     * metadata, and the saved row all carry them. Only on fresh turns — edits
+     * replay an existing message that already has its quotes. The excerpts are
+     * merged into the model-facing text later, per message, in `buildMessages`,
+     * keeping the stored `text` clean while the count stays consistent.
+     */
+    if (!opts.isEdited) {
+      const referencedQuotes = getReferencedQuotes(this.options.req?.body?.quotes);
+      if (referencedQuotes != null) {
+        userMessage.quotes = referencedQuotes;
+      }
+    }
+
     if (typeof opts?.getReqData === 'function') {
       opts.getReqData({
         userMessage,
@@ -492,6 +619,39 @@ class BaseClient {
         }
         delete userMessage.image_urls;
       }
+      /**
+       * Persist the user's manual skill picks onto the user message so the
+       * frontend `SkillPills` component can render them in history
+       * after reload. UI-only metadata — the runtime skill resolution
+       * pipeline reads the top-level `req.body.manualSkills` separately.
+       * Filter is defense-in-depth on top of Mongoose schema validation:
+       * keeps the DB row free of empty/non-string entries even if a
+       * crafted payload slips past schema checks upstream.
+       */
+      const rawManualSkills = this.options.req?.body?.manualSkills;
+      if (Array.isArray(rawManualSkills) && rawManualSkills.length > 0) {
+        const skills = rawManualSkills.filter((s) => typeof s === 'string' && s.length > 0);
+        if (skills.length > 0) {
+          userMessage.manualSkills = skills;
+        }
+      }
+      /**
+       * Persist the names of skills auto-primed this turn via `always-apply`
+       * frontmatter so `SkillPills` can render pinned-variant badges
+       * on the user bubble that survive reload and history render. Frozen
+       * at turn time (not reconstructed from `Skill.alwaysApply` at render
+       * time) because the flag is mutable — historical turns must keep
+       * their audit trail even if an admin flips `alwaysApply` off later.
+       */
+      const alwaysApplySkillPrimes = this.options.agent?.alwaysApplySkillPrimes;
+      if (Array.isArray(alwaysApplySkillPrimes) && alwaysApplySkillPrimes.length > 0) {
+        const names = alwaysApplySkillPrimes
+          .map((p) => p?.name)
+          .filter((n) => typeof n === 'string' && n.length > 0);
+        if (names.length > 0) {
+          userMessage.alwaysAppliedSkills = names;
+        }
+      }
       userMessagePromise = this.saveMessageToDatabase(userMessage, saveOptions, user).catch(
         (err) => {
           logger.error('[BaseClient] Failed to save user message:', err);
@@ -667,14 +827,13 @@ class BaseClient {
       user,
     );
     this.savedMessageIds.add(responseMessage.messageId);
-    delete responseMessage.tokenCount;
     return responseMessage;
   }
 
   async loadHistory(conversationId, parentMessageId = null) {
     logger.debug('[BaseClient] Loading history:', { conversationId, parentMessageId });
 
-    const messages = (await db.getMessages({ conversationId })) ?? [];
+    const messages = (await db.getMessages({ conversationId, user: this.user })) ?? [];
 
     if (messages.length === 0) {
       return [];
@@ -780,11 +939,28 @@ class BaseClient {
       endpointType: options.endpointType,
       ...endpointOptions,
     };
+    const conversationCreatedAt = options?.req?.conversationCreatedAt;
+    const createdAtOnInsert =
+      conversationCreatedAt != null ? new Date(conversationCreatedAt) : undefined;
+    const validCreatedAtOnInsert =
+      createdAtOnInsert && !Number.isNaN(createdAtOnInsert.getTime())
+        ? createdAtOnInsert
+        : undefined;
 
-    const existingConvo =
-      this.fetchedConvo === true
-        ? null
-        : await db.getConvo(options?.req?.user?.id, message.conversationId);
+    const req = options?.req;
+    const skippedExistingConvoLookup = this.fetchedConvo === true;
+    const hasResolvedConversation =
+      req != null && Object.prototype.hasOwnProperty.call(req, 'resolvedConversation');
+    let existingConvo = null;
+    if (!skippedExistingConvoLookup && hasResolvedConversation) {
+      existingConvo = req.resolvedConversation;
+    } else if (!skippedExistingConvoLookup) {
+      existingConvo = await db.getConvo(req?.user?.id, message.conversationId);
+    }
+    if (hasResolvedConversation) {
+      delete req.resolvedConversation;
+    }
+    const shouldSetCreatedAtOnInsert = !skippedExistingConvoLookup && existingConvo == null;
 
     const unsetFields = {};
     const exceptions = new Set(['spec', 'iconURL']);
@@ -814,6 +990,7 @@ class BaseClient {
     const conversation = await db.saveConvo(reqCtx, fieldsToKeep, {
       context: 'api/app/clients/BaseClient.js - saveMessageToDatabase #saveConvo',
       unsetFields,
+      createdAtOnInsert: shouldSetCreatedAtOnInsert ? validCreatedAtOnInsert : undefined,
     });
 
     return { message: savedMessage, conversation };
@@ -1166,8 +1343,8 @@ class BaseClient {
     const provider = this.options.agent?.provider ?? this.options.endpoint;
     const isBedrock = provider === EModelEndpoint.bedrock;
 
-    if (!this._mergedFileConfig && this.options.req?.config?.fileConfig) {
-      this._mergedFileConfig = mergeFileConfig(this.options.req.config.fileConfig);
+    if (!this._mergedFileConfig) {
+      this._mergedFileConfig = mergeFileConfig(this.options.req?.config?.fileConfig);
       const endpoint = this.options.agent?.endpoint ?? this.options.endpoint;
       this._endpointFileConfig = getEndpointFileConfig({
         fileConfig: this._mergedFileConfig,
@@ -1183,7 +1360,11 @@ class BaseClient {
         allFiles.push(file);
         continue;
       }
-      if (file.embedded === true || file.metadata?.fileIdentifier != null) {
+      if (
+        file.embedded === true ||
+        file.metadata?.codeEnvRef != null ||
+        file.metadata?.fileIdentifier != null
+      ) {
         allFiles.push(file);
         continue;
       }
@@ -1254,12 +1435,26 @@ class BaseClient {
       return _messages;
     }
 
-    const seen = new Set();
+    const contextSeen = new Set();
     const attachmentsProcessed =
       this.options.attachments && !(this.options.attachments instanceof Promise);
     if (attachmentsProcessed) {
       for (const attachment of this.options.attachments) {
-        seen.add(attachment.file_id);
+        if (attachment?.file_id) {
+          contextSeen.add(attachment.file_id);
+        }
+      }
+    }
+
+    const historicalFileIds = collectHistoricalFileIds(_messages);
+    const fileFilter = buildOwnerFileFilter(historicalFileIds, this.options.req?.user);
+    const authorizedFilesById = new Map();
+    if (fileFilter) {
+      const files = (await db.getFiles(fileFilter, {}, {})) ?? [];
+      for (const file of files) {
+        if (file?.file_id) {
+          authorizedFilesById.set(file.file_id, file);
+        }
       }
     }
 
@@ -1273,38 +1468,57 @@ class BaseClient {
         this.message_file_map = {};
       }
 
-      const fileIds = [];
-      for (const file of message.files) {
-        if (seen.has(file.file_id)) {
-          continue;
+      delete message.fileContext;
+
+      const contextFiles = [];
+      if (Array.isArray(message.files)) {
+        for (const file of message.files) {
+          if (!file?.file_id || contextSeen.has(file.file_id)) {
+            continue;
+          }
+          const authorizedFile = authorizedFilesById.get(file.file_id);
+          if (authorizedFile) {
+            contextFiles.push(authorizedFile);
+            contextSeen.add(file.file_id);
+          }
         }
-        fileIds.push(file.file_id);
-        seen.add(file.file_id);
       }
 
-      if (fileIds.length === 0) {
+      const rehydratedFiles = rehydrateMessageFileRefs(message.files, authorizedFilesById);
+      if (rehydratedFiles) {
+        message.files = rehydratedFiles;
+      } else {
+        delete message.files;
+      }
+
+      const rehydratedAttachments = rehydrateMessageFileRefs(
+        message.attachments,
+        authorizedFilesById,
+        {
+          preserveDisplayOnly: true,
+        },
+      );
+      if (rehydratedAttachments) {
+        message.attachments = rehydratedAttachments;
+      } else {
+        delete message.attachments;
+      }
+
+      if (contextFiles.length === 0) {
         return message;
       }
 
-      const files = await db.getFiles(
-        {
-          file_id: { $in: fileIds },
-        },
-        {},
-        {},
-      );
+      await this.addFileContextToMessage(message, contextFiles);
+      await this.processAttachments(message, contextFiles);
 
-      await this.addFileContextToMessage(message, files);
-      await this.processAttachments(message, files);
-
-      this.message_file_map[message.messageId] = files;
+      this.message_file_map[message.messageId] = contextFiles;
       return message;
     };
 
     const promises = [];
 
     for (const message of _messages) {
-      if (!message.files) {
+      if (!message.files && !message.attachments) {
         promises.push(message);
         continue;
       }

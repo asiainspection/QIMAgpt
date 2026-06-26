@@ -1,11 +1,11 @@
 import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
 import {
   ResourceType,
   PrincipalType,
   PrincipalModel,
   PermissionBits,
 } from 'librechat-data-provider';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import type * as t from '~/types';
 import { createAclEntryMethods, permissionBitSupersets } from './aclEntry';
 import aclEntrySchema from '~/schema/aclEntry';
@@ -1194,6 +1194,42 @@ describe('AclEntry Model Tests', () => {
       expect(agentIds).toHaveLength(1);
       expect(agentIds[0].toString()).toBe(agentRes.toString());
     });
+
+    test('should have a public-principal compound index available for the planner', async () => {
+      await AclEntry.syncIndexes();
+      const indexes = await AclEntry.collection.indexes();
+      const publicIndex = indexes.find(
+        (idx) =>
+          idx.key?.principalType === 1 &&
+          idx.key?.resourceType === 1 &&
+          idx.key?.permBits === 1 &&
+          idx.key?.resourceId === 1,
+      );
+      expect(publicIndex).toBeDefined();
+
+      await methods.grantPermission(
+        PrincipalType.PUBLIC,
+        null,
+        ResourceType.AGENT,
+        new mongoose.Types.ObjectId(),
+        PermissionBits.VIEW,
+        grantedById,
+      );
+
+      const explain = (await AclEntry.find({
+        principalType: PrincipalType.PUBLIC,
+        resourceType: ResourceType.AGENT,
+        permBits: { $in: [PermissionBits.VIEW] },
+      })
+        .hint(publicIndex!.name as string)
+        .explain('queryPlanner')) as unknown as {
+        queryPlanner?: { winningPlan?: Record<string, unknown> };
+      };
+
+      const planString = JSON.stringify(explain?.queryPlanner?.winningPlan ?? {});
+      expect(planString).toContain('IXSCAN');
+      expect(planString).not.toContain('COLLSCAN');
+    });
   });
 
   describe('aggregateAclEntries', () => {
@@ -1223,14 +1259,14 @@ describe('AclEntry Model Tests', () => {
         grantedById,
       );
 
-      const results = await methods.aggregateAclEntries([
+      const results = (await methods.aggregateAclEntries([
         { $group: { _id: '$resourceType', count: { $sum: 1 } } },
         { $sort: { _id: 1 } },
-      ]);
+      ])) as Array<{ _id: string; count: number }>;
 
       expect(results).toHaveLength(2);
-      const agentResult = results.find((r: { _id: string }) => r._id === ResourceType.AGENT);
-      expect(agentResult.count).toBe(2);
+      const agentResult = results.find((r) => r._id === ResourceType.AGENT);
+      expect(agentResult?.count).toBe(2);
     });
 
     test('should return empty array for non-matching pipeline', async () => {
@@ -1626,6 +1662,7 @@ describe('AclEntry Model Tests', () => {
     describe('rejection of out-of-range inputs (cache-growth safety)', () => {
       const MAX =
         PermissionBits.VIEW | PermissionBits.EDIT | PermissionBits.DELETE | PermissionBits.SHARE;
+      const FIRST_TRUNCATED_32_BIT_VALUE = 2 ** 32;
       const SHARED_EMPTY = permissionBitSupersets(MAX + 1);
 
       test('returns a frozen empty array for requiredBits above MAX_PERM_BITS', () => {
@@ -1641,9 +1678,19 @@ describe('AclEntry Model Tests', () => {
         expect(permissionBitSupersets(MAX + 1)).toBe(SHARED_EMPTY);
         expect(permissionBitSupersets(MAX + 100)).toBe(SHARED_EMPTY);
         expect(permissionBitSupersets(-1)).toBe(SHARED_EMPTY);
+        expect(permissionBitSupersets(FIRST_TRUNCATED_32_BIT_VALUE)).toBe(SHARED_EMPTY);
+        expect(permissionBitSupersets(FIRST_TRUNCATED_32_BIT_VALUE * 2)).toBe(SHARED_EMPTY);
         expect(permissionBitSupersets(Number.MAX_SAFE_INTEGER)).toBe(SHARED_EMPTY);
         expect(permissionBitSupersets(NaN)).toBe(SHARED_EMPTY);
         expect(permissionBitSupersets(1.5)).toBe(SHARED_EMPTY);
+      });
+
+      test('rejects large integers that truncate to in-range 32-bit values', () => {
+        expect(FIRST_TRUNCATED_32_BIT_VALUE & ~MAX).toBe(0);
+        expect(permissionBitSupersets(FIRST_TRUNCATED_32_BIT_VALUE)).toBe(SHARED_EMPTY);
+        expect(permissionBitSupersets(FIRST_TRUNCATED_32_BIT_VALUE + PermissionBits.VIEW)).toBe(
+          SHARED_EMPTY,
+        );
       });
 
       test('rejects inputs with bits above MAX_PERM_BITS even if some in-range bits are set', () => {
@@ -1692,6 +1739,7 @@ describe('AclEntry Model Tests', () => {
           const before = setSpy.mock.calls.length;
           for (let i = 0; i < 500; i++) {
             permissionBitSupersets(MAX + 1 + i);
+            permissionBitSupersets(FIRST_TRUNCATED_32_BIT_VALUE + i);
             permissionBitSupersets(-(i + 1));
             permissionBitSupersets(i + 0.5);
           }
