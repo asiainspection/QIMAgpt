@@ -1,9 +1,9 @@
 /**
  * Locks in the selection-flow contract that the follow-up `manualSkills`
- * PR has to honor: when a user picks a skill in the `$` popover the
+ * PR has to honor: when a user picks a skill in the `/` popover the
  * component must (a) push the skill name onto the per-conversation
  * `pendingManualSkillsByConvoId` atom, (b) flip `ephemeralAgent.skills`
- * to true, and (c) insert `$skill-name ` into the textarea.
+ * to true, and (c) not insert `/skill-name ` into the textarea.
  *
  * Also covers the Phase 2 filter composition: per-agent skill scope
  * intersects with the ACL catalog, and per-user active-state toggles
@@ -115,7 +115,7 @@ jest.mock('react-virtualized', () => ({
 
 import SkillsCommand, { filterSkillsForPopover } from '../SkillsCommand';
 
-const makeTextarea = (initial = '$') => {
+const makeTextarea = (initial = '/') => {
   const textarea = document.createElement('textarea');
   textarea.value = initial;
   document.body.appendChild(textarea);
@@ -189,9 +189,9 @@ describe('SkillsCommand', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('selecting a skill pushes to pendingManualSkillsByConvoId, flips ephemeralAgent.skills, strips the $ trigger from the textarea, and closes the popover', async () => {
+  it('selecting a skill pushes to pendingManualSkillsByConvoId, flips ephemeralAgent.skills, strips the / trigger from the textarea, and closes the popover', async () => {
     const user = userEvent.setup();
-    const textAreaRef = makeTextarea('$');
+    const textAreaRef = makeTextarea('/');
     render(<SkillsCommand index={0} textAreaRef={textAreaRef} conversationId={CONVO_ID} />);
 
     const skillButton = await screen.findByRole('button', { name: /Brand Guidelines/i });
@@ -215,10 +215,10 @@ describe('SkillsCommand', () => {
     expect(agentUpdater(null)).toEqual({ skills: true });
     expect(agentUpdater({ skills: true })).toEqual({ skills: true });
 
-    /* Textarea is cleared of the `$` trigger but no `$skill-name ` cue is
+    /* Textarea is cleared of the `/` trigger but no `/skill-name ` cue is
        inserted — visual confirmation is the `SkillPills` row that
        renders on the submitted user message, and injecting text would
-       mislead users into thinking free-form `$name` invocation works. */
+       mislead users into thinking free-form `/name` invocation works. */
     expect(textAreaRef.current?.value).toBe('');
 
     /* Popover dismisses on selection. */
@@ -238,7 +238,7 @@ describe('SkillsCommand', () => {
       agent_1: { id: 'agent_1', skills: ['2'], skills_enabled: true },
     });
 
-    const textAreaRef = makeTextarea('$');
+    const textAreaRef = makeTextarea('/');
     render(
       <SkillsCommand
         index={0}
@@ -266,7 +266,7 @@ describe('SkillsCommand', () => {
       agent_1: { id: 'agent_1', skills: ['1', '2'], skills_enabled: false },
     });
 
-    const textAreaRef = makeTextarea('$');
+    const textAreaRef = makeTextarea('/');
     render(
       <SkillsCommand
         index={0}
@@ -293,7 +293,7 @@ describe('SkillsCommand', () => {
       agent_1: { id: 'agent_1' },
     });
 
-    const textAreaRef = makeTextarea('$');
+    const textAreaRef = makeTextarea('/');
     render(
       <SkillsCommand
         index={0}
@@ -323,7 +323,7 @@ describe('SkillsCommand', () => {
       agent_1: { id: 'agent_1', skills: [], skills_enabled: true },
     });
 
-    const textAreaRef = makeTextarea('$');
+    const textAreaRef = makeTextarea('/');
     render(
       <SkillsCommand
         index={0}
@@ -348,7 +348,7 @@ describe('SkillsCommand', () => {
     });
     mockUseAgentsMapContext.mockReturnValue({});
 
-    const textAreaRef = makeTextarea('$');
+    const textAreaRef = makeTextarea('/');
     render(
       <SkillsCommand
         index={0}
@@ -375,7 +375,7 @@ describe('SkillsCommand', () => {
     });
     mockUseAgentsMapContext.mockReturnValue(undefined);
 
-    const textAreaRef = makeTextarea('$');
+    const textAreaRef = makeTextarea('/');
     render(
       <SkillsCommand
         index={0}
@@ -404,7 +404,7 @@ describe('SkillsCommand', () => {
     });
     mockUseAgentsMapContext.mockReturnValue({});
 
-    const textAreaRef = makeTextarea('$');
+    const textAreaRef = makeTextarea('/');
     render(
       <SkillsCommand
         index={0}
@@ -429,7 +429,7 @@ describe('SkillsCommand', () => {
     });
     mockIsActive.mockImplementation((skill: { _id: string }) => skill._id !== '1');
 
-    const textAreaRef = makeTextarea('$');
+    const textAreaRef = makeTextarea('/');
     render(<SkillsCommand index={0} textAreaRef={textAreaRef} conversationId={CONVO_ID} />);
 
     expect(screen.queryByRole('button', { name: /Brand Guidelines/i })).toBeNull();

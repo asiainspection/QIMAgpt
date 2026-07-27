@@ -108,7 +108,7 @@ const useHandleKeyUp = ({
     if (!hasPromptsAccess || !slashCommandEnabled) {
       return;
     }
-    if (shouldTriggerCommand(textAreaRef, '/')) {
+    if (shouldTriggerCommand(textAreaRef, '$')) {
       setShowPromptsPopover(true);
     }
   }, [textAreaRef, hasPromptsAccess, setShowPromptsPopover, slashCommandEnabled]);
@@ -122,7 +122,7 @@ const useHandleKeyUp = ({
     ) {
       return;
     }
-    if (shouldTriggerCommand(textAreaRef, '$')) {
+    if (shouldTriggerCommand(textAreaRef, '/')) {
       setShowSkillsPopover(true);
     }
   }, [
@@ -138,8 +138,8 @@ const useHandleKeyUp = ({
     () => ({
       '@': handleAtCommand,
       '+': handlePlusCommand,
-      '/': handlePromptsCommand,
-      $: handleSkillsCommand,
+      '/': handleSkillsCommand,
+      $: handlePromptsCommand,
     }),
     [handleAtCommand, handlePlusCommand, handlePromptsCommand, handleSkillsCommand],
   );

@@ -13,7 +13,7 @@ import MentionItem from './MentionItem';
 import { useLocalize } from '~/hooks';
 import store from '~/store';
 
-const commandChar = '/';
+const commandChar = '$';
 
 const PopoverContainer = memo(
   ({

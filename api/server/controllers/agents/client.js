@@ -1208,7 +1208,7 @@ class AgentClient extends BaseClient {
         ...(this.agentConfigs ? Array.from(this.agentConfigs.values()) : []),
       ]);
       /**
-       * Skills primed fresh this turn — manual ($ popover) and always-apply
+       * Skills primed fresh this turn — manual (/ popover) and always-apply
        * (frontmatter). `injectSkillPrimes` (below) splices their SKILL.md
        * bodies in, so `formatAgentMessages` must NOT also reconstruct the
        * same names from a historical `skill` tool_call — otherwise the body
@@ -1250,7 +1250,7 @@ class AgentClient extends BaseClient {
       }
 
       /**
-       * Skill priming — both manual ($ popover) and always-apply (frontmatter).
+       * Skill priming — both manual (/ popover) and always-apply (frontmatter).
        *
        * Splice + index-shift logic lives in `injectSkillPrimes`
        * (packages/api/src/agents/skills.ts) so the delicate position math
@@ -1450,7 +1450,7 @@ class AgentClient extends BaseClient {
        * cards. `extractInvokedSkillsFromPayload` scans history for
        * `skill` tool_calls and feeds `primeInvokedSkills`, which is
        * Phase 3's sticky-re-prime path — that's the right behavior for
-       * manual (user picked `$skill` once; re-prime on every subsequent
+       * manual (user picked `/skill` once; re-prime on every subsequent
        * turn from history). For always-apply, `resolveAlwaysApplySkills`
        * already re-primes every turn from fresh DB state, so persisting
        * the card would cause the skill body to get primed twice per

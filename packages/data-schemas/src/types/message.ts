@@ -45,7 +45,7 @@ export interface IMessage extends Document {
     encoding?: string;
   };
   attachments?: unknown[];
-  /** Skills the user invoked manually via the `$` popover on this turn. UI-only metadata for `SkillPills`. */
+  /** Skills the user invoked manually via the `/` popover on this turn. UI-only metadata for `SkillPills`. */
   manualSkills?: string[];
   /**
    * Skills auto-primed on this turn via `always-apply` frontmatter. Persisted

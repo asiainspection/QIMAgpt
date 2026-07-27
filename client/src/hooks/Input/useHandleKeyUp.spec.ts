@@ -139,11 +139,11 @@ beforeEach(() => {
 
 describe('useHandleKeyUp', () => {
   describe('command triggering — normal typing speed (cursor at position 1)', () => {
-    it('triggers slash command for "/" at position 1', () => {
-      const ref = makeTextAreaRef('/', 1);
+    it('triggers $ prompt command for "$" at position 1', () => {
+      const ref = makeTextAreaRef('$', 1);
       const { handleKeyUp, setShowPromptsPopover } = renderUseHandleKeyUp(ref);
 
-      act(() => handleKeyUp(makeKeyEvent('/')));
+      act(() => handleKeyUp(makeKeyEvent('$')));
 
       expect(setShowPromptsPopover).toHaveBeenCalledWith(true);
     });
@@ -166,19 +166,19 @@ describe('useHandleKeyUp', () => {
       expect(setShowPlusPopover).toHaveBeenCalledWith(true);
     });
 
-    it('triggers $ skill command for "$" at position 1', () => {
-      const ref = makeTextAreaRef('$', 1);
+    it('triggers / skill command for "/" at position 1', () => {
+      const ref = makeTextAreaRef('/', 1);
       const { handleKeyUp, setShowSkillsPopover } = renderUseHandleKeyUp(ref);
 
-      act(() => handleKeyUp(makeKeyEvent('$')));
+      act(() => handleKeyUp(makeKeyEvent('/')));
 
       expect(setShowSkillsPopover).toHaveBeenCalledWith(true);
     });
   });
 
   describe('fast typing — cursor past position 1 but text is short', () => {
-    it('triggers slash command for "/sc" (fast typed)', () => {
-      const ref = makeTextAreaRef('/sc', 3);
+    it('triggers $ prompt command for "$sc" (fast typed)', () => {
+      const ref = makeTextAreaRef('$sc', 3);
       const { handleKeyUp, setShowPromptsPopover } = renderUseHandleKeyUp(ref);
 
       act(() => handleKeyUp(makeKeyEvent('c')));
@@ -196,7 +196,7 @@ describe('useHandleKeyUp', () => {
     });
 
     it('triggers for text up to MAX_COMMAND_TRIGGER_LENGTH (5 chars)', () => {
-      const ref = makeTextAreaRef('/abcd', 5);
+      const ref = makeTextAreaRef('$abcd', 5);
       const { handleKeyUp, setShowPromptsPopover } = renderUseHandleKeyUp(ref);
 
       act(() => handleKeyUp(makeKeyEvent('d')));
@@ -204,8 +204,8 @@ describe('useHandleKeyUp', () => {
       expect(setShowPromptsPopover).toHaveBeenCalledWith(true);
     });
 
-    it('triggers $ skill command for "$sk" (fast typed)', () => {
-      const ref = makeTextAreaRef('$sk', 3);
+    it('triggers / skill command for "/sk" (fast typed)', () => {
+      const ref = makeTextAreaRef('/sk', 3);
       const { handleKeyUp, setShowSkillsPopover } = renderUseHandleKeyUp(ref);
 
       act(() => handleKeyUp(makeKeyEvent('k')));
@@ -214,7 +214,7 @@ describe('useHandleKeyUp', () => {
     });
 
     it('does NOT trigger for text exceeding MAX_COMMAND_TRIGGER_LENGTH', () => {
-      const ref = makeTextAreaRef('/abcde', 6);
+      const ref = makeTextAreaRef('$abcde', 6);
       const { handleKeyUp, setShowPromptsPopover } = renderUseHandleKeyUp(ref);
 
       act(() => handleKeyUp(makeKeyEvent('e')));
@@ -225,7 +225,7 @@ describe('useHandleKeyUp', () => {
 
   describe('navigation keys — should never trigger', () => {
     it('does NOT trigger when cursor is mid-text after ArrowLeft', () => {
-      const ref = makeTextAreaRef('/abc', 2);
+      const ref = makeTextAreaRef('$abc', 2);
       const { handleKeyUp, setShowPromptsPopover } = renderUseHandleKeyUp(ref);
 
       act(() => handleKeyUp(makeKeyEvent('ArrowLeft')));
@@ -243,7 +243,7 @@ describe('useHandleKeyUp', () => {
     });
 
     it('does NOT trigger when ArrowRight lands at end of short command text', () => {
-      const ref = makeTextAreaRef('/ab', 3);
+      const ref = makeTextAreaRef('$ab', 3);
       const { handleKeyUp, setShowPromptsPopover } = renderUseHandleKeyUp(ref);
 
       act(() => handleKeyUp(makeKeyEvent('ArrowRight')));
@@ -252,7 +252,7 @@ describe('useHandleKeyUp', () => {
     });
 
     it('does NOT trigger when Home key is pressed on command text', () => {
-      const ref = makeTextAreaRef('/abc', 0);
+      const ref = makeTextAreaRef('$abc', 0);
       const { handleKeyUp, setShowPromptsPopover } = renderUseHandleKeyUp(ref);
 
       act(() => handleKeyUp(makeKeyEvent('Home')));
@@ -270,7 +270,7 @@ describe('useHandleKeyUp', () => {
     });
 
     it('does NOT trigger when ArrowUp is pressed on non-empty command text', () => {
-      const ref = makeTextAreaRef('/ab', 3);
+      const ref = makeTextAreaRef('$ab', 3);
       const { handleKeyUp, setShowPromptsPopover } = renderUseHandleKeyUp(ref);
 
       act(() => handleKeyUp(makeKeyEvent('ArrowUp')));
@@ -282,11 +282,11 @@ describe('useHandleKeyUp', () => {
   describe('paste protection — long text starting with command char', () => {
     it('does NOT trigger for pasted "/api/v1/users"', () => {
       const ref = makeTextAreaRef('/api/v1/users', 13);
-      const { handleKeyUp, setShowPromptsPopover } = renderUseHandleKeyUp(ref);
+      const { handleKeyUp, setShowSkillsPopover } = renderUseHandleKeyUp(ref);
 
       act(() => handleKeyUp(makeKeyEvent('v')));
 
-      expect(setShowPromptsPopover).not.toHaveBeenCalled();
+      expect(setShowSkillsPopover).not.toHaveBeenCalled();
     });
 
     it('does NOT trigger for pasted "@username mentioned in a long message"', () => {
@@ -322,7 +322,7 @@ describe('useHandleKeyUp', () => {
     });
 
     it('does NOT trigger for command char in the middle of text', () => {
-      const ref = makeTextAreaRef('hello /world', 12);
+      const ref = makeTextAreaRef('hello $world', 12);
       const { handleKeyUp, setShowPromptsPopover } = renderUseHandleKeyUp(ref);
 
       act(() => handleKeyUp(makeKeyEvent('d')));
@@ -344,7 +344,7 @@ describe('useHandleKeyUp', () => {
       'End',
       'Delete',
     ])('does NOT trigger on %s key', (key) => {
-      const ref = makeTextAreaRef('/', 1);
+      const ref = makeTextAreaRef('$', 1);
       const { handleKeyUp, setShowPromptsPopover } = renderUseHandleKeyUp(ref);
 
       act(() => handleKeyUp(makeKeyEvent(key)));
@@ -354,12 +354,12 @@ describe('useHandleKeyUp', () => {
   });
 
   describe('command toggles', () => {
-    it('does NOT trigger slash command when slashCommand toggle is disabled', () => {
+    it('does NOT trigger $ prompt command when slashCommand toggle is disabled', () => {
       mockCommandToggles.slash = false;
-      const ref = makeTextAreaRef('/', 1);
+      const ref = makeTextAreaRef('$', 1);
       const { handleKeyUp, setShowPromptsPopover } = renderUseHandleKeyUp(ref);
 
-      act(() => handleKeyUp(makeKeyEvent('/')));
+      act(() => handleKeyUp(makeKeyEvent('$')));
 
       expect(setShowPromptsPopover).not.toHaveBeenCalled();
     });
@@ -384,24 +384,24 @@ describe('useHandleKeyUp', () => {
       expect(setShowPlusPopover).not.toHaveBeenCalled();
     });
 
-    it('does NOT trigger $ skill command when dollarCommand toggle is disabled', () => {
+    it('does NOT trigger / skill command when dollarCommand toggle is disabled', () => {
       mockCommandToggles.dollar = false;
-      const ref = makeTextAreaRef('$', 1);
+      const ref = makeTextAreaRef('/', 1);
       const { handleKeyUp, setShowSkillsPopover } = renderUseHandleKeyUp(ref);
 
-      act(() => handleKeyUp(makeKeyEvent('$')));
+      act(() => handleKeyUp(makeKeyEvent('/')));
 
       expect(setShowSkillsPopover).not.toHaveBeenCalled();
     });
   });
 
   describe('permission gating', () => {
-    it('does NOT trigger slash command without PROMPTS access', () => {
+    it('does NOT trigger $ prompt command without PROMPTS access', () => {
       mockHasPromptsAccess.current = false;
-      const ref = makeTextAreaRef('/', 1);
+      const ref = makeTextAreaRef('$', 1);
       const { handleKeyUp, setShowPromptsPopover } = renderUseHandleKeyUp(ref);
 
-      act(() => handleKeyUp(makeKeyEvent('/')));
+      act(() => handleKeyUp(makeKeyEvent('$')));
 
       expect(setShowPromptsPopover).not.toHaveBeenCalled();
     });
@@ -427,22 +427,22 @@ describe('useHandleKeyUp', () => {
       expect(setShowMentionPopover).toHaveBeenCalledWith(true);
     });
 
-    it('does NOT trigger $ skill command without SKILLS access', () => {
+    it('does NOT trigger / skill command without SKILLS access', () => {
       mockHasSkillsAccess.current = false;
-      const ref = makeTextAreaRef('$', 1);
+      const ref = makeTextAreaRef('/', 1);
       const { handleKeyUp, setShowSkillsPopover } = renderUseHandleKeyUp(ref);
 
-      act(() => handleKeyUp(makeKeyEvent('$')));
+      act(() => handleKeyUp(makeKeyEvent('/')));
 
       expect(setShowSkillsPopover).not.toHaveBeenCalled();
     });
 
-    it('does NOT trigger $ skill command when skills capability is disabled on agents endpoint', () => {
+    it('does NOT trigger / skill command when skills capability is disabled on agents endpoint', () => {
       mockSkillsEnabled.current = false;
-      const ref = makeTextAreaRef('$', 1);
+      const ref = makeTextAreaRef('/', 1);
       const { handleKeyUp, setShowSkillsPopover } = renderUseHandleKeyUp(ref);
 
-      act(() => handleKeyUp(makeKeyEvent('$')));
+      act(() => handleKeyUp(makeKeyEvent('/')));
 
       expect(setShowSkillsPopover).not.toHaveBeenCalled();
     });
@@ -489,27 +489,27 @@ describe('useHandleKeyUp', () => {
       expect(setShowPlusPopover).toHaveBeenCalledWith(true);
     });
 
-    it('does NOT trigger $ skill command on assistants endpoint', () => {
+    it('does NOT trigger / skill command on assistants endpoint', () => {
       mockEndpoint.current = 'assistants';
-      const ref = makeTextAreaRef('$', 1);
+      const ref = makeTextAreaRef('/', 1);
       const { handleKeyUp, setShowSkillsPopover } = renderUseHandleKeyUp(ref);
 
-      act(() => handleKeyUp(makeKeyEvent('$')));
+      act(() => handleKeyUp(makeKeyEvent('/')));
 
       expect(setShowSkillsPopover).not.toHaveBeenCalledWith(true);
     });
 
-    it('does NOT trigger $ skill command on azureAssistants endpoint', () => {
+    it('does NOT trigger / skill command on azureAssistants endpoint', () => {
       mockEndpoint.current = 'azureAssistants';
-      const ref = makeTextAreaRef('$', 1);
+      const ref = makeTextAreaRef('/', 1);
       const { handleKeyUp, setShowSkillsPopover } = renderUseHandleKeyUp(ref);
 
-      act(() => handleKeyUp(makeKeyEvent('$')));
+      act(() => handleKeyUp(makeKeyEvent('/')));
 
       expect(setShowSkillsPopover).not.toHaveBeenCalledWith(true);
     });
 
-    it('resets $ skills popover when endpoint switches to assistants', () => {
+    it('resets / skills popover when endpoint switches to assistants', () => {
       mockEndpoint.current = 'assistants';
       const ref = makeTextAreaRef('', 0);
       const { setShowSkillsPopover } = renderUseHandleKeyUp(ref);

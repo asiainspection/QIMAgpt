@@ -19,7 +19,7 @@ const CATALOG_PAGE_SIZE = 100;
 /** Hard ceiling on skill names a model spec can request by config. */
 const MAX_MODEL_SPEC_SKILLS = SKILL_CATALOG_LIMIT;
 /**
- * Hard ceiling on skill names resolved per request via `$` popover or
+ * Hard ceiling on skill names resolved per request via `/` popover or
  * `always-apply`. The popover realistically surfaces only a few per turn;
  * the cap is a defense-in-depth against a crafted payload fanning out into
  * many concurrent `getSkillByName` DB lookups.
@@ -587,7 +587,7 @@ export async function injectSkillCatalog(
  * treats all three paths identically.
  *
  * Used by:
- *  - Phase 3 manual invocation (`$skill-name` popover) — called at turn start.
+ *  - Phase 3 manual invocation (`/skill-name` popover) — called at turn start.
  *  - Phase 5 `always-apply` frontmatter — called at turn start.
  *  - `handleSkillToolCall` for model-invoked skills — called from the tool
  *    execution handler.
@@ -603,7 +603,7 @@ export function buildSkillPrimeMessage(skill: { name: string; body: string }): I
 }
 
 export interface ResolveManualSkillsParams {
-  /** Skill names the user invoked (via `$` popover or `always-apply`). */
+  /** Skill names the user invoked (via `/` popover or `always-apply`). */
   names: string[];
   /** DB lookup: name → skill doc, constrained to ACL-accessible IDs.
    *
@@ -648,7 +648,7 @@ export interface ResolveManualSkillsParams {
 
 /**
  * Canonical shape of a skill resolved into prime-ready form. Both
- * manual-invocation (`$` popover) and `always-apply` resolvers emit this
+ * manual-invocation (`/` popover) and `always-apply` resolvers emit this
  * shape so downstream pipeline stages (`injectSkillPrimes`,
  * `unionPrimeAllowedTools`, `buildSkillPrimedIdsByName`) can treat either
  * source uniformly. The per-prime distinction lives on
@@ -676,7 +676,7 @@ export interface ResolvedSkillPrime {
 }
 
 /**
- * Back-compat alias for manual-invocation primes (`$` popover). Semantic
+ * Back-compat alias for manual-invocation primes (`/` popover). Semantic
  * aliases over `ResolvedSkillPrime` keep the per-source naming at call
  * sites (so `manualPrimes: ResolvedManualSkill[]` stays readable) without
  * maintaining parallel interfaces.
@@ -695,7 +695,7 @@ export type ResolvedAlwaysApplySkill = ResolvedSkillPrime;
  *  - names not backed by an accessible skill (ACL miss or typo),
  *  - skills the user has toggled inactive (respects ownership-aware defaults).
  *
- * The active-state filter is intentional even for explicit `$` selections:
+ * The active-state filter is intentional even for explicit `/` selections:
  *  1. Phase 2 closes the loop on the UI side by hiding inactive skills from
  *     the popover, so a deactivated skill shouldn't be reachable through the
  *     normal flow in the first place.
@@ -704,7 +704,7 @@ export type ResolvedAlwaysApplySkill = ResolvedSkillPrime;
  *     stops working the moment someone crafts a raw payload isn't much of
  *     a toggle.
  *
- * Silently skips unresolvable names with a warn log — a missing `$skill` must
+ * Silently skips unresolvable names with a warn log — a missing `/skill` must
  * never block the user's actual message from going through.
  *
  * Preserves input order and drops duplicate names (first wins) so a user who
@@ -1151,12 +1151,12 @@ export interface InjectSkillPrimesResult {
  * message array just before the latest user message. Ordering: always-apply
  * primes first (further from the user message, ambient context), then
  * manual primes (closer to the user message, explicit user intent). More
- * recent context gets more attention in most LLMs, so we want explicit `$`
+ * recent context gets more attention in most LLMs, so we want explicit `/`
  * picks landing closest to the latest user turn and ambient priming
  * sitting further back. Shifts `indexTokenCountMap` for the combined
  * splice.
  *
- * Cross-list dedup: if a user `$`-invokes a skill that is also marked
+ * Cross-list dedup: if a user `/`-invokes a skill that is also marked
  * `always-apply`, the always-apply copy is dropped so the SKILL.md body
  * is primed only once. Manual wins (drops the always-apply side) because
  * manual primes sit closer to the user message and carry explicit intent.

@@ -15,12 +15,12 @@ import { removeCharIfLast } from '~/utils';
 import MentionItem from './MentionItem';
 import store from '~/store';
 
-const commandChar = '$';
+const commandChar = '/';
 const ROW_HEIGHT = 44;
 const skillIcon = <ScrollText className="icon-md text-cyan-500" />;
 
 /**
- * Determines whether a skill should appear in the `$` command popover.
+ * Determines whether a skill should appear in the `/` command popover.
  * Reads the persisted `userInvocable` field (mirrors the `user-invocable`
  * frontmatter). Defaults to visible when the field is absent so older
  * skills authored before Phase 6 stay user-invocable without a migration;
@@ -31,7 +31,7 @@ export function isUserInvocable(skill: TSkillSummary): boolean {
 }
 
 /**
- * Filters the skills list down to what should appear in the `$` popover.
+ * Filters the skills list down to what should appear in the `/` popover.
  * Composes three rules, short-circuiting on the cheapest check first:
  *
  * 1. Agent scope — mirrors backend `scopeSkillIds` semantics:
@@ -215,7 +215,7 @@ function SkillsCommandContent({
       /* Structured channel for manual skill invocations. The submit
          pipeline reads this and primes SKILL.md as a meta user message
          before the LLM turn — no textarea-level marker is needed, and
-         injecting `$skill-name ` as text would mislead users into thinking
+         injecting `/skill-name ` as text would mislead users into thinking
          free-form text invocation is supported. Visual confirmation after
          submit comes from `SkillPills` on the user message bubble
          until the live skill-card stream takes over. */
