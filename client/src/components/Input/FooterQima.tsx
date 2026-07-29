@@ -9,7 +9,7 @@ type FooterQimaProps = {
   startupConfig?: FooterStartupConfig | null;
 };
 
-const DEFAULT_FOOTER = 'QIMA GPT. Serves and searches all conversations reliably.';
+const DEFAULT_FOOTER = 'QIMAgpt. Get things done, faster, better.';
 
 export default function FooterQima({ className, startupConfig }: FooterQimaProps) {
   const shouldFetchConfig = startupConfig === undefined;
