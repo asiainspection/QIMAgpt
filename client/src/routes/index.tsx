@@ -198,7 +198,11 @@ export const router = createBrowserRouter(
             },
           ],
         },
-      ],
+        {
+        path: '*',
+        element: <Navigate to="/c/new" replace />,
+      },
+    ],
     },
   ],
   { basename: baseHref },

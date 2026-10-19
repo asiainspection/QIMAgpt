@@ -3,9 +3,8 @@ import { TStartupConfig } from 'librechat-data-provider';
 import { ErrorMessage } from '~/components/Auth/ErrorMessage';
 import { TranslationKeys, useLocalize } from '~/hooks';
 import SocialLoginRender from './SocialLoginRender';
-import { BlinkAnimation } from './BlinkAnimation';
+import Footer from '../Input/FooterQima';
 import { Banner } from '../Banners';
-import Footer from './Footer';
 
 function AuthLayout({
   children,
@@ -62,15 +61,6 @@ function AuthLayout({
   return (
     <div className="relative flex min-h-screen flex-col bg-surface-primary">
       <Banner />
-      <BlinkAnimation active={isFetching}>
-        <div className="mt-6 h-10 w-full bg-cover">
-          <img
-            src="assets/logo.svg"
-            className="h-full w-full object-contain"
-            alt={localize('com_ui_logo', { 0: startupConfig?.appTitle ?? 'LibreChat' })}
-          />
-        </div>
-      </BlinkAnimation>
       <DisplayError />
       <div className="absolute bottom-0 left-0 md:m-4">
         <ThemeSelector />
