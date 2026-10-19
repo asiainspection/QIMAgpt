@@ -33,7 +33,7 @@ COPY --chown=node:node packages/data-provider/package.json ./packages/data-provi
 COPY --chown=node:node packages/data-schemas/package.json ./packages/data-schemas/package.json
 COPY --chown=node:node packages/api/package.json ./packages/api/package.json
 
-RUN \
+RUN set -e; \
     # Allow mounting of these files, which have no default
     touch .env ; \
     # Create directories for the volumes to inherit the correct permissions
