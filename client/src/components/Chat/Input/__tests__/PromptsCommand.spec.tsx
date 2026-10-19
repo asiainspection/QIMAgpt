@@ -82,7 +82,7 @@ jest.mock('react-virtualized', () => ({
 
 import PromptsCommand from '../PromptsCommand';
 
-const makeTextarea = (initial = '/') => {
+const makeTextarea = (initial = '$') => {
   const textarea = document.createElement('textarea');
   textarea.value = initial;
   document.body.appendChild(textarea);
@@ -132,7 +132,7 @@ beforeEach(() => {
 });
 
 const renderCommand = () => {
-  const textAreaRef = makeTextarea('/');
+  const textAreaRef = makeTextarea('$');
   const utils = render(
     <PromptsCommand index={0} textAreaRef={textAreaRef} submitPrompt={jest.fn()} />,
   );
