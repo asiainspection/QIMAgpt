@@ -36,7 +36,7 @@ import { ShareArtifactsContainer } from './ShareArtifacts';
 import AppChatSurface from '../Chat/Surface';
 import { ShareContext } from '~/Providers';
 import MessagesView from './MessagesView';
-import Footer from '../Chat/Footer';
+import Footer from '../Input/FooterQima';
 import store from '~/store';
 
 /** Root sibling-index key used by the shared MessagesView/MultiMessage tree. */

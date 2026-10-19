@@ -63,7 +63,7 @@ jest.mock('../Chat/Surface', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => children,
 }));
-jest.mock('../Chat/Footer', () => ({ __esModule: true, default: () => null }));
+jest.mock('../Input/FooterQima', () => ({ __esModule: true, default: () => null }));
 
 const frame = () => (
   <RecoilRoot>

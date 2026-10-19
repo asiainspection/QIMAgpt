@@ -42,10 +42,9 @@ jest.mock('../Presentation', () => ({
   default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 jest.mock('../Header', () => ({ __esModule: true, default: () => <div /> }));
-jest.mock('../Footer', () => ({
+jest.mock('../../Input/FooterQima', () => ({
   __esModule: true,
   default: () => <div />,
-  useConfiguredFooter: () => false,
 }));
 jest.mock('../Landing', () => ({ __esModule: true, default: () => <div /> }));
 jest.mock('../Messages/MessagesView', () => ({ __esModule: true, default: () => <div /> }));

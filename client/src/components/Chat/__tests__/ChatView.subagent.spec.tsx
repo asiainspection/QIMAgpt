@@ -71,10 +71,9 @@ jest.mock('../Landing', () => () => <div data-testid="landing" />);
 jest.mock('../Trace', () => ({
   TraceSurface: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
-jest.mock('../Footer', () => ({
+jest.mock('../../Input/FooterQima', () => ({
   __esModule: true,
   default: () => <div data-testid="footer" />,
-  useConfiguredFooter: () => false,
 }));
 jest.mock('../Header', () => ({ readOnly }: { readOnly?: boolean }) => (
   <div data-read-only={String(readOnly)} data-testid="header" />
