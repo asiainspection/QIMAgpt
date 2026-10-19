@@ -151,8 +151,9 @@ export default defineConfig(({ command }) => ({
       },
       includeAssets: [],
       manifest: {
-        name: 'LibreChat',
-        short_name: 'LibreChat',
+        name: 'QIMA GPT',
+        short_name: 'QIMA GPT',
+        start_url: '/',
         display: 'standalone',
         background_color: '#000000',
         theme_color: '#009688',
