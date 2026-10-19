@@ -5,7 +5,7 @@ import AssistantsSettings from './Assistants';
 import { GoogleSettings } from './MultiView';
 import AnthropicSettings from './Anthropic';
 import BedrockSettings from './Bedrock';
-import OpenAISettings from './OpenAI';
+import OpenAISettings from './OpenAIQima';
 
 const settings: { [key: string]: FC<TModelSelectProps> | undefined } = {
   [EModelEndpoint.assistants]: AssistantsSettings,
