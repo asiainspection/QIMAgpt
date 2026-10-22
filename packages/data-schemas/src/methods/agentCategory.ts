@@ -222,6 +222,12 @@ export function createAgentCategoryMethods(mongoose: typeof import('mongoose')):
         description: 'com_agents_category_aftersales_description',
         order: 6,
       },
+      {
+        value: 'marketing',
+        label: 'com_agents_category_marketing',
+        description: 'com_agents_category_marketing_description',
+        order: 7,
+      },
     ];
 
     const existingCategories = await getAllCategories();

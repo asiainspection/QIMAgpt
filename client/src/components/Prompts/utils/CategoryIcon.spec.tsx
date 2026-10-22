@@ -18,6 +18,7 @@ const categoryColors = {
   it: 'text-series-5',
   sales: 'text-series-2',
   aftersales: 'text-series-4',
+  marketing: 'text-series-3',
 };
 
 describe('CategoryIcon', () => {

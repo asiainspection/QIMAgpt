@@ -12,6 +12,7 @@ import {
   TerminalSquareIcon,
   Users as UsersIcon,
   Beaker as BeakerIcon,
+  Megaphone as MegaphoneIcon,
   Settings as SettingsIcon,
 } from 'lucide-react';
 import { cn } from '~/utils';
@@ -32,6 +33,7 @@ const categoryIconMap: Record<string, React.ElementType> = {
   it: TerminalSquareIcon,
   sales: LineChartIcon,
   aftersales: SettingsIcon,
+  marketing: MegaphoneIcon,
 };
 
 const categoryColorMap: Record<string, string> = {
@@ -50,6 +52,7 @@ const categoryColorMap: Record<string, string> = {
   it: 'text-series-5',
   sales: 'text-series-2',
   aftersales: 'text-series-4',
+  marketing: 'text-series-3',
 };
 
 export default function CategoryIcon({
